@@ -1,0 +1,11 @@
+﻿*
+!.gitignore
+!apps/
+!apps/**
+apps/**/node_modules/
+apps/**/dist/
+apps/**/build/
+apps/**/.env
+apps/**/.env.*
+apps/**/.DS_Store
+apps/**/.vscode/

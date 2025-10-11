@@ -42,10 +42,18 @@ const upload = multer({
 // Get profile by userId
 router.get('/:userId', async (req, res) => {
   try {
-    const profile = await Profile.findOne({ userId: req.params.userId });
+    let profile = await Profile.findOne({ userId: req.params.userId });
+    
+    // If profile not found, return default profile instead of 404
     if (!profile) {
-      return res.status(404).json({ error: 'Profile not found' });
+      profile = {
+        userId: req.params.userId,
+        name: 'User',
+        bio: '',
+        avatar: ''
+      };
     }
+    
     res.json(profile);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -84,9 +92,16 @@ router.post('/avatar', auth, upload.single('avatar'), async (req, res) => {
       throw new Error('Please upload a file');
     }
 
-    const profile = await Profile.findOne({ userId: req.user._id });
+    // Find or create profile
+    let profile = await Profile.findOne({ userId: req.user._id });
     if (!profile) {
-      throw new Error('Profile not found');
+      profile = new Profile({
+        userId: req.user._id,
+        name: req.user.email.split('@')[0],
+        bio: '',
+        avatar: ''
+      });
+      await profile.save();
     }
 
     // Delete old avatar if exists

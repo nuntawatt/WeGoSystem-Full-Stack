@@ -10,7 +10,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User>;
   signUp: (email: string, password: string) => Promise<void>;
   logOut: () => void;
 }
@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     setUser(user);
+    return user; // Return user object so SignIn can check role
   };
 
   const signUp = async (email: string, password: string) => {

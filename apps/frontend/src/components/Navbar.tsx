@@ -1,8 +1,8 @@
 // apps/frontend/src/components/Navbar.tsx
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import clsx from 'clsx';
 import { useProfile } from '../hooks/useProfile';
+import clsx from 'clsx';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'WeGo';
 
@@ -12,7 +12,7 @@ function nameFromEmail(email?: string | null) {
 
 export default function Navbar() {
   const { user, logOut } = useAuth();
-  const { data: profile } = useProfile();
+  const { data: profile } = useProfile(user?._id);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     clsx(
@@ -21,11 +21,11 @@ export default function Navbar() {
       isActive && 'underline decoration-2 text-white'
     );
 
-  const displayName = profile?.name || nameFromEmail(user?.email) || '';
-  const avatar = profile?.avatar || '';
-  const first = (displayName || nameFromEmail(user?.email) || '?')
-    .charAt(0)
-    .toUpperCase();
+  const displayName = nameFromEmail(user?.email) || '';
+  const profileAvatar = profile?.avatar || '';
+  const isTransient = profileAvatar && (profileAvatar.startsWith('blob:') || profileAvatar.startsWith('file:'));
+  const avatar = isTransient ? '' : profileAvatar;
+  const first = (displayName || '?').charAt(0).toUpperCase();
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-primary-900/70 backdrop-blur">
@@ -44,6 +44,11 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-6 lg:gap-8">
           <NavLink to="/explore" className={linkClass}>Explore</NavLink>
           <NavLink to="/create" className={linkClass}>Create</NavLink>
+          
+          {/* Admin Dashboard Link (only for admin) */}
+          {user?.role === 'admin' && (
+            <NavLink to="/admin/dashboard" className={linkClass}>Dashboard</NavLink>
+          )}
 
           {user ? (
             <div className="flex items-center gap-3">

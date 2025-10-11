@@ -26,10 +26,25 @@ export function useProfile(userId?: string) {
     queryKey: ['profile', currentUserId],
     queryFn: async () => {
       if (!currentUserId) throw new Error('กรุณาระบุรหัสผู้ใช้');
-      const res = await profileAPI.get(currentUserId);
-      return res.data;
+      try {
+        const res = await profileAPI.get(currentUserId);
+        return res.data;
+      } catch (error: any) {
+        // Return default profile if API not found (404)
+        if (error.response?.status === 404) {
+          return {
+            userId: currentUserId,
+            name: user?.email || 'User',
+            bio: '',
+            avatar: ''
+          };
+        }
+        throw error;
+      }
     },
     enabled: !!currentUserId,
+    retry: false, // Don't retry on failure
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
   const updateProfile = useMutation({

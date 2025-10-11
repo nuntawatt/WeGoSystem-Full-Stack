@@ -17,71 +17,105 @@ import Schedule from './pages/groups/Schedule';
 import DirectChat from './pages/dm/DirectChat';
 import { DMProvider } from './hooks/useDM';
 import DMFloating from './components/DMFloating';
+import Dashboard from './pages/admin/Dashboard';
+import AdminLayout from './components/AdminLayout';
+import UserManagement from './pages/admin/UserManagement';
+import ActivityManagement from './pages/admin/ActivityManagement';
+import EventManagement from './pages/admin/EventManagement';
+import GroupManagement from './pages/admin/GroupManagement';
+import ChatManagement from './pages/admin/ChatManagement';
 
 export default function App() {
   return (
     <DMProvider>
-      <div className="min-h-screen bg-primary-900">
-        <Navbar />
+      <Routes>
+        {/* Admin Routes - Separate Layout without Navbar */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="activities" element={<ActivityManagement />} />
+          <Route path="events" element={<EventManagement />} />
+          <Route path="groups" element={<GroupManagement />} />
+          <Route path="chats" element={<ChatManagement />} />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        </Route>
 
-        <main className="mx-auto max-w-7xl p-4 sm:p-6 space-y-6">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/explore" element={<Explore />} />
+        {/* Main App Routes with Navbar */}
+        <Route
+          path="/*"
+          element={
+            <div className="min-h-screen bg-primary-900">
+              <Navbar />
+              <main className="mx-auto max-w-7xl p-4 sm:p-6 space-y-6">
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/explore" element={<Explore />} />
 
-            <Route
-              path="/groups/:id"
-              element={
-                <ProtectedRoute>
-                  <GroupDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/groups/:id/schedule"
-              element={
-                <ProtectedRoute>
-                  <Schedule />
-                </ProtectedRoute>
-              }
-            />
+                  <Route
+                    path="/groups/:id"
+                    element={
+                      <ProtectedRoute>
+                        <GroupDetail />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/groups/:id/schedule"
+                    element={
+                      <ProtectedRoute>
+                        <Schedule />
+                      </ProtectedRoute>
+                    }
+                  />
 
-            <Route
-              path="/create"
-              element={
-                <ProtectedRoute>
-                  <Create />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
+                  <Route
+                    path="/create"
+                    element={
+                      <ProtectedRoute>
+                        <Create />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
+                      </ProtectedRoute>
+                    }
+                  />
 
-            <Route
-              path="/dm/:uid"
-              element={
-                <ProtectedRoute>
-                  <DirectChat />
-                </ProtectedRoute>
-              }
-            />
+                  <Route
+                    path="/dm/:uid"
+                    element={
+                      <ProtectedRoute>
+                        <DirectChat />
+                      </ProtectedRoute>
+                    }
+                  />
 
-            <Route path="/auth/signin" element={<SignIn />} />
-            <Route path="/auth/signup" element={<SignUp />} />
-            <Route path="/auth/reset-password" element={<ResetPassword />} />
-            <Route path="/auth/reset" element={<ResetPasswordConfirm />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
-        </main>
-        <DMFloating />
-        <Toasts />
-      </div>
+                  {/* Auth Routes with Navbar */}
+                  <Route path="/auth/signin" element={<SignIn />} />
+                  <Route path="/auth/signup" element={<SignUp />} />
+                  <Route path="/auth/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/reset" element={<ResetPasswordConfirm />} />
+
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </main>
+              <DMFloating />
+              <Toasts />
+            </div>
+          }
+        />
+      </Routes>
     </DMProvider>
   );
 }

@@ -1,6 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
+import Profile from '../models/profile.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -10,6 +11,16 @@ router.post('/register', async (req, res) => {
   try {
     const user = new User(req.body);
     await user.save();
+    
+    // Auto-create profile for new user
+    const profile = new Profile({
+      userId: user._id,
+      name: user.email.split('@')[0], // Use email prefix as default name
+      bio: '',
+      avatar: ''
+    });
+    await profile.save();
+    
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
     res.status(201).json({ user, token });
   } catch (error) {
@@ -34,6 +45,18 @@ router.post('/login', async (req, res) => {
     
     if (!user || !(await user.comparePassword(password))) {
       throw new Error('Invalid login credentials');
+    }
+
+    // Check if profile exists, create if not
+    let profile = await Profile.findOne({ userId: user._id });
+    if (!profile) {
+      profile = new Profile({
+        userId: user._id,
+        name: user.email.split('@')[0],
+        bio: '',
+        avatar: ''
+      });
+      await profile.save();
     }
 
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);

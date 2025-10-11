@@ -49,6 +49,10 @@
     @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-semibold bg-gradient-to-b from-brand-gold to-brand-gold/80 text-black/90 hover:from-brand-gold/95 hover:to-brand-gold/75 ring-1 ring-black/10 shadow-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/50 active:translate-y-[1px] transition;
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 font-semibold bg-white/10 text-white hover:bg-white/15 ring-1 ring-white/20 shadow-md focus:outline-none focus:ring-2 focus:ring-white/30 active:translate-y-[1px] transition;
+  }
+
   .btn-ghost {
     @apply px-4 py-2 rounded-lg ring-1 ring-white/15 hover:bg-white/10 transition text-white;
   }

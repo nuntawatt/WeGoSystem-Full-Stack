@@ -218,7 +218,31 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
-    // Check if user is a participant
+    // If this chat is linked to an activity, enforce activity capacity rules:
+    const relatedActivity = chat.groupInfo?.relatedActivity;
+    if (relatedActivity) {
+      const ActivityModel = Activity; // imported at top
+      const activity = await ActivityModel.findById(relatedActivity._id);
+      if (activity) {
+        // compute effective count: participants.length + (creator occupies slot if not already in participants)
+        const storedParticipants = activity.participants.length;
+        const creatorId = activity.createdBy ? activity.createdBy.toString() : null;
+        const creatorInParticipants = creatorId ? activity.participants.some(p => p.user && p.user.toString() === creatorId) : false;
+        const creatorOccupiesSlot = creatorId && !creatorInParticipants;
+        const effectiveCount = storedParticipants + (creatorOccupiesSlot ? 1 : 0);
+
+        const isActivityFull = activity.maxParticipants && effectiveCount >= activity.maxParticipants;
+
+        // check if current user is listed as a participant in the activity
+        const userIsActivityParticipant = activity.participants.some(p => p.user && p.user.equals(currentUserId));
+
+        if (isActivityFull && !userIsActivityParticipant) {
+          return res.status(403).json({ message: 'Activity is full - access to chat is restricted to participants' });
+        }
+      }
+    }
+
+    // Check if user is a participant in chat (existing rule)
     const isParticipant = chat.participants.some(p => p.user._id.equals(currentUserId));
     if (!isParticipant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
@@ -288,6 +312,24 @@ router.post('/:id/messages', async (req, res) => {
       return res.status(404).json({ message: 'Chat not found' });
     }
 
+    // If this chat is linked to an activity, enforce activity capacity rules (same as GET)
+    if (chat.groupInfo && chat.groupInfo.relatedActivity) {
+      const activity = await Activity.findById(chat.groupInfo.relatedActivity);
+      if (activity) {
+        const storedParticipants = activity.participants.length;
+        const creatorId = activity.createdBy ? activity.createdBy.toString() : null;
+        const creatorInParticipants = creatorId ? activity.participants.some(p => p.user && p.user.toString() === creatorId) : false;
+        const creatorOccupiesSlot = creatorId && !creatorInParticipants;
+        const effectiveCount = storedParticipants + (creatorOccupiesSlot ? 1 : 0);
+        const isActivityFull = activity.maxParticipants && effectiveCount >= activity.maxParticipants;
+        const userIsActivityParticipant = activity.participants.some(p => p.user && p.user.equals(currentUserId));
+
+        if (isActivityFull && !userIsActivityParticipant) {
+          return res.status(403).json({ message: 'Activity is full - access to chat is restricted to participants' });
+        }
+      }
+    }
+
     // Check if user is a participant
     const isParticipant = chat.participants.some(p => p.user.equals(currentUserId));
     if (!isParticipant) {
@@ -302,6 +344,15 @@ router.post('/:id/messages', async (req, res) => {
 
     // Get the newly added message
     const newMessage = chat.messages[chat.messages.length - 1];
+
+    // Emit Socket.io event for real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`chat:${id}`).emit('message:receive', {
+        chatId: id,
+        message: newMessage
+      });
+    }
 
     res.status(201).json({
       message: 'Message sent successfully',

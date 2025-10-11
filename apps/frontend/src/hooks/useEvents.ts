@@ -14,6 +14,7 @@ export interface Event {
   category: string;
   cover?: string;
   participants: string[];
+  chat?: string; // Chat ID reference
   createdBy: {
     _id: string;
     email: string;

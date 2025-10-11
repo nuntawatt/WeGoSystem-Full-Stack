@@ -1,7 +1,7 @@
 // App bootstrap + React Query + Router + AuthProvider + global CSS
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App';
 import './styles/index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -10,13 +10,23 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const qc = new QueryClient();
 
+const routerOptions: any = {
+  // Opt-in to v7 future behaviors to silence deprecation warnings
+  future: {
+    v7_startTransition: true,
+    v7_relativeSplatPath: true,
+  }
+};
+
+const router = createBrowserRouter([
+  { path: '/*', element: <App /> },
+], routerOptions);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
       <AuthProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <RouterProvider router={router} />
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>

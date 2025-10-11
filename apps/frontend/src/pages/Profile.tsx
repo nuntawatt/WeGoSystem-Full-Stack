@@ -113,16 +113,24 @@ export default function Profile() {
 
       const data = await response.json();
       
-      // Cleanup blob URL after successful upload
-      if (localUrl) {
-        URL.revokeObjectURL(localUrl);
-      }
-      
+      // Set avatar to server URL first, then revoke local blob after DOM updates
       await updateProfile({ name, bio, avatar: data.avatarUrl });
       setAvatar(data.avatarUrl);
       setUploading(false);
       setProgress(100);
       toast('Profile picture updated');
+
+      // Revoke local preview blob after a short delay so the DOM updates to the server URL
+      if (localUrl) {
+        const urlToRevoke: string = localUrl; // narrow type for closure
+        setTimeout(() => {
+          try {
+            URL.revokeObjectURL(urlToRevoke);
+          } catch (err) {
+            // ignore
+          }
+        }, 300);
+      }
     } catch (error: any) {
       // Cleanup blob URL on error
       if (localUrl) {

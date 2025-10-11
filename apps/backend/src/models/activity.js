@@ -200,25 +200,30 @@ activitySchema.index({ status: 1, visibility: 1 });
 
 // Check if user can join the activity
 activitySchema.methods.canUserJoin = function(userId) {
-  // Check if activity is open
+  // Check if activity is open (drafts are not joinable)
   if (this.status !== 'published') {
+    // do not allow joining when not published
     return false;
   }
   
   // Check if already a participant
   const alreadyJoined = this.participants.some(p => p.user.equals(userId));
   if (alreadyJoined) {
-    return false;
+    throw new Error('User already joined this activity');
   }
   
-  // Check if full
-  if (this.participants.length >= this.maxParticipants) {
-    return false;
+  // Check if full (do not allow joining when full)
+  // Treat the creator as occupying a slot if they're not already in participants
+  let creatorOccupiesSlot = false;
+  if (this.createdBy) {
+    const creatorId = this.createdBy.toString();
+    const creatorInParticipants = this.participants.some(p => p.user && p.user.toString() === creatorId);
+    creatorOccupiesSlot = !creatorInParticipants; // if creator not in participants, they count as occupying one slot
   }
-  
-  // Check if creator
-  if (this.createdBy.equals(userId)) {
-    return false;
+
+  const effectiveCount = this.participants.length + (creatorOccupiesSlot ? 1 : 0);
+  if (effectiveCount >= this.maxParticipants) {
+    throw new Error('Activity is full');
   }
   
   return true;
@@ -227,6 +232,7 @@ activitySchema.methods.canUserJoin = function(userId) {
 // Add participant
 activitySchema.methods.addParticipant = async function(userId, status = 'joined', note = '') {
   if (!this.canUserJoin(userId)) {
+    // canUserJoin will throw a specific error if not allowed
     throw new Error('Cannot join this activity');
   }
   

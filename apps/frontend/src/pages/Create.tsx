@@ -53,7 +53,7 @@ export default function Create() {
     const { name, value } = e.target;
     setFormData((prev: FormData) => ({
       ...prev,
-      [name]: value
+      [name]: name === 'maxParticipants' ? parseInt(value) || 2 : value
     }));
   };
 
@@ -122,6 +122,51 @@ export default function Create() {
     }
 
     try {
+      // If there's a cover image, upload it first
+      let coverUrl = undefined;
+      if (formData.coverImage) {
+        setUploading(true);
+        const formDataUpload = new FormData();
+        formDataUpload.append('cover', formData.coverImage);
+
+        try {
+          const token = localStorage.getItem('token');
+          const uploadResponse = await fetch('http://localhost:5000/api/events/upload-cover', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formDataUpload
+          });
+
+          if (!uploadResponse.ok) {
+            const text = await uploadResponse.text().catch(() => uploadResponse.statusText || 'unknown');
+            throw new Error(`Failed to upload image: ${uploadResponse.status} ${text}`);
+          }
+
+          const uploadData = await uploadResponse.json();
+          coverUrl = uploadData.url;
+          setProgress(100);
+          // Cleanup local preview blob after a short delay to avoid ERR_FILE_NOT_FOUND
+          if (previewImage) {
+            setTimeout(() => {
+              try {
+                URL.revokeObjectURL(previewImage);
+              } catch (err) {
+                // ignore
+              }
+            }, 300);
+            setPreviewImage('');
+          }
+        } catch (uploadError) {
+          console.error('Image upload error:', uploadError);
+          toast('Failed to upload image. Creating activity without image...');
+        } finally {
+          setUploading(false);
+          setProgress(0);
+        }
+      }
+
       const eventData = {
         title: formData.title,
         description: formData.description,
@@ -131,7 +176,7 @@ export default function Create() {
         tags: formData.tags,
         maxParticipants: formData.maxParticipants,
         category: formData.category,
-        cover: formData.coverImage ? URL.createObjectURL(formData.coverImage) : undefined
+        cover: coverUrl
       };
 
       const newEvent = await createEvent(eventData);
@@ -305,6 +350,26 @@ export default function Create() {
               onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
               disabled={isLoading}
             />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="maxParticipants">จำนวนผู้เข้าร่วมสูงสุด</label>
+            <input
+              type="number"
+              id="maxParticipants"
+              name="maxParticipants"
+              className="input"
+              placeholder="ระบุจำนวนคนที่รับได้ (ขั้นต่ำ 2 คน)"
+              min={2}
+              max={100}
+              value={formData.maxParticipants}
+              onChange={handleChange}
+              required
+              disabled={isLoading}
+            />
+            <p className="text-xs text-white/60 mt-1">
+              ระบุจำนวนคนที่ต้องการรับเข้ากิจกรรม (ไม่นับรวมผู้สร้าง)
+            </p>
           </div>
 
           <button 

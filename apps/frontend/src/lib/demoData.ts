@@ -2,7 +2,7 @@
 export type EventItem = {
   id: string;
   title: string;
-  cover: string;
+  cover?: string;
   about: string;
   tags: string[];
   location?: string;

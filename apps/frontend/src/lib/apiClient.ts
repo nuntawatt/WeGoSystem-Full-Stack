@@ -64,8 +64,10 @@ api.interceptors.response.use(
       return Promise.reject(new Error('ไม่พบข้อมูลที่ต้องการ'));
     }
 
-    if (error.response?.data?.message) {
-      return Promise.reject(new Error(error.response.data.message));
+    // Support backend returning either { message: '...' } or { error: '...' }
+    const serverMsg = error.response?.data?.message || error.response?.data?.error;
+    if (serverMsg) {
+      return Promise.reject(new Error(serverMsg));
     }
 
     return Promise.reject(new Error('เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์'));

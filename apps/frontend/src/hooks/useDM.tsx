@@ -4,11 +4,14 @@ import { DEMO_USERS } from '../lib/demoData';
 
 type DMMessage = { from: string; to: string; text: string; at: number };
 
+type PeerMeta = { uid: string; name: string; avatar?: string };
+
 type DMContextValue = {
   meUid: string;
   isOpen: boolean;
-  openPeer: { uid: string; name: string; avatar: string } | null;
-  openDM: (peerUid: string) => void;
+  openPeer: PeerMeta | null;
+  // openDM accepts either a uid string or a PeerMeta object
+  openDM: (peer: string | PeerMeta) => void;
   closeDM: () => void;
   getMsgs: (peerUid?: string) => DMMessage[];
   sendTo: (peerUid: string, text: string) => void;
@@ -26,11 +29,14 @@ export const DMProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
   // เก็บข้อความทุกคู่แชทใน Map
   const storeRef = useRef<Map<string, DMMessage[]>>(new Map());
 
+  // peers map stores metadata for known peers (initialize from DEMO_USERS)
+  const peersRef = useRef<Map<string, PeerMeta>>(new Map(DEMO_USERS.map(u => [u.uid, { uid: u.uid, name: u.name, avatar: u.avatar }])));
+
   const [openPeerUid, setOpenPeerUid] = useState<string | null>(null);
 
   const openPeer = useMemo(() => {
     if (!openPeerUid) return null;
-    return DEMO_USERS.find((u) => u.uid === openPeerUid) || null;
+    return peersRef.current.get(openPeerUid) ?? null;
   }, [openPeerUid]);
 
   const getMsgs = (peerUidArg?: string) => {
@@ -51,7 +57,15 @@ export const DMProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
     setOpenPeerUid((uid) => (uid ? `${uid}` : uid));
   };
 
-  const openDM = (peerUid: string) => setOpenPeerUid(peerUid);
+  const openDM = (peer: string | PeerMeta) => {
+    if (typeof peer === 'string') {
+      setOpenPeerUid(peer);
+      return;
+    }
+    // store peer metadata and open
+    peersRef.current.set(peer.uid, peer);
+    setOpenPeerUid(peer.uid);
+  };
   const closeDM = () => setOpenPeerUid(null);
 
   const value: DMContextValue = {

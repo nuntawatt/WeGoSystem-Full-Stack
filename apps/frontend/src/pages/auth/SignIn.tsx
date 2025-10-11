@@ -26,9 +26,15 @@ export default function SignIn() {
 
     try {
       setLoading(true);
-      await signIn(email.trim(), pass);
+      const result = await signIn(email.trim(), pass);
       toast('เข้าสู่ระบบสำเร็จ');
-      nav(from, { replace: true });
+      
+      // Redirect admins to dashboard, others to intended location or explore
+      if (result && result.role === 'admin') {
+        nav('/admin/dashboard', { replace: true });
+      } else {
+        nav(from === '/' ? '/explore' : from, { replace: true });
+      }
     } catch (err: any) {
       toast(err?.message || 'เข้าสู่ระบบไม่สำเร็จ');
     } finally {

@@ -6,26 +6,14 @@ import auth from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { uploadBuffer, cloudinary } from '../lib/cloudinary.js';
 
 const router = express.Router();
 
-// Configure multer for activity images
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = 'uploads/activities';
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'activity-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
-
+// Use memoryStorage for uploading buffers to Cloudinary
+const storage = multer.memoryStorage();
 const upload = multer({
-  storage: storage,
+  storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: function (req, file, cb) {
     const filetypes = /jpeg|jpg|png|gif|webp/;
@@ -245,13 +233,24 @@ router.post('/:id/images', auth, upload.array('images', 5), async (req, res) => 
       return res.status(400).json({ error: 'No images uploaded' });
     }
 
-    const images = req.files.map(file => ({
-      url: `http://localhost:5000/uploads/activities/${file.filename}`,
-      description: req.body.description || '',
-      uploadedBy: req.user._id
-    }));
+    // Upload each file to Cloudinary
+    const uploaded = [];
+    for (const file of req.files) {
+      try {
+        const pub = `activities/${activity._id}/${Date.now()}-${Math.round(Math.random()*1e6)}`;
+        const resUpload = await uploadBuffer(file.buffer, { public_id: pub, folder: 'wego/activities', resource_type: 'image' });
+        uploaded.push({
+          url: resUpload.secure_url,
+          public_id: resUpload.public_id,
+          description: req.body.description || '',
+          uploadedBy: req.user._id
+        });
+      } catch (uErr) {
+        console.error('Failed to upload activity image to Cloudinary:', uErr);
+      }
+    }
 
-    activity.images.push(...images);
+    activity.images.push(...uploaded);
     
     // Set first image as cover if no cover exists
     if (!activity.cover && images.length > 0) {
@@ -547,14 +546,25 @@ router.delete('/:id', auth, async (req, res) => {
       await Chat.findByIdAndDelete(activity.chat);
     }
 
-    // Delete activity images
+    // Delete activity images from Cloudinary if possible
     if (activity.images && activity.images.length > 0) {
-      activity.images.forEach(image => {
-        const imagePath = image.url.replace('http://localhost:5000/', '');
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
+      for (const image of activity.images) {
+        try {
+          if (image.public_id) {
+            await cloudinary.uploader.destroy(image.public_id, { resource_type: 'image' });
+          } else if (image.url && image.url.includes('res.cloudinary.com')) {
+            const parts = image.url.split('/');
+            const idx = parts.findIndex(p => p === 'upload');
+            if (idx > -1 && parts.length > idx + 1) {
+              const publicWithExt = parts.slice(idx + 1).join('/');
+              const publicId = publicWithExt.replace(/\.[a-zA-Z0-9]+$/, '');
+              await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });
+            }
+          }
+        } catch (delErr) {
+          console.error('Failed to delete activity image from Cloudinary:', delErr);
         }
-      });
+      }
     }
 
     await Activity.findByIdAndDelete(req.params.id);

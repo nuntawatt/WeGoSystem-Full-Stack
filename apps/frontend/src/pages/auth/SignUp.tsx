@@ -1,5 +1,5 @@
 // Sign up page
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '../../components/Toasts';
 import { useAuth } from '../../hooks/useAuth';
@@ -14,27 +14,33 @@ export default function SignUp() {
 
   const { signUp } = useAuth();
 
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return toast('โปรดกรอกชื่อ');
-    if (!email.trim()) return toast('โปรดกรอกอีเมล');
-    if (pw.length < 6) return toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร');
+    if (!name.trim()) return toast('โปรดกรอกชื่อ', 'error');
+    if (!email.trim()) return toast('โปรดกรอกอีเมล', 'error');
+    if (pw.length < 6) return toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร', 'error');
 
     try {
-      setLoading(true);
-      await signUp(email, pw);
-      toast('สมัครสำเร็จ! 🎉');
+  setLoading(true);
+  // Pass username (name) to signUp so backend stores it on User and Profile
+  await signUp(email, pw, name.trim());
+      toast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ WeGo 🎉', 'success');
       nav('/profile');
     } catch (err: any) {
       const message = err?.message || '';
       if (message.includes('duplicate')) {
-        toast('อีเมลนี้มีบัญชีอยู่แล้ว • กด "Sign in" หรือ "Reset password"');
+        toast('อีเมลนี้มีบัญชีอยู่แล้ว • กด "Sign in" หรือ "Reset password"', 'error');
       } else if (message.includes('email')) {
-        toast('อีเมลไม่ถูกต้อง');
+        toast('อีเมลไม่ถูกต้อง', 'error');
       } else if (message.includes('password')) {
-        toast('รหัสผ่านน้อยเกินไป (อย่างน้อย 6 ตัวอักษร)');
+        toast('รหัสผ่านน้อยเกินไป (อย่างน้อย 6 ตัวอักษร)', 'error');
       } else {
-        toast(`สมัครไม่สำเร็จ: ${err?.message || 'Unknown error'}`);
+        toast(`สมัครไม่สำเร็จ: ${err?.message || 'Unknown error'}`, 'error');
       }
     } finally {
       setLoading(false);
@@ -42,29 +48,46 @@ export default function SignUp() {
   };
 
   return (
-    <section className="container-app py-10">
-      <div className="card p-6 max-w-md mx-auto">
-        <h2 className="text-xl font-semibold mb-4">Create account</h2>
+    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4">
+      <div className="w-full max-w-md">
+        {/* Card with Header Inside */}
+        <div className="card p-8 border border-amber-500/20 shadow-2xl shadow-amber-500/10">
+          {/* Header */}
+          <header className="text-center mb-8">
+            <div className="inline-block p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mb-4 shadow-lg shadow-emerald-500/30">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+              Sign Up
+            </h2>
+            <p className="text-slate-400">Create your WeGo account</p>
+          </header>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div>
-            <label className="label" htmlFor="username">Username</label>
+          <form onSubmit={onSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="username">
+              <span className="text-amber-400">👤</span> Username
+            </label>
             <input
               id="username"
-              className="input"
-              placeholder="Username"
+              className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
+              placeholder="Your name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
             />
           </div>
 
-          <div>
-            <label className="label" htmlFor="email">Email</label>
+          <div className="space-y-2">
+            <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
+              <span className="text-amber-400">📧</span> Email
+            </label>
             <input
               id="email"
-              className="input"
-              placeholder="Email"
+              className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
+              placeholder="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -72,13 +95,15 @@ export default function SignUp() {
             />
           </div>
 
-          <div>
-            <label className="label" htmlFor="password">Password</label>
+          <div className="space-y-2">
+            <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="password">
+              <span className="text-amber-400">🔒</span> Password
+            </label>
             <div className="relative">
               <input
                 id="password"
-                className="input pr-10"
-                placeholder="Password"
+                className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 pr-12 transition-all duration-300"
+                placeholder="At least 6 characters"
                 type={showPw ? 'text' : 'password'}
                 value={pw}
                 onChange={(e) => setPw(e.target.value)}
@@ -87,7 +112,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className="absolute inset-y-0 right-0 px-3 flex items-center text-white/70 hover:text-white"
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-amber-400 transition-all duration-300"
                 aria-label={showPw ? 'Hide password' : 'Show password'}
                 title={showPw ? 'Hide password' : 'Show password'}
               >
@@ -110,14 +135,34 @@ export default function SignUp() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary w-full" disabled={loading}>
-            {loading ? 'Creating…' : 'Sign up'}
+          <button 
+            type="submit" 
+            className="w-full mt-6 px-8 py-3.5 font-bold text-white rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:transform-none disabled:shadow-none" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Creating account...
+              </span>
+            ) : (
+              'Sign Up'
+            )}
           </button>
 
-          <p className="text-sm opacity-80 text-center">
-            Already have an account? <Link className="underline" to="/auth/signin">Sign in</Link>
-          </p>
-        </form>
+          <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-700/50">
+            <p className="text-slate-300">
+              Already have an account?{' '}
+              <Link to="/auth/signin" className="text-amber-400 font-bold hover:text-amber-300 transition-colors duration-300">
+                Sign in
+              </Link>
+            </p>
+          </div>
+          </form>
+        </div>
       </div>
     </section>
   );

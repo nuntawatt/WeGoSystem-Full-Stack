@@ -22,6 +22,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     // ตรวจสอบว่า user เป็น admin หรือไม่
     if (user && user.role !== 'admin') {
@@ -83,7 +88,7 @@ export default function Dashboard() {
       {/* Header with Quick Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Admin Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 font-['Poppins']">Admin Dashboard</h1>
           <p className="text-primary-300 text-sm sm:text-base">Welcome back, {user?.email?.split('@')[0] || 'godmode'}</p>
         </div>
         <div className="flex gap-2">
@@ -94,70 +99,56 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards - Responsive Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {/* Total Users Card */}
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+        <div className="group relative bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent border border-blue-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden"
              onClick={() => navigate('/admin/users')}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-blue-300 text-xs sm:text-sm font-medium">Total Users</p>
-            <div className="bg-blue-500/30 p-2 rounded-lg">
-              <i className="fas fa-users text-blue-400 text-lg"></i>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-blue-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Total Users</p>
+              <div className="bg-gradient-to-br from-blue-500/40 to-blue-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <i className="fas fa-users text-blue-300 text-lg sm:text-xl"></i>
+              </div>
+            </div>
+            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-blue-200 transition-colors">{stats.totalUsers}</p>
+            <div className="flex items-center gap-2 text-blue-300/80 text-xs sm:text-sm">
+              <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+              <span className="font-medium">Manage users</span>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{stats.totalUsers}</p>
-          <p className="text-blue-300/60 text-xs mt-1">Click to manage →</p>
         </div>
 
         {/* Total Activities Card */}
-        <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
+        <div className="group relative bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent border border-emerald-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden"
              onClick={() => navigate('/admin/activities')}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-green-300 text-xs sm:text-sm font-medium">Activities</p>
-            <div className="bg-green-500/30 p-2 rounded-lg">
-              <i className="fas fa-clipboard-list text-green-400 text-lg"></i>
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-emerald-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Activities</p>
+              <div className="bg-gradient-to-br from-emerald-500/40 to-emerald-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <i className="fas fa-clipboard-list text-emerald-300 text-lg sm:text-xl"></i>
+              </div>
+            </div>
+            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-emerald-200 transition-colors">{stats.totalActivities}</p>
+            <div className="flex items-center gap-2 text-emerald-300/80 text-xs sm:text-sm">
+              <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+              <span className="font-medium">View activities</span>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{stats.totalActivities}</p>
-          <p className="text-green-300/60 text-xs mt-1">Click to view →</p>
         </div>
 
-        {/* Total Groups Card */}
-        <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
-             onClick={() => navigate('/admin/groups')}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-purple-300 text-xs sm:text-sm font-medium">Groups</p>
-            <div className="bg-purple-500/30 p-2 rounded-lg">
-              <i className="fas fa-user-friends text-purple-400 text-lg"></i>
+        {/* Total Groups Card - Info Only */}
+        <div className="group relative bg-gradient-to-br from-purple-500/20 via-purple-600/10 to-transparent border border-purple-500/30 rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300 overflow-hidden opacity-60">
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-purple-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Groups</p>
+              <div className="bg-gradient-to-br from-purple-500/40 to-purple-600/40 p-2.5 rounded-xl">
+                <i className="fas fa-user-friends text-purple-300 text-lg sm:text-xl"></i>
+              </div>
             </div>
+            <p className="text-3xl sm:text-4xl font-black text-white mb-2">{stats.totalGroups}</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{stats.totalGroups}</p>
-          <p className="text-purple-300/60 text-xs mt-1">Click to view →</p>
-        </div>
-
-        {/* Total Events Card */}
-        <div className="bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 border border-yellow-500/20 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
-             onClick={() => navigate('/admin/events')}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-yellow-300 text-xs sm:text-sm font-medium">Events</p>
-            <div className="bg-yellow-500/30 p-2 rounded-lg">
-              <i className="fas fa-calendar-alt text-yellow-400 text-lg"></i>
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{stats.totalEvents}</p>
-          <p className="text-yellow-300/60 text-xs mt-1">Click to view →</p>
-        </div>
-
-        {/* Total Chats Card */}
-        <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 border border-pink-500/20 rounded-xl p-4 sm:p-5 shadow-lg hover:shadow-2xl hover:scale-105 transition-all cursor-pointer"
-             onClick={() => navigate('/admin/chats')}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-pink-300 text-xs sm:text-sm font-medium">Chats</p>
-            <div className="bg-pink-500/30 p-2 rounded-lg">
-              <i className="fas fa-comments text-pink-400 text-lg"></i>
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-bold text-white">{stats.totalChats}</p>
-          <p className="text-pink-300/60 text-xs mt-1">Click to view →</p>
         </div>
       </div>
 

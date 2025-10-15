@@ -50,11 +50,7 @@ const activitySchema = new mongoose.Schema({
     required: true,
     min: 2
   },
-  category: {
-    type: String,
-    required: true,
-    enum: ['sports', 'social', 'education', 'entertainment', 'food', 'outdoor', 'other']
-  },
+  // category removed: use tags instead
   difficulty: {
     type: String,
     enum: ['easy', 'moderate', 'hard'],
@@ -192,7 +188,7 @@ activitySchema.index({ 'location.coordinates': '2dsphere' });
 // Compound indexes for common queries
 activitySchema.index({ createdBy: 1, createdAt: -1 });
 activitySchema.index({ date: 1, status: 1 });
-activitySchema.index({ category: 1, status: 1 });
+// category index removed (category field deleted)
 activitySchema.index({ tags: 1 });
 activitySchema.index({ status: 1, visibility: 1 });
 
@@ -207,7 +203,7 @@ activitySchema.methods.canUserJoin = function(userId) {
   }
   
   // Check if already a participant
-  const alreadyJoined = this.participants.some(p => p.user.equals(userId));
+  const alreadyJoined = this.participants.some(p => p.user && p.user.equals(userId));
   if (alreadyJoined) {
     throw new Error('User already joined this activity');
   }
@@ -248,7 +244,7 @@ activitySchema.methods.addParticipant = async function(userId, status = 'joined'
 
 // Remove participant
 activitySchema.methods.removeParticipant = async function(userId) {
-  const index = this.participants.findIndex(p => p.user.equals(userId));
+  const index = this.participants.findIndex(p => p.user && p.user.equals(userId));
   
   if (index === -1) {
     throw new Error('User is not a participant');

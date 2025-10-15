@@ -11,7 +11,7 @@ export interface Event {
   time: string;
   tags: string[];
   maxParticipants: number;
-  category: string;
+  category?: string;
   cover?: string;
   participants: string[];
   chat?: string; // Chat ID reference
@@ -50,7 +50,7 @@ export function useEvents() {
     time: string;
     tags: string[];
     maxParticipants: number;
-    category: string;
+    category?: string;
     cover?: string;
   }) => {
     try {

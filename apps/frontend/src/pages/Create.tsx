@@ -15,7 +15,6 @@ interface FormData {
   time: string;
   tags: string[];
   maxParticipants: number;
-  category: string;
   coverImage?: File;
 }
 
@@ -33,12 +32,17 @@ export default function Create() {
     time: '',
     tags: [],
     maxParticipants: 2,
-    category: ''
+    
   });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [previewImage, setPreviewImage] = useState<string>('');
   const navigate = useNavigate();
+
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Cleanup preview image when component unmounts
   useEffect(() => {
@@ -68,14 +72,14 @@ export default function Create() {
   const handleImageSelect = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast('Please select an image file');
+      toast('Please select an image file', 'error');
       return;
     }
 
     const maxSize = 5; // 5MB
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > maxSize) {
-      toast(`File too large (max ${maxSize} MB)`);
+      toast(`File too large (max ${maxSize} MB)`, 'error');
       return;
     }
 
@@ -109,15 +113,15 @@ export default function Create() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form data
+    // Validate form data (category is optional)
     if (!formData.title || !formData.description || !formData.location || 
-        !formData.date || !formData.time || !formData.category) {
-      toast('Please fill in all required fields');
+        !formData.date || !formData.time) {
+      toast('Please fill in all required fields', 'error');
       return;
     }
 
     if (formData.maxParticipants < 2) {
-      toast('Minimum 2 participants required');
+      toast('Minimum 2 participants required', 'error');
       return;
     }
 
@@ -160,7 +164,7 @@ export default function Create() {
           }
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
-          toast('Failed to upload image. Creating activity without image...');
+          toast('Failed to upload image. Creating activity without image...', 'error');
         } finally {
           setUploading(false);
           setProgress(0);
@@ -175,45 +179,59 @@ export default function Create() {
         time: formData.time,
         tags: formData.tags,
         maxParticipants: formData.maxParticipants,
-        category: formData.category,
         cover: coverUrl
       };
 
       const newEvent = await createEvent(eventData);
+      toast('กิจกรรมถูกสร้างเรียบร้อยแล้ว! 🎉', 'success');
       navigate('/explore');
     } catch (error: any) {
       console.error('Create event error:', error);
+      toast('ไม่สามารถสร้างกิจกรรมได้', 'error');
     }
   };
 
   return (
-    <section className="container-app flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-3xl space-y-8">
-        
+    <section className="min-h-screen py-8">
+      <div className="container-app px-4">
+        {/* Header with Icon */}
+        <header className="mb-6 text-center">
+          <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+            Create Activity
+          </h2>
+          <p className="text-slate-400">Share your interests and meet like-minded people</p>
+        </header>
+
+        <div className="w-full max-w-3xl mx-auto">
         <form
           onSubmit={onSubmit}
-          className="card p-6 space-y-5 shadow-lg border border-white/10"
+          className="card p-6 space-y-5 border border-white/10 hover:border-white/20 transition-all duration-300"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="text-xl font-bold text-white">Create Activity</h3>
-            <span className="text-sm text-gray-300">
-              Creator: <span className="font-medium text-brand-gold">{userName}</span>
+          <div className="flex items-center justify-between pb-4 border-b border-white/10">
+            <h3 className="text-lg font-semibold text-amber-400 font-['Poppins']">Activity Details</h3>
+            <span className="text-sm text-slate-300">
+              Creator: <span className="font-medium text-amber-400">{userName}</span>
             </span>
           </div>
 
           <div>
-            <label className="label" htmlFor="coverImage">Cover Image</label>
+            <label className="label font-medium text-slate-200" htmlFor="coverImage">📸 Cover Image</label>
             <div className="flex gap-4 items-start">
-              <div className="relative w-40 h-40 bg-white/5 rounded-lg overflow-hidden">
+              <div className="relative w-40 h-40 bg-slate-700/30 rounded-lg overflow-hidden border border-white/10">
                 {previewImage ? (
                   <img
                     src={previewImage}
                     alt="Activity cover"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white/40">
-                    No image
+                  <div className="w-full h-full flex items-center justify-center text-slate-500">
+                    📷
                   </div>
                 )}
               </div>
@@ -221,7 +239,7 @@ export default function Create() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn-primary px-4 py-2"
+                  className="px-5 py-2.5 font-semibold text-white bg-amber-500 hover:bg-amber-400 rounded-lg transition-all duration-300"
                   disabled={isLoading}
                 >
                   Choose Image
@@ -230,12 +248,12 @@ export default function Create() {
                   <button
                     type="button"
                     onClick={removeImage}
-                    className="px-4 py-2 text-sm border border-white/15 rounded-lg hover:bg-white/5"
+                    className="px-5 py-2.5 text-sm font-semibold border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg transition-all duration-300"
                   >
                     Remove
                   </button>
                 )}
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-slate-400">
                   Recommended: 1200×800px • Max 5MB<br />
                   Supports: JPG, PNG, WebP
                 </p>
@@ -251,11 +269,11 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label" htmlFor="title">Activity Name</label>
+            <label className="label font-medium text-slate-200" htmlFor="title">📝 Activity Name</label>
             <input
               id="title"
               name="title"
-              className="input"
+              className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
               placeholder="e.g., Saturday Hiking"
               value={formData.title}
               onChange={handleChange}
@@ -265,11 +283,11 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label" htmlFor="description">Description</label>
+            <label className="label font-medium text-slate-200" htmlFor="description">📄 Description</label>
             <textarea
               id="description"
               name="description"
-              className="input h-24"
+              className="input h-24 hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
               placeholder="Briefly describe your activity"
               value={formData.description}
               onChange={handleChange}
@@ -279,11 +297,11 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label" htmlFor="location">Location</label>
+            <label className="label font-medium text-slate-200" htmlFor="location">📍 Location</label>
             <input
               id="location"
               name="location"
-              className="input"
+              className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
               placeholder="e.g., Central Park, New York"
               value={formData.location}
               onChange={handleChange}
@@ -294,12 +312,12 @@ export default function Create() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label" htmlFor="date">Date</label>
+              <label className="label font-medium text-slate-200" htmlFor="date">📅 Date</label>
               <input
                 type="date"
                 id="date"
                 name="date"
-                className="input"
+                className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
                 value={formData.date}
                 onChange={handleChange}
                 required
@@ -307,12 +325,12 @@ export default function Create() {
               />
             </div>
             <div>
-              <label className="label" htmlFor="time">Time</label>
+              <label className="label font-medium text-slate-200" htmlFor="time">⏰ Time</label>
               <input
                 type="time"
                 id="time"
                 name="time"
-                className="input"
+                className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
                 value={formData.time}
                 onChange={handleChange}
                 required
@@ -320,31 +338,8 @@ export default function Create() {
               />
             </div>
           </div>
-
           <div>
-            <label className="label" htmlFor="category">Category</label>
-            <select
-              id="category"
-              name="category"
-              className="input bg-gray-800 text-white"
-              value={formData.category}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            >
-              <option value="">Select a category</option>
-              <option value="sports">Sports</option>
-              <option value="social">Social</option>
-              <option value="education">Education</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="food">Food & Dining</option>
-              <option value="outdoor">Outdoor</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div>
-            <div className="label">Tags</div>
+            <div className="label font-medium text-slate-200">🏷️ Tags</div>
             <TagSelector 
               value={formData.tags} 
               onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
@@ -353,7 +348,7 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label" htmlFor="maxParticipants">จำนวนผู้เข้าร่วมสูงสุด</label>
+            <label className="label font-medium text-slate-200" htmlFor="maxParticipants">👥 Max Participants</label>
             <input
               type="number"
               id="maxParticipants"
@@ -373,7 +368,7 @@ export default function Create() {
           </div>
 
           <button 
-            className="btn-primary w-full py-2 text-base font-semibold flex items-center justify-center gap-2" 
+            className="w-full py-3 text-base font-semibold text-white bg-amber-500 hover:bg-amber-400 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
             type="submit"
             disabled={isLoading}
           >
@@ -387,18 +382,8 @@ export default function Create() {
             )}
           </button>
         </form>
-
-        {/* Tips Section */}
-        <aside className="card p-5 text-sm">
-          <h3 className="text-lg font-bold text-white mb-2">💡 Activity Creation Tips</h3>
-          <ul className="list-disc ml-5 space-y-1 text-gray-300">
-            <li>Choose a clear and friendly activity name</li>
-            <li>Add 1-3 relevant tags (#exercise #outdoors #social)</li>
-            <li>Write a concise and helpful description</li>
-            <li>Specify location, date, and time clearly</li>
-            <li>Invite friends and share your activity</li>
-          </ul>
-        </aside>
+       
+        </div>
       </div>
     </section>
   );

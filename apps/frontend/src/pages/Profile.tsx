@@ -37,6 +37,11 @@ export default function Profile() {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const bioRef = useRef<HTMLTextAreaElement | null>(null);
 
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Load initial data
   useEffect(() => {
     if (data || user) {
@@ -61,12 +66,12 @@ export default function Profile() {
   const onSelectFile = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast('Please select an image file');
+      toast('Please select an image file', 'error');
       return;
     }
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > AVATAR_MAX_MB) {
-      toast(`File too large (max ${AVATAR_MAX_MB} MB)`);
+      toast(`File too large (max ${AVATAR_MAX_MB} MB)`, 'error');
       return;
     }
 
@@ -118,7 +123,7 @@ export default function Profile() {
       setAvatar(data.avatarUrl);
       setUploading(false);
       setProgress(100);
-      toast('Profile picture updated');
+      toast('รูปโปรไฟล์อัปเดตสำเร็จ! ✨', 'success');
 
       // Revoke local preview blob after a short delay so the DOM updates to the server URL
       if (localUrl) {
@@ -140,7 +145,7 @@ export default function Profile() {
       setUploading(false);
       setProgress(0);
       console.error('Upload error:', error);
-      toast('Failed to upload image. Please try again.');
+      toast('Failed to upload image. Please try again.', 'error');
     }
   };
 
@@ -171,26 +176,26 @@ export default function Profile() {
 
       setAvatar('');
       await updateProfile({ name, bio, avatar: '' });
-      toast('Profile picture removed');
+      toast('รูปโปรไฟล์ถูกลบแล้ว', 'success');
     } catch (error) {
       console.error('Remove avatar error:', error);
-      toast('Failed to remove picture');
+      toast('Failed to remove picture', 'error');
     }
   };
 
   const save = async () => {
     try {
       if (bio.length > BIO_MAX) {
-        toast(`Bio exceeds ${BIO_MAX} characters`);
+        toast(`Bio exceeds ${BIO_MAX} characters`, 'error');
         return;
       }
       await updateProfile({ name, bio, avatar });
-      toast('Profile updated');
+      toast('โปรไฟล์อัปเดตสำเร็จ! ✨', 'success');
       setIsEditingName(false);
       setIsEditingBio(false);
     } catch (error) {
       console.error('Update profile error:', error);
-      toast('Failed to update profile');
+      toast('Failed to update profile', 'error');
     }
   };
 
@@ -213,143 +218,165 @@ export default function Profile() {
   const firstChar = (name || user.email || '?').charAt(0).toUpperCase();
 
   return (
-    <section className="container-app py-10">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">Profile</h2>
-        <p className="opacity-60 text-sm">Update your public profile and preferences</p>
-      </div>
+    <section className="min-h-screen py-8">
+      <div className="container-app">
+        {/* Header with Icon */}
+        <header className="mb-6 text-center">
+          <div className="inline-block p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-purple-500/30">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+            Profile Settings
+          </h2>
+          <p className="text-slate-400">Manage your account information and preferences</p>
+        </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[320px,minmax(0,640px)] items-start">
-        <aside className="card p-4 space-y-4 self-start">
-          <h3 className="text-lg font-semibold">Profile Picture</h3>
-          <div className="flex items-center gap-4">
-            <div className="relative h-20 w-20 shrink-0">
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt="Avatar"
-                  className="h-20 w-20 rounded-full object-cover ring-2 ring-white/20"
-                />
-              ) : (
-                <div className="grid h-20 w-20 place-items-center rounded-full bg-white/10 text-2xl font-semibold ring-2 ring-white/20">
-                  {firstChar}
-                </div>
-              )}
-              {uploading && (
-                <div className="absolute -bottom-2 left-1/2 w-24 -translate-x-1/2 rounded-full bg-white/10">
-                  <div
-                    className="h-1 rounded-full bg-gradient-to-r from-amber-400 to-pink-500"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              )}
-            </div>
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[320px,minmax(0,640px)] items-start justify-center">
+        {/* Profile Picture Card */}
+        <aside className="card p-5 space-y-4 self-start border border-white/10 hover:border-white/20 transition-all duration-300">
+            <h3 className="text-lg font-semibold text-amber-400 font-['Poppins']">Profile Picture</h3>
+            
+            <div className="flex items-center gap-4">
+              <div className="relative h-24 w-24 shrink-0">
+                {avatar ? (
+                  <>
+                    <img
+                      src={avatar}
+                      alt="Avatar"
+                      className="h-24 w-24 rounded-full object-cover ring-2 ring-amber-400/40 hover:ring-amber-400/60 transition-all duration-300 contrast-110 brightness-105"
+                    />
+                  </>
+                ) : (
+                  <div className="grid h-24 w-24 place-items-center rounded-full bg-gradient-to-br from-slate-700 to-slate-800 text-3xl font-semibold ring-2 ring-amber-400/40">
+                    {firstChar}
+                  </div>
+                )}
+                {uploading && (
+                  <div className="absolute -bottom-2 left-1/2 w-24 -translate-x-1/2 rounded-full bg-white/10">
+                    <div
+                      className="h-1 rounded-full bg-gradient-to-r from-amber-400 to-pink-500"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                )}
+              </div>
 
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={openFilePicker}
-                className="rounded-full px-4 py-2 font-semibold text-white shadow-lg shadow-amber-500/10 bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-400 hover:to-pink-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition disabled:opacity-60"
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading…' : 'Upload Picture'}
-              </button>
-              {avatar && (
+              <div className="flex flex-col gap-2">
                 <button
-                  onClick={removeAvatar}
-                  className="rounded-full px-4 py-2 font-semibold border border-white/15 bg-white/5 hover:bg-white/10"
+                  onClick={openFilePicker}
+                  className="rounded-lg px-5 py-2.5 font-semibold text-white bg-amber-500 hover:bg-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition-all duration-300 disabled:opacity-60"
+                  disabled={uploading}
                 >
-                  Remove
+                  {uploading ? '⏳ กำลังอัปโหลด…' : '📸 Upload'}
                 </button>
-              )}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                hidden
-                onChange={(e) => onSelectFile(e.target.files?.[0] || null)}
-              />
-              <p className="text-xs text-white/60">Recommended {AVATAR_MAX_MB}MB</p>
+                {avatar && (
+                  <button
+                    onClick={removeAvatar}
+                    className="rounded-lg px-5 py-2.5 font-semibold border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 hover:border-red-400/60 text-red-300 transition-all duration-300"
+                  >
+                    🗑️ Remove
+                  </button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => onSelectFile(e.target.files?.[0] || null)}
+                />
+                <p className="text-xs text-white/60">แนะนำไม่เกิน {AVATAR_MAX_MB}MB</p>
+              </div>
             </div>
-          </div>
 
-          <div className="border-t border-white/10 pt-4 space-y-2">
-            <div className="text-base font-medium">Account</div>
-            <div className="text-sm opacity-80">{name}</div>
-            <div className="text-sm opacity-80">{user.email}</div>
-          </div>
+            <div className="border-t border-white/10 pt-4 space-y-3">
+              <div className="text-base font-semibold text-amber-400">🔐 Your account</div>
+              <div className="space-y-1.5">
+                <div className="text-sm font-medium text-slate-300">👤 {name}</div>
+                <div className="text-sm text-slate-400">📧 {user.email}</div>
+              </div>
+            </div>
         </aside>
 
-        <main className="card p-5 space-y-5 self-start w-full max-w-2xl">
-          <h3 className="text-lg font-semibold">Your Details</h3>
+        {/* Main Details Card */}
+        <main className="card p-6 space-y-6 self-start w-full max-w-2xl border border-white/10 hover:border-white/20 transition-all duration-300">
+            <h3 className="text-xl font-semibold text-amber-400 font-['Poppins']">✏️ Your Information</h3>
 
-          <div>
-            <label className="label" htmlFor="name">Name</label>
-            <div className="relative">
-              <input
-                id="name"
-                ref={usernameRef}
-                className={`input pr-10 ${isEditingName ? 'ring-2 ring-amber-300/40' : ''}`}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                readOnly={!isEditingName}
-              />
-              <button
-                type="button"
-                aria-label="Edit name"
-                aria-pressed={isEditingName}
-                onClick={() => {
-                  setIsEditingName((v: boolean) => !v);
-                  setTimeout(() => usernameRef.current?.focus(), 0);
-                }}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 ring-1 ring-white/15 ${
-                  isEditingName ? 'bg-amber-500/80' : 'bg-white/10 hover:bg-white/20'
-                }`}
+            <div className="space-y-2">
+              <label className="label font-medium text-slate-200" htmlFor="name">👤 ชื่อผู้ใช้</label>
+              <div className="relative">
+                <input
+                  id="name"
+                  ref={usernameRef}
+                  className={`input pr-12 transition-all duration-300 ${isEditingName ? 'ring-2 ring-amber-400/50 bg-slate-700/50' : 'hover:bg-slate-700/30'}`}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  readOnly={!isEditingName}
+                />
+                <button
+                  type="button"
+                  aria-label="Edit name"
+                  aria-pressed={isEditingName}
+                  onClick={() => {
+                    setIsEditingName((v: boolean) => !v);
+                    setTimeout(() => usernameRef.current?.focus(), 0);
+                  }}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 transition-all duration-300 ${
+                    isEditingName ? 'bg-amber-500 scale-105' : 'bg-white/10 hover:bg-white/20 hover:scale-105'
+                  }`}
+                >
+                  <Edit3 className="h-4 w-4 text-white" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="label font-medium text-slate-200" htmlFor="email">📧 อีเมล</label>
+              <input id="email" className="input bg-slate-700/30 cursor-not-allowed" value={user?.email || ''} readOnly />
+            </div>
+
+            <div className="space-y-2">
+              <label className="label font-medium text-slate-200" htmlFor="bio">📝 เกี่ยวกับคุณ</label>
+              <div className="relative">
+                <textarea
+                  id="bio"
+                  ref={bioRef}
+                  className={`input h-32 resize-y pr-12 transition-all duration-300 ${isEditingBio ? 'ring-2 ring-amber-400/50 bg-slate-700/50' : 'hover:bg-slate-700/30'}`}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
+                  readOnly={!isEditingBio}
+                  placeholder="บอกอะไรเกี่ยวกับตัวคุณสักหน่อย..."
+                />
+                <button
+                  type="button"
+                  aria-label="Edit bio"
+                  aria-pressed={isEditingBio}
+                  onClick={() => {
+                    setIsEditingBio((v: boolean) => !v);
+                    setTimeout(() => bioRef.current?.focus(), 0);
+                  }}
+                  className={`absolute right-2 top-2 rounded-lg p-2 transition-all duration-300 ${
+                    isEditingBio ? 'bg-amber-500 scale-105' : 'bg-white/10 hover:bg-white/20 hover:scale-105'
+                  }`}
+                >
+                  <Edit3 className="h-4 w-4 text-white" />
+                </button>
+              </div>
+              <div className="text-right text-xs text-slate-400 font-medium">{bio.length}/{BIO_MAX} ตัวอักษร</div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10">
+              <button 
+                className="px-8 py-3 font-semibold text-white rounded-lg bg-amber-500 hover:bg-amber-400 transition-all duration-300 disabled:opacity-60" 
+                onClick={save} 
+                disabled={uploading}
               >
-                <Edit3 className="h-4 w-4 text-white" />
+                Confirm changes
               </button>
             </div>
-          </div>
-
-          <div>
-            <label className="label" htmlFor="email">Email</label>
-            <input id="email" className="input" value={user?.email || ''} readOnly />
-          </div>
-
-          <div>
-            <label className="label" htmlFor="bio">Bio</label>
-            <div className="relative">
-              <textarea
-                id="bio"
-                ref={bioRef}
-                className={`input h-28 resize-y pr-10 ${isEditingBio ? 'ring-2 ring-amber-300/40' : ''}`}
-                value={bio}
-                onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
-                readOnly={!isEditingBio}
-              />
-              <button
-                type="button"
-                aria-label="Edit bio"
-                aria-pressed={isEditingBio}
-                onClick={() => {
-                  setIsEditingBio((v: boolean) => !v);
-                  setTimeout(() => bioRef.current?.focus(), 0);
-                }}
-                className={`absolute right-2 top-2 rounded-full p-1 ring-1 ring-white/15 ${
-                  isEditingBio ? 'bg-amber-500/80' : 'bg-white/10 hover:bg-white/20'
-                }`}
-              >
-                <Edit3 className="h-4 w-4 text-white" />
-              </button>
-            </div>
-            <div className="text-right text-xs opacity-70">{bio.length}/{BIO_MAX}</div>
-          </div>
-
-          <div className="pt-2">
-            <button className="btn-primary w-auto" onClick={save} disabled={uploading}>
-              Save changes
-            </button>
-          </div>
         </main>
+        </div>
       </div>
     </section>
   );

@@ -1,75 +1,271 @@
 // Landing page (Hero) with CTAs
+import { useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { Users, Calendar, Star, ArrowRight, Compass, MessageCircle, MapPin, Zap, Shield, Heart, TrendingUp } from "lucide-react";
 
 export default function Home() {
   const { user, loading } = useAuth();
+
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   // Redirect authenticated users to explore page
   if (!loading && user) {
     return <Navigate to="/explore" replace />;
   }
+
   return (
-    <section className="relative overflow-hidden bg-transparent">
-      <div className="pointer-events-none absolute -top-32 -left-24 h-96 w-96 rounded-full bg-gradient-to-br from-pink-500/20 to-amber-400/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 blur-3xl" />
-
-      <div className="container-app py-16 md:py-24 text-white">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6 max-w-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm backdrop-blur">
-              🎉 เจอเพื่อนไปทำกิจกรรมได้ง่ายขึ้น • จัดกลุ่ม • นัดเวลา • แชต
-            </div>
-
-            <h1 className="text-4xl md:text-5xl font-extrabold leading-tight tracking-tight">
-              ไปคนเดียวไม่ต้องเหงา <br />
-              <span className="brand-gradient">
-                เพราะเราจะหาคนไปด้วย
+    <div className="relative -m-4 sm:-m-6 min-h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Hero Section */}
+      <section className="relative z-10 container mx-auto px-4 sm:px-6 py-12 md:py-20">
+        <div className="max-w-5xl mx-auto space-y-12">
+          {/* Top Content - Centered */}
+          <div className="text-center space-y-6 max-w-3xl mx-auto">
+            {/* Main Heading */}
+            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight font-['Poppins']">
+              <span className="text-white">
+                อยู่คนเดียวไม่ต้องเหงา
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-300 bg-clip-text text-transparent">
+                เพราะพวกเราจะไปด้วยกัน
               </span>
             </h1>
 
-            <p className="text-white/80">
-              หาเพื่อนร่วมกิจกรรม, จัดกลุ่ม, นัดเวลา, คุยกันในแชต — ครบจบในที่เดียว
+            {/* Subheading */}
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-light max-w-2xl mx-auto">
+              หาเพื่อนร่วมกิจกรรม จัดกลุ่ม นัดเวลา คุยกันในแชต - ครบจบในที่เดียว
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap justify-center gap-4 pt-4">
               <Link
                 to="/auth/signup"
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold shadow-lg shadow-amber-500/10
-                           bg-gradient-to-r from-amber-500 to-pink-500 hover:from-amber-400 hover:to-pink-400
-                           focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white
+                           bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500
+                           hover:from-purple-500/90 hover:via-pink-500/90 hover:to-cyan-500/90
+                           shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40
+                           transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 active:scale-95
+                           animate-pulse-subtle"
               >
                 Get Started
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500 ease-out" />
               </Link>
               <Link
                 to="/explore"
-                className="inline-flex items-center justify-center rounded-xl px-5 py-3 font-semibold
-                           border border-white/15 bg-white/5 hover:bg-white/10
-                           focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 transition"
+                className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white
+                           border-2 border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50
+                           backdrop-blur-sm transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 active:scale-95"
               >
-                Explore
+                Explore Events
+                <Compass className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700 ease-out" />
               </Link>
             </div>
-
-            <div className="flex items-center gap-6 pt-2 text-sm text-white/70">
-              <span>👥 500+ ผู้ใช้</span>
-              <span>🗓️ 100 กิจกรรม</span>
-              <span>⭐ 4.8/5 ความพึงพอใจ</span>
-            </div>
           </div>
 
-          <div className="relative md:order-last order-first">
-            <div className="rounded-2xl bg-white/5 p-2 ring-1 ring-white/10 shadow-xl transition hover:scale-[1.01]">
+          {/* Center Image */}
+          <div className="relative group max-w-5xl mx-auto">
+            {/* Image Container */}
+            <div className="relative transform transition-all duration-700 ease-out 
+                            group-hover:scale-[1.03] group-hover:-translate-y-3">
               <img
                 src="https://i.pinimg.com/1200x/54/57/24/545724f929914db48a3d1964f983f755.jpg"
-                alt="Friends doing activities together"
-                className="h-auto w-full rounded-xl object-cover aspect-[16/10] ring-1 ring-white/10"
+                alt="Friends enjoying campus activities together"
+                className="w-full h-auto rounded-2xl object-cover aspect-[16/9] shadow-2xl
+                           contrast-110 brightness-105 saturate-110
+                           group-hover:contrast-115 group-hover:brightness-110
+                           transition-all duration-700 ease-out"
               />
             </div>
-            <div className="absolute -bottom-4 -right-4 h-24 w-24 rounded-xl bg-gradient-to-br from-blue-500/30 to-indigo-500/30 blur-2xl" />
+          </div>
+
+          {/* Stats - Below Image */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto pt-8">
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 
+                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
+                              border border-white/10 backdrop-blur-sm hover:border-blue-500/40 
+                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
+                <Users className="w-6 h-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <div className="text-3xl font-bold text-white mb-1">150+</div>
+                <div className="text-sm text-slate-400 font-medium">ผู้ใช้งาน</div>
+              </div>
+            </div>
+
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 
+                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
+                              border border-white/10 backdrop-blur-sm hover:border-amber-500/40 
+                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
+                <Calendar className="w-6 h-6 text-amber-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
+                <div className="text-3xl font-bold text-white mb-1">50+</div>
+                <div className="text-sm text-slate-400 font-medium">กิจกรรม</div>
+              </div>
+            </div>
+
+            <div className="group relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 
+                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
+                              border border-white/10 backdrop-blur-sm hover:border-yellow-500/40 
+                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
+                <Star className="w-6 h-6 text-yellow-400 mb-2 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
+                <div className="text-3xl font-bold text-white mb-1">4.8/5</div>
+                <div className="text-sm text-slate-400 font-medium">คะแนนรีวิว</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features Section */}
+          <div className="pt-20 pb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4 font-['Poppins']">
+              ทำไมต้องเลือก WeGo?
+            </h2>
+            <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
+              ทุกสิ่งที่คุณต้องการเพื่อเชื่อมต่อ สำรวจ และเติบโตในมหาวิทยาลัย
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Feature 1 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
+                                hover:border-blue-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center mb-4
+                                  group-hover:scale-110 transition-transform duration-300">
+                    <Users className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">หาเพื่อนใหม่</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    เชื่อมต่อกับเพื่อนที่มีความสนใจและแชร์ความหลงใหลเดียวกันกับคุณ
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
+                                hover:border-amber-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center mb-4
+                                  group-hover:scale-110 transition-transform duration-300">
+                    <Calendar className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">จัดตารางง่าย</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    วางแผนกิจกรรมและอีเวนต์ด้วยระบบจัดตารางอัจฉริยะที่เหมาะกับทุกคน
+                  </p>
+                </div>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="group relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
+                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
+                                hover:border-purple-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4
+                                  group-hover:scale-110 transition-transform duration-300">
+                    <MessageCircle className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">เชื่อมต่อตลอดเวลา</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    แชทกับเพื่อนและสมาชิกกลุ่มแบบเรียลไทม์ ทุกที่ทุกเวลา
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* How It Works Section */}
+          <div className="pt-12 pb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4 font-['Poppins']">
+              วิธีการใช้งาน
+            </h2>
+            <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
+              เริ่มต้นได้ง่ายๆ ในเพียง 3 ขั้นตอน
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              {/* Step 1 */}
+              <div className="relative text-center group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4
+                                shadow-lg shadow-purple-500/30 group-hover:shadow-2xl group-hover:shadow-purple-500/50 
+                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                  <span className="text-2xl font-bold text-white">1</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">สมัครฟรี</h3>
+                <p className="text-slate-400 text-sm">
+                  สร้างบัญชีของคุณได้ในไม่กี่วินาทีด้วยอีเมล
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative text-center group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-cyan-500 flex items-center justify-center mx-auto mb-4
+                                shadow-lg shadow-pink-500/30 group-hover:shadow-2xl group-hover:shadow-pink-500/50 
+                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                  <span className="text-2xl font-bold text-white">2</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">สำรวจกิจกรรม</h3>
+                <p className="text-slate-400 text-sm">
+                  เลือกดูอีเวนต์และหากลุ่มที่ตรงกับความสนใจ
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative text-center group">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center mx-auto mb-4
+                                shadow-lg shadow-cyan-500/30 group-hover:shadow-2xl group-hover:shadow-cyan-500/50 
+                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
+                  <span className="text-2xl font-bold text-white">3</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">เข้าร่วมและเชื่อมต่อ</h3>
+                <p className="text-slate-400 text-sm">
+                  พบเพื่อนใหม่และเริ่มผจญภัยร่วมกันได้ทันที
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="pt-12 pb-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+              <div className="text-center group cursor-default">
+                <div className="flex justify-center mb-2">
+                  <Shield className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <p className="text-sm text-slate-400 font-medium">ปลอดภัย</p>
+              </div>
+              
+              <div className="text-center group cursor-default">
+                <div className="flex justify-center mb-2">
+                  <Zap className="w-8 h-8 text-yellow-400 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <p className="text-sm text-slate-400 font-medium">รวดเร็ว</p>
+              </div>
+              
+              <div className="text-center group cursor-default">
+                <div className="flex justify-center mb-2">
+                  <Heart className="w-8 h-8 text-pink-400 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <p className="text-sm text-slate-400 font-medium">ใส่ใจ</p>
+              </div>
+              
+              <div className="text-center group cursor-default">
+                <div className="flex justify-center mb-2">
+                  <TrendingUp className="w-8 h-8 text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <p className="text-sm text-slate-400 font-medium">เติบโตต่อเนื่อง</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 // Sign in page
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SignInSchema } from '../../lib/validators';
 import { toast } from '../../components/Toasts';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -16,18 +16,23 @@ export default function SignIn() {
   const from = (loc.state as any)?.from?.pathname || '/';
 
   const { signIn } = useAuth();
+
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
 
     const parsed = SignInSchema.safeParse({ email, password: pass });
-    if (!parsed.success) return toast(parsed.error.errors[0].message);
+    if (!parsed.success) return toast(parsed.error.errors[0].message, 'error');
 
     try {
       setLoading(true);
       const result = await signIn(email.trim(), pass);
-      toast('เข้าสู่ระบบสำเร็จ');
+      toast('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับมา 🎉', 'success');
       
       // Redirect admins to dashboard, others to intended location or explore
       if (result && result.role === 'admin') {
@@ -36,24 +41,39 @@ export default function SignIn() {
         nav(from === '/' ? '/explore' : from, { replace: true });
       }
     } catch (err: any) {
-      toast(err?.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      toast(err?.message || 'เข้าสู่ระบบไม่สำเร็จ', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section className="container-app py-10">
-      <div className="card p-6 max-w-md mx-auto">
-        <h3 className="text-2xl font-semibold mb-4">Sign in</h3>
+    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4">
+      <div className="w-full max-w-md">
+        {/* Card with Header Inside */}
+        <div className="card p-8 border border-amber-500/20 shadow-2xl shadow-amber-500/10">
+          {/* Header */}
+          <header className="text-center mb-8">
+            <div className="inline-block p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-2xl mb-4 shadow-lg shadow-amber-500/30">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+              Sign In
+            </h2>
+            <p className="text-slate-400">Welcome back to WeGo</p>
+          </header>
 
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="label" htmlFor="email">Email</label>
+          <form onSubmit={submit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
+              <span className="text-amber-400">📧</span> Email
+            </label>
             <input
               id="email"
-              className="input"
-              placeholder="Email"
+              className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
+              placeholder="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -63,13 +83,15 @@ export default function SignIn() {
           </div>
 
           {/* Password */}
-          <div>
-            <label className="label" htmlFor="password">Password</label>
+          <div className="space-y-2">
+            <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="password">
+              <span className="text-amber-400">🔒</span> Password
+            </label>
             <div className="relative">
               <input
                 id="password"
-                className="input pr-10"
-                placeholder="Password"
+                className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 pr-12 transition-all duration-300"
+                placeholder="password"
                 type={showPw ? 'text' : 'password'}
                 value={pass}
                 onChange={(e) => setPass(e.target.value)}
@@ -79,7 +101,7 @@ export default function SignIn() {
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
-                className="absolute inset-y-0 right-0 px-3 flex items-center text-white/70 hover:text-white"
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-amber-400 transition-all duration-300"
                 aria-label={showPw ? 'Hide password' : 'Show password'}
                 title={showPw ? 'Hide password' : 'Show password'}
                 disabled={loading}
@@ -102,15 +124,40 @@ export default function SignIn() {
           </div>
 
           {/* Submit */}
-          <button className="btn-primary w-full" type="submit" disabled={loading}>
-            {loading ? 'Signing in…' : 'Sign in'}
+          <button 
+            className="w-full mt-6 px-8 py-3.5 font-bold text-white rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:transform-none disabled:shadow-none" 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Signing in...
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
 
-          <div className="text-sm opacity-80 text-center">
-            Create account ? <Link to="/auth/signup" className="underline">Sign up</Link> ·{' '}
-            <Link to="/auth/reset-password" className="underline">Reset password</Link>
+          <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-700/50">
+            <p className="text-slate-300">
+              Don't have an account?{' '}
+              <Link to="/auth/signup" className="text-amber-400 font-bold hover:text-amber-300 transition-colors duration-300">
+                Sign up
+              </Link>
+            </p>
+            <p>
+              <Link to="/auth/forgot-password" className="text-slate-400 hover:text-amber-400 transition-colors duration-300 inline-flex items-center gap-1">
+                <span>🔑</span> Forgot password?
+              </Link>
+            </p>
           </div>
-        </form>
+            </form>
+        </div>
+      
       </div>
     </section>
   );

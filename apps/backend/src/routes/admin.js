@@ -11,10 +11,15 @@ const router = express.Router();
 
 // Middleware to check if user is admin
 const isAdmin = (req, res, next) => {
+  console.log('Checking admin access for user:', req.user?.email, 'role:', req.user?.role);
   if (req.user && req.user.role === 'admin') {
     next();
   } else {
-    return res.status(403).json({ message: 'Access denied. Admin only.' });
+    return res.status(403).json({ 
+      message: 'Access denied. Admin only.',
+      error: 'Forbidden',
+      userRole: req.user?.role
+    });
   }
 };
 
@@ -51,7 +56,7 @@ router.get('/users/stats', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const users = await User.find()
-      .select('email username role isBlocked createdAt')
+      .select('email username role isBlocked isOnline lastActive createdAt')
       .sort({ createdAt: -1 });
 
     // Fetch profiles for all users
@@ -83,19 +88,35 @@ router.put('/users/:id/block', async (req, res) => {
     const { id } = req.params;
     const { isBlocked } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { isBlocked },
-      { new: true }
-    ).select('email username role isBlocked');
+    // ห้าม Admin block ตัวเอง
+    if (id === req.user._id.toString()) {
+      return res.status(400).json({ 
+        message: 'Cannot block yourself',
+        error: 'You cannot block your own account'
+      });
+    }
 
+    // หา user ที่จะ block
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // อัพเดทสถานะ block
+    user.isBlocked = isBlocked;
+    await user.save();
+
+    console.log(`User ${user.email} ${isBlocked ? 'blocked' : 'unblocked'} by admin ${req.user.email}`);
+
     res.status(200).json({
       message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
-      user
+      user: {
+        _id: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        isBlocked: user.isBlocked
+      }
     });
   } catch (error) {
     console.error('Error blocking user:', error);
@@ -178,7 +199,8 @@ router.get('/activities/stats', async (req, res) => {
 router.get('/activities', async (req, res) => {
   try {
     const activities = await Activity.find()
-      .populate('creator', 'email username')
+      .populate('createdBy', 'email username')
+      .populate('participants.user', 'email username')
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -234,15 +256,36 @@ router.get('/groups/stats', async (req, res) => {
 // Get all groups
 router.get('/groups', async (req, res) => {
   try {
+    console.log('Fetching groups...');
+    
+    const groupsCount = await Group.countDocuments();
+    console.log('Total groups:', groupsCount);
+    
+    if (groupsCount === 0) {
+      return res.status(200).json({ groups: [] });
+    }
+    
     const groups = await Group.find()
-      .populate('creator', 'email username')
-      .sort({ createdAt: -1 });
+      .populate({
+        path: 'createdBy',
+        select: 'email username',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'members.user',
+        select: 'email username',
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 })
+      .lean();
 
+    console.log('Groups fetched successfully:', groups.length);
     res.status(200).json({
       groups
     });
   } catch (error) {
     console.error('Error getting groups:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -291,15 +334,31 @@ router.get('/events/stats', async (req, res) => {
 // Get all events
 router.get('/events', async (req, res) => {
   try {
+    console.log('Fetching events...');
+    
+    const eventsCount = await Event.countDocuments();
+    console.log('Total events:', eventsCount);
+    
+    if (eventsCount === 0) {
+      return res.status(200).json({ events: [] });
+    }
+    
     const events = await Event.find()
-      .populate('activityId', 'title')
-      .sort({ createdAt: -1 });
+      .populate({
+        path: 'createdBy',
+        select: 'email username',
+        options: { strictPopulate: false }
+      })
+      .sort({ createdAt: -1 })
+      .lean();
 
+    console.log('Events fetched successfully:', events.length);
     res.status(200).json({
       events
     });
   } catch (error) {
     console.error('Error getting events:', error);
+    console.error('Error details:', error.message);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -348,16 +407,44 @@ router.get('/chats/stats', async (req, res) => {
 // Get all chats
 router.get('/chats', async (req, res) => {
   try {
+    console.log('Fetching chats...');
+    
+    // Try to get chats without populate first
+    const chatsCount = await Chat.countDocuments();
+    console.log('Total chats:', chatsCount);
+    
+    if (chatsCount === 0) {
+      return res.status(200).json({ chats: [] });
+    }
+    
+    // Try with selective populate
     const chats = await Chat.find()
-      .populate('participants', 'email username')
-      .populate('activity', 'title')
-      .sort({ updatedAt: -1 });
+      .populate({
+        path: 'participants.user',
+        select: 'email username',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'groupInfo.relatedActivity',
+        select: 'title',
+        options: { strictPopulate: false }
+      })
+      .populate({
+        path: 'createdBy',
+        select: 'email username',
+        options: { strictPopulate: false }
+      })
+      .sort({ updatedAt: -1 })
+      .lean();
 
+    console.log('Chats fetched successfully:', chats.length);
     res.status(200).json({
       chats
     });
   } catch (error) {
     console.error('Error getting chats:', error);
+    console.error('Error details:', error.message);
+    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

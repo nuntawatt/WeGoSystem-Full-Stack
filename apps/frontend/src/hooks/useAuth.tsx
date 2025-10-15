@@ -4,6 +4,7 @@ import { api } from '../lib/apiClient';
 interface User {
   _id: string;
   email: string;
+  username?: string;
   role: string;
 }
 
@@ -11,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<User>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username?: string) => Promise<void>;
   logOut: () => void;
 }
 
@@ -48,8 +49,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return user; // Return user object so SignIn can check role
   };
 
-  const signUp = async (email: string, password: string) => {
-    const response = await api.post('/auth/register', { email, password });
+  const signUp = async (email: string, password: string, username?: string) => {
+    const payload: any = { email, password };
+    if (username) {
+      payload.username = username;
+    }
+    const response = await api.post('/auth/register', payload);
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     setUser(user);

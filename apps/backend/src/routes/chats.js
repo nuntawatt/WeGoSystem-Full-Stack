@@ -2,6 +2,7 @@ import express from 'express';
 import Chat from '../models/chat.js';
 import User from '../models/user.js';
 import Activity from '../models/activity.js';
+import Profile from '../models/profile.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -39,7 +40,7 @@ router.post('/direct', async (req, res) => {
     const chat = await Chat.createDirectChat(currentUserId, recipientId);
     
     // Populate user details
-    await chat.populate('participants.user', 'email username');
+  await chat.populate('participants.user', 'email username isOnline');
 
     res.status(200).json({
       message: 'Direct chat created/retrieved successfully',
@@ -111,7 +112,7 @@ router.post('/group', async (req, res) => {
     }
 
     // Populate user details
-    await chat.populate('participants.user', 'email username');
+  await chat.populate('participants.user', 'email username isOnline');
     await chat.populate('groupInfo.relatedActivity', 'title category');
 
     res.status(201).json({
@@ -150,7 +151,7 @@ router.get('/', async (req, res) => {
 
     // Get chats with pagination
     const chats = await Chat.find(query)
-      .populate('participants.user', 'email username')
+      .populate('participants.user', 'email username isOnline')
       .populate('groupInfo.relatedActivity', 'title category')
       .sort({ lastMessageAt: -1 })
       .limit(parseInt(limit))
@@ -210,8 +211,8 @@ router.get('/:id', async (req, res) => {
 
     // Find chat
     const chat = await Chat.findById(id)
-      .populate('participants.user', 'email username')
-      .populate('messages.sender', 'email username')
+      .populate('participants.user', 'email username isOnline')
+      .populate('messages.sender', 'email username isOnline')
       .populate('groupInfo.relatedActivity', 'title category location');
 
     if (!chat) {
@@ -243,7 +244,7 @@ router.get('/:id', async (req, res) => {
     }
 
     // Check if user is a participant in chat (existing rule)
-    const isParticipant = chat.participants.some(p => p.user._id.equals(currentUserId));
+    const isParticipant = chat.participants.some(p => p.user && p.user._id && p.user._id.equals(currentUserId));
     if (!isParticipant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
     }
@@ -261,7 +262,37 @@ router.get('/:id', async (req, res) => {
       .slice(-parseInt(limit) - skip)
       .slice(-parseInt(limit));
 
-    chatObj.messages = messages;
+    // Enrich messages with sender avatar from profiles (bulk fetch)
+    // Safely extract sender IDs so we don't accidentally pass a full object to Mongoose
+    const extractSenderId = (s) => {
+      if (!s) return null;
+      if (typeof s === 'string') return s;
+      if (typeof s === 'object') {
+        if (s._id) return s._id.toString();
+        if (s.userId) return s.userId.toString();
+      }
+      return null;
+    };
+
+    const senderIds = Array.from(new Set(messages.map(m => extractSenderId(m.sender)).filter(Boolean)));
+    let profilesByUser = {};
+    if (senderIds.length > 0) {
+      const profiles = await Profile.find({ userId: { $in: senderIds } });
+      profiles.forEach(p => {
+        if (p && p.userId) profilesByUser[p.userId.toString()] = p;
+      });
+    }
+
+    const enrichedMessages = messages.map(m => {
+      const mm = m.toObject ? m.toObject() : { ...m };
+      const sid = mm.sender && (mm.sender._id ? mm.sender._id.toString() : mm.sender.toString());
+      const prof = sid ? profilesByUser[sid] : null;
+      if (!mm.sender) mm.sender = {};
+      mm.sender.avatar = (prof && prof.avatar) ? prof.avatar : (mm.sender.avatar || '');
+      return mm;
+    });
+
+    chatObj.messages = enrichedMessages;
     chatObj.messagesPagination = {
       total: totalMessages,
       page: parseInt(page),
@@ -331,7 +362,7 @@ router.post('/:id/messages', async (req, res) => {
     }
 
     // Check if user is a participant
-    const isParticipant = chat.participants.some(p => p.user.equals(currentUserId));
+    const isParticipant = chat.participants.some(p => p.user && p.user.equals(currentUserId));
     if (!isParticipant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
     }
@@ -443,7 +474,7 @@ router.delete('/:id/messages/:messageId', async (req, res) => {
     }
 
     // Check if user is the sender or chat admin
-    const participant = chat.participants.find(p => p.user.equals(currentUserId));
+    const participant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     const isAdmin = participant && participant.role === 'admin';
     const isSender = message.sender.equals(currentUserId);
 
@@ -496,7 +527,7 @@ router.put('/:id/read', async (req, res) => {
     }
 
     // Check if user is a participant
-    const isParticipant = chat.participants.some(p => p.user.equals(currentUserId));
+    const isParticipant = chat.participants.some(p => p.user && p.user.equals(currentUserId));
     if (!isParticipant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
     }
@@ -549,7 +580,7 @@ router.post('/:id/participants', async (req, res) => {
     }
 
     // Check if current user is admin
-    const currentParticipant = chat.participants.find(p => p.user.equals(currentUserId));
+    const currentParticipant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     if (!currentParticipant || currentParticipant.role !== 'admin') {
       return res.status(403).json({ message: 'Only admins can add participants' });
     }
@@ -571,6 +602,16 @@ router.post('/:id/participants', async (req, res) => {
       message: 'Participant added successfully',
       chat
     });
+    try {
+      // Notify connected sockets in the chat room about updated participants
+      const io = req.app.get('io');
+      const parts = chat.participants
+        .filter(p => p.user)
+        .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+      io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
+    } catch (emitErr) {
+      console.error('Failed to emit chat:participants after add:', emitErr);
+    }
   } catch (error) {
     if (error.message === 'User is already a participant') {
       return res.status(400).json({ message: error.message });
@@ -602,7 +643,7 @@ router.delete('/:id/participants/:userId', async (req, res) => {
     }
 
     // Check permissions (admin or removing self)
-    const currentParticipant = chat.participants.find(p => p.user.equals(currentUserId));
+    const currentParticipant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     const isAdmin = currentParticipant && currentParticipant.role === 'admin';
     const isSelf = currentUserId.toString() === userId;
 
@@ -638,6 +679,15 @@ router.delete('/:id/participants/:userId', async (req, res) => {
       message: 'Participant removed successfully',
       chat
     });
+    try {
+      const io = req.app.get('io');
+      const parts = chat.participants
+        .filter(p => p.user)
+        .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+      io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
+    } catch (emitErr) {
+      console.error('Failed to emit chat:participants after remove:', emitErr);
+    }
   } catch (error) {
     if (error.message === 'User is not a participant') {
       return res.status(404).json({ message: error.message });
@@ -676,13 +726,13 @@ router.put('/:id/participants/:userId/role', async (req, res) => {
     }
 
     // Check if current user is admin
-    const currentParticipant = chat.participants.find(p => p.user.equals(currentUserId));
+    const currentParticipant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     if (!currentParticipant || currentParticipant.role !== 'admin') {
       return res.status(403).json({ message: 'Only admins can update participant roles' });
     }
 
     // Find target participant
-    const targetParticipant = chat.participants.find(p => p.user.equals(userId));
+    const targetParticipant = chat.participants.find(p => p.user && p.user.equals(userId));
     if (!targetParticipant) {
       return res.status(404).json({ message: 'Participant not found' });
     }
@@ -728,7 +778,7 @@ router.put('/:id/mute', async (req, res) => {
     }
 
     // Find current participant
-    const participant = chat.participants.find(p => p.user.equals(currentUserId));
+    const participant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     if (!participant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
     }
@@ -764,7 +814,7 @@ router.delete('/:id', async (req, res) => {
     }
 
     // Check if user is a participant
-    const participant = chat.participants.find(p => p.user.equals(currentUserId));
+    const participant = chat.participants.find(p => p.user && p.user.equals(currentUserId));
     if (!participant) {
       return res.status(403).json({ message: 'You are not a participant in this chat' });
     }

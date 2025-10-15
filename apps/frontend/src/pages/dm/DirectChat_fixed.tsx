@@ -40,11 +40,6 @@ export default function DirectChat() {
   const [isLoading, setIsLoading] = useState(true);
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  // Reset scroll on mount
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   // Fetch chat info and messages
   useEffect(() => {
     const fetchChat = async () => {
@@ -74,9 +69,8 @@ export default function DirectChat() {
           });
 
           const members = chatData.participants
-            .filter((p: Participant) => p.user) // Add null check
             .filter((p: Participant, index: number, self: Participant[]) => 
-              index === self.findIndex((t) => t.user && t.user._id === p.user._id)
+              index === self.findIndex((t) => t.user._id === p.user._id)
             )
             .map((p: Participant) => {
               const pid = p.user._id;
@@ -112,88 +106,21 @@ export default function DirectChat() {
   useEffect(() => {
     if (!uid || !user) return;
 
-    console.log('🔌 Socket status before connect:', socket.connected);
     if (!socket.connected) socket.connect();
-    console.log('🔌 Socket status after connect:', socket.connected);
 
-    console.log('👤 Joining as user:', user._id);
     socket.emit('user:join', user._id);
-    
-    console.log('💬 Joining chat room:', uid);
     socket.emit('chat:join', uid);
 
     const handleNewMessage = (message: Message) => {
       console.log('📥 Received new message:', message);
-      setMessages((prev) => {
-        console.log('📊 Previous messages:', prev.length);
-        console.log('📊 New message count:', prev.length + 1);
-        return [...prev, message];
-      });
-    };
-
-    const handleMessageSent = (message: Message) => {
-      console.log('✅ Message sent confirmation:', message);
-      // Replace temp message with real message from backend
-      setMessages((prev) => {
-        const withoutTemp = prev.filter(m => !m._id.startsWith('temp-'));
-        return [...withoutTemp, message];
-      });
+      setMessages((prev) => [...prev, message]);
     };
 
     const handleUserStatus = (payload: { userId: string; isOnline: boolean }) => {
       console.log('👤 User status changed:', payload);
-      
-      // Update members list
       setMembersWithProfiles((prev) => {
         if (!prev) return prev;
-        return prev.map((m) => {
-          // Check if this member's user ID matches
-          const memberId = m.user?._id || m._id || m.id;
-          if (memberId === payload.userId) {
-            return {
-              ...m,
-              isOnline: payload.isOnline,
-              user: m.user ? { ...m.user, isOnline: payload.isOnline } : undefined
-            };
-          }
-          return m;
-        });
-      });
-      
-      // Update messages sender status
-      setMessages((prev) => 
-        prev.map((msg) => {
-          if (msg.sender._id === payload.userId) {
-            return {
-              ...msg,
-              sender: { ...msg.sender, isOnline: payload.isOnline }
-            };
-          }
-          return msg;
-        })
-      );
-    };
-
-    const handleParticipantsUpdate = (payload: { participants: any[] }) => {
-      console.log('🔁 Received participants update for chat:', payload.participants.length);
-      // Normalize participants for MemberListDM
-      const members = payload.participants
-        .filter((p) => p && p.id)
-        .map((p) => ({
-          id: String(p.id),
-          name: p.email || p.username || p.id,
-          role: p.role || 'member',
-          avatar: p.avatar || '',
-          username: p.username || p.email?.split('@')[0] || p.id,
-          isOnline: !!p.isOnline
-        }));
-
-      setMembersWithProfiles(members);
-
-      // Also update chatInfo participants if present so header count and other parts stay consistent
-      setChatInfo((prev: any) => {
-        if (!prev) return prev;
-        return { ...prev, participants: payload.participants };
+        return prev.map((m) => (m.id === payload.userId ? { ...m, isOnline: payload.isOnline } : m));
       });
     };
 
@@ -202,20 +129,13 @@ export default function DirectChat() {
     };
 
     socket.on('message:receive', handleNewMessage);
-    socket.on('message:sent', handleMessageSent);
     socket.on('error', handleError);
     socket.on('userStatusChanged', handleUserStatus);
-  socket.on('chat:participants', handleParticipantsUpdate);
-
-    console.log('✅ Socket listeners registered');
 
     return () => {
-      console.log('🔌 Disconnecting from chat:', uid);
       socket.off('message:receive', handleNewMessage);
-      socket.off('message:sent', handleMessageSent);
       socket.off('error', handleError);
       socket.off('userStatusChanged', handleUserStatus);
-      socket.off('chat:participants', handleParticipantsUpdate);
       socket.emit('chat:leave', uid);
     };
   }, [uid, user]);
@@ -223,16 +143,6 @@ export default function DirectChat() {
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  // Compute deduplicated participant count (exclude null users)
-  const participantCount = (() => {
-    if (membersWithProfiles) return membersWithProfiles.length;
-    if (!chatInfo?.participants) return 0;
-    const ids = chatInfo.participants
-      .filter((p: Participant) => p.user)
-      .map((p: Participant) => p.user._id);
-    return Array.from(new Set(ids)).length;
-  })();
 
   const handleSend = () => {
     const content = text.trim();
@@ -242,21 +152,6 @@ export default function DirectChat() {
     }
 
     console.log('📤 Sending message:', { chatId: uid, userId: user._id, content });
-    
-    // Optimistic update - แสดงข้อความทันทีก่อนส่งไป backend
-    const tempMessage = {
-      _id: `temp-${Date.now()}`,
-      sender: {
-        _id: user._id,
-        email: user.email,
-        username: (user as any).username,
-        avatar: (user as any).avatar
-      },
-      content: content,
-      createdAt: new Date().toISOString()
-    };
-    
-    setMessages((prev) => [...prev, tempMessage]);
     setText('');
 
     socket.emit('message:send', {
@@ -309,7 +204,7 @@ export default function DirectChat() {
                 <span className="font-semibold">Back</span>
               </button>
               <div className="flex-1">
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-300 bg-clip-text text-transparent font-['Poppins']">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-amber-300 bg-clip-text text-transparent">
                   {chatInfo.type === 'group' ? `${chatInfo.groupInfo?.name || 'Group Chat'}` : '💬 Direct Message'}
                 </h3>
                 {chatInfo.type === 'group' && (
@@ -317,7 +212,7 @@ export default function DirectChat() {
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
                     </svg>
-                    <span>{participantCount} members</span>
+                    <span>{chatInfo.participants?.length || 0} members</span>
                   </div>
                 )}
               </div>
@@ -326,7 +221,6 @@ export default function DirectChat() {
             {/* Messages Card */}
             <div className="card p-8 h-[calc(100vh-280px)] flex flex-col border border-amber-500/20 bg-gradient-to-b from-slate-800/60 via-slate-850/60 to-slate-900/60 backdrop-blur-lg shadow-2xl">
               <div className="flex-1 overflow-y-auto space-y-5 thin-scrollbar pr-3">
-                {(() => { console.log('🎨 Rendering messages, count:', messages.length); return null; })()}
                 {messages.map((msg, idx) => {
                   const isMine = user && msg.sender._id === user._id;
                   const sender = msg.sender as any;
@@ -367,10 +261,10 @@ export default function DirectChat() {
                             </div>
                           )}
                           <div
-                            className={`px-5 py-3.5 shadow-xl transition-all duration-300 hover:shadow-2xl ${
+                            className={`px-5 py-3.5 rounded-2xl shadow-xl transition-all duration-300 hover:shadow-2xl hover:scale-[1.02] ${
                               isMine
-                                ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white rounded-2xl rounded-br-md'
-                                : 'bg-gradient-to-br from-slate-700/90 to-slate-600/90 text-white rounded-2xl rounded-bl-md backdrop-blur-md border border-white/10 hover:border-white/20'
+                                ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 text-white rounded-br-sm ml-auto'
+                                : 'bg-gradient-to-br from-slate-700/90 to-slate-600/90 text-white rounded-bl-sm backdrop-blur-md border border-white/10 hover:border-white/20'
                             }`}
                           >
                             <div className="break-words text-[15px] leading-relaxed">{msg.content}</div>
@@ -476,9 +370,8 @@ export default function DirectChat() {
                 </h4>
                 <MemberListDM 
                   members={membersWithProfiles || chatInfo.participants
-                    .filter((p: Participant) => p.user) // Add null check
                     .filter((p: Participant, index: number, self: Participant[]) => 
-                      index === self.findIndex((t) => t.user && t.user._id === p.user._id)
+                      index === self.findIndex((t) => t.user._id === p.user._id)
                     )
                     .map((p: Participant) => ({
                       id: p.user._id,

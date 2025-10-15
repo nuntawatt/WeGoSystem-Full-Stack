@@ -7,7 +7,7 @@ import Create from './pages/Create';
 import Profile from './pages/Profile';
 import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
-import ResetPassword from './pages/auth/ResetPassword';
+import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPasswordConfirm from './pages/auth/ResetPasswordConfirm';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Toasts from './components/Toasts';
@@ -21,9 +21,6 @@ import Dashboard from './pages/admin/Dashboard';
 import AdminLayout from './components/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import ActivityManagement from './pages/admin/ActivityManagement';
-import EventManagement from './pages/admin/EventManagement';
-import GroupManagement from './pages/admin/GroupManagement';
-import ChatManagement from './pages/admin/ChatManagement';
 
 export default function App() {
   return (
@@ -41,9 +38,6 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="activities" element={<ActivityManagement />} />
-          <Route path="events" element={<EventManagement />} />
-          <Route path="groups" element={<GroupManagement />} />
-          <Route path="chats" element={<ChatManagement />} />
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
 
@@ -104,7 +98,7 @@ export default function App() {
                   {/* Auth Routes with Navbar */}
                   <Route path="/auth/signin" element={<SignIn />} />
                   <Route path="/auth/signup" element={<SignUp />} />
-                  <Route path="/auth/reset-password" element={<ResetPassword />} />
+                  <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset" element={<ResetPasswordConfirm />} />
 
                   <Route path="*" element={<Navigate to="/" />} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
+import { socket } from '../../lib/socket';
 
 interface User {
   _id: string;
@@ -7,6 +8,8 @@ interface User {
   username?: string;
   role: 'user' | 'admin';
   isBlocked?: boolean;
+  isOnline?: boolean;
+  lastActive?: string;
   createdAt: string;
   profile?: {
     avatar?: string;
@@ -31,8 +34,60 @@ export default function UserManagement() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   useEffect(() => {
     fetchUsers();
+    
+    // Connect socket and authenticate user
+    const initSocket = async () => {
+      if (!socket.connected) {
+        socket.connect();
+      }
+
+      // Get current user ID from localStorage or API
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await api.get('/auth/me');
+          const currentUserId = response.data._id;
+          
+          // Join socket with user ID
+          socket.emit('user:join', currentUserId);
+          console.log('Admin joined socket with ID:', currentUserId);
+        } catch (error) {
+          console.error('Error getting current user:', error);
+        }
+      }
+    };
+
+    initSocket();
+
+    // Listen for user status updates
+    socket.on('userStatusChanged', ({ userId, isOnline }: { userId: string; isOnline: boolean }) => {
+      console.log('User status changed:', userId, isOnline ? '🟢 ONLINE' : '⚫ OFFLINE');
+      
+      // Update users list
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, isOnline } : user
+        )
+      );
+      
+      // Update selected user in modal if it's open
+      setSelectedUser((prevSelected) =>
+        prevSelected && prevSelected._id === userId
+          ? { ...prevSelected, isOnline }
+          : prevSelected
+      );
+    });
+
+    // Cleanup
+    return () => {
+      socket.off('userStatusChanged');
+    };
   }, []);
 
   const fetchUsers = async () => {
@@ -48,38 +103,49 @@ export default function UserManagement() {
   };
 
   const handleBlockUser = async (userId: string, isBlocked: boolean) => {
+    // ตรวจสอบว่าไม่ใช่ตัวเอง
     try {
-      await api.put(`/admin/users/${userId}/block`, { isBlocked: !isBlocked });
-      fetchUsers();
-    } catch (error) {
-      console.error('Error blocking user:', error);
-      alert('Failed to block/unblock user');
-    }
-  };
-
-  const handleChangeRole = async (userId: string, newRole: 'user' | 'admin') => {
-    try {
-      await api.put(`/admin/users/${userId}/role`, { role: newRole });
-      fetchUsers();
-    } catch (error) {
-      console.error('Error changing role:', error);
-      alert('Failed to change user role');
-    }
-  };
-
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
-    try {
-      await api.delete(`/admin/users/${userId}`);
-      fetchUsers();
-      if (selectedUser?._id === userId) {
-        setShowModal(false);
-        setSelectedUser(null);
+      const response = await api.get('/auth/me');
+      const currentUserId = response.data._id;
+      
+      if (userId === currentUserId) {
+        alert('⚠️ Cannot block yourself!\n\nYou cannot block your own admin account.');
+        return;
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      alert('Failed to delete user');
+      console.error('Error checking current user:', error);
+    }
+
+    // Confirmation message
+    const user = users.find(u => u._id === userId);
+    const confirmMessage = isBlocked 
+      ? `Unblock ${user?.email || 'this user'}?\n\nThey will be able to login and use the system again.`
+      : `⚠️ Block ${user?.email || 'this user'}?\n\n⛔ This user will:\n• Cannot login to the system\n• Cannot access any features\n• Be kicked out immediately if online\n\nAre you sure?`;
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await api.put(`/admin/users/${userId}/block`, { isBlocked: !isBlocked });
+      
+      // Update users list
+      await fetchUsers();
+      
+      // Update selected user in modal if it's open
+      if (selectedUser && selectedUser._id === userId) {
+        setSelectedUser({ ...selectedUser, isBlocked: !isBlocked });
+      }
+
+      // Success message
+      const successMsg = !isBlocked 
+        ? `✅ User blocked successfully!\n\n🚫 ${user?.email} cannot login or use the system anymore.`
+        : `✅ User unblocked successfully!\n\n✓ ${user?.email} can now login and use the system.`;
+      
+      alert(successMsg);
+    } catch (error: any) {
+      console.error('Error blocking user:', error);
+      alert(`❌ Failed to ${isBlocked ? 'unblock' : 'block'} user\n\n${error.response?.data?.message || 'Unknown error occurred'}`);
     }
   };
   
@@ -121,7 +187,7 @@ export default function UserManagement() {
       {/* Header with Quick Stats */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">User Management</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 font-['Poppins']">User Management</h1>
           <p className="text-primary-300 text-sm sm:text-base">Manage all users in the system</p>
         </div>
         <button onClick={fetchUsers} className="btn-ghost px-3 py-2 text-sm rounded-lg hover:bg-white/5">
@@ -131,145 +197,186 @@ export default function UserManagement() {
 
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 rounded-xl p-3 sm:p-4">
-          <p className="text-blue-300 text-xs font-medium mb-1">Total Users</p>
-          <p className="text-xl sm:text-2xl font-bold text-white">{filteredUsers.length}</p>
+        <div className="bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent border border-blue-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/40 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i className="fas fa-users text-xl text-blue-300"></i>
+            </div>
+            <p className="text-blue-300 text-xs font-bold uppercase tracking-wider">Total Users</p>
+          </div>
+          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.length}</p>
         </div>
-        <div className="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20 rounded-xl p-3 sm:p-4">
-          <p className="text-red-300 text-xs font-medium mb-1">Admins</p>
-          <p className="text-xl sm:text-2xl font-bold text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
+        <div className="bg-gradient-to-br from-red-500/20 via-red-600/10 to-transparent border border-red-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-500/40 to-red-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i className="fas fa-crown text-xl text-red-300"></i>
+            </div>
+            <p className="text-red-300 text-xs font-bold uppercase tracking-wider">Admins</p>
+          </div>
+          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
         </div>
-        <div className="bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 rounded-xl p-3 sm:p-4">
-          <p className="text-green-300 text-xs font-medium mb-1">Active</p>
-          <p className="text-xl sm:text-2xl font-bold text-white">{filteredUsers.filter((u) => !u.isBlocked).length}</p>
+        <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent border border-emerald-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/40 to-emerald-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i className="fas fa-wifi text-xl text-emerald-300"></i>
+            </div>
+            <p className="text-emerald-300 text-xs font-bold uppercase tracking-wider">Online</p>
+          </div>
+          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.isOnline && !u.isBlocked).length}</p>
         </div>
-        <div className="bg-gradient-to-br from-gray-500/10 to-gray-600/5 border border-gray-500/20 rounded-xl p-3 sm:p-4">
-          <p className="text-gray-300 text-xs font-medium mb-1">Blocked</p>
-          <p className="text-xl sm:text-2xl font-bold text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
+        <div className="bg-gradient-to-br from-gray-500/20 via-gray-600/10 to-transparent border border-gray-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-gray-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i className="fas fa-ban text-xl text-gray-300"></i>
+            </div>
+            <p className="text-gray-300 text-xs font-bold uppercase tracking-wider">Blocked</p>
+          </div>
+          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
         </div>
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-primary-800/50 backdrop-blur-sm border border-primary-700/50 rounded-xl p-4 sm:p-6 shadow-xl">
+      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl p-5 sm:p-6 shadow-2xl">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
-            <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-primary-400"></i>
+          <div className="flex-1 relative group">
+            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-hover:scale-110 transition-transform"></i>
             <input
               type="text"
               placeholder="Search by email or username..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-primary-700/50 text-white rounded-lg pl-10 pr-4 py-2.5 sm:py-3 border border-primary-600/50 focus:border-blue-400 focus:outline-none transition-colors"
+              className="w-full bg-primary-900/50 text-white rounded-xl pl-12 pr-4 py-3.5 border border-primary-600/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 focus:outline-none transition-all placeholder:text-primary-400"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value as any)}
-            className="bg-primary-700/50 text-white rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 border border-primary-600/50 focus:border-blue-400 focus:outline-none cursor-pointer transition-colors"
+            className="bg-primary-900/50 text-white rounded-xl px-4 py-3.5 border border-primary-600/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none cursor-pointer transition-all hover:bg-primary-900/70"
           >
-            <option value="all">All Roles</option>
-            <option value="user">User Only</option>
-            <option value="admin">Admin Only</option>
+            <option value="all">🔍 All Roles</option>
+            <option value="user">👤 User Only</option>
+            <option value="admin">👑 Admin Only</option>
           </select>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-primary-800/50 backdrop-blur-sm border border-primary-700/50 rounded-xl overflow-hidden shadow-xl">
+      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-primary-700/50">
+            <thead className="bg-gradient-to-r from-primary-700/70 to-primary-600/50">
               <tr>
-                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm">User</th>
-                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm">Email</th>
-                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm">Role</th>
-                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm">Status</th>
-                <th className="text-left py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm hidden md:table-cell">Joined</th>
-                <th className="text-right py-3 sm:py-4 px-3 sm:px-6 text-primary-300 font-semibold text-xs sm:text-sm">Actions</th>
+                <th className="text-left py-4 px-6 text-blue-300 font-bold text-sm uppercase tracking-wider">
+                  <i className="fas fa-user mr-2"></i>User
+                </th>
+                <th className="text-left py-4 px-6 text-emerald-300 font-bold text-sm uppercase tracking-wider">
+                  <i className="fas fa-envelope mr-2"></i>Email
+                </th>
+                <th className="text-left py-4 px-6 text-purple-300 font-bold text-sm uppercase tracking-wider">
+                  <i className="fas fa-shield-alt mr-2"></i>Role
+                </th>
+                <th className="text-left py-4 px-6 text-amber-300 font-bold text-sm uppercase tracking-wider">
+                  <i className="fas fa-circle mr-2"></i>Status
+                </th>
+                <th className="text-left py-4 px-6 text-pink-300 font-bold text-sm uppercase tracking-wider hidden md:table-cell">
+                  <i className="fas fa-calendar mr-2"></i>Joined
+                </th>
+                <th className="text-right py-4 px-6 text-gray-300 font-bold text-sm uppercase tracking-wider">
+                  <i className="fas fa-cog mr-2"></i>Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
-                  <tr key={user._id} className="border-t border-primary-700/30 hover:bg-primary-700/30 transition-colors">
-                    <td className="py-3 sm:py-4 px-3 sm:px-6">
-                      <div className="flex items-center gap-2 sm:gap-3">
+                  <tr key={user._id} className="border-t border-primary-600/30 hover:bg-gradient-to-r hover:from-primary-700/40 hover:to-transparent transition-all duration-200 group">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-3">
                         {user.profile?.avatar ? (
                           <img
                             src={user.profile.avatar.startsWith('http') ? user.profile.avatar : `http://localhost:3000${user.profile.avatar}`}
                             alt={user.profile.name || user.email}
-                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover"
+                            className={`w-12 h-12 rounded-xl object-cover ring-2 transition-all ${
+                              user.isBlocked 
+                                ? 'ring-red-500/50 opacity-50 grayscale' 
+                                : 'ring-blue-500/30 group-hover:ring-blue-400/50'
+                            }`}
                           />
                         ) : (
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-400 font-bold text-sm sm:text-base">
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 ring-2 transition-all ${
+                            user.isBlocked
+                              ? 'from-red-500/30 to-gray-500/30 ring-red-500/30 opacity-50'
+                              : 'from-blue-500/30 to-purple-500/30 ring-blue-500/20 group-hover:ring-blue-400/40'
+                          }`}>
+                            <span className={`font-black text-lg ${user.isBlocked ? 'text-red-300' : 'text-blue-300'}`}>
                               {user.email.charAt(0).toUpperCase()}
                             </span>
                           </div>
                         )}
-                        <span className="text-white font-medium text-xs sm:text-sm truncate max-w-[100px] sm:max-w-none">
-                          {user.profile?.name || user.username || 'N/A'}
+                        <div>
+                          <span className={`font-bold text-sm transition-colors ${
+                            user.isBlocked 
+                              ? 'text-red-400 line-through' 
+                              : 'text-white group-hover:text-blue-300'
+                          }`}>
+                            {user.profile?.name || user.username || 'N/A'}
+                          </span>
+                          {user.isBlocked && (
+                            <p className="text-xs text-red-400 mt-0.5">🚫 Blocked - Cannot use system</p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-emerald-300/80 text-sm font-medium">{user.email}</td>
+                    <td className="py-4 px-6">
+                      <span className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider inline-block ${
+                        user.role === 'admin'
+                          ? 'bg-gradient-to-r from-red-500/30 to-pink-500/20 text-red-300 border border-red-500/40'
+                          : 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-blue-300 border border-blue-500/40'
+                      }`}>
+                        {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
+                            user.isBlocked
+                              ? 'bg-gradient-to-r from-gray-500/30 to-gray-600/20 text-gray-300 border border-gray-500/40'
+                              : user.isOnline
+                              ? 'bg-gradient-to-r from-emerald-500/30 to-green-600/20 text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/10'
+                              : 'bg-gradient-to-r from-amber-500/30 to-yellow-600/20 text-amber-300 border border-amber-500/40'
+                          }`}
+                        >
+                          {user.isBlocked ? '🚫 Blocked' : user.isOnline ? '🟢 Online' : '⚫ Offline'}
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-6 text-primary-300 text-xs sm:text-sm truncate max-w-[150px]">{user.email}</td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-6">
-                      <select
-                        value={user.role}
-                        onChange={(e) => handleChangeRole(user._id, e.target.value as any)}
-                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${
-                          user.role === 'admin'
-                            ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                            : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                        } cursor-pointer hover:brightness-110 transition-all`}
-                      >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-6">
-                      <span
-                        className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-semibold ${
-                          user.isBlocked
-                            ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                            : 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        }`}
-                      >
-                        {user.isBlocked ? 'Blocked' : 'Active'}
-                      </span>
-                    </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-6 text-primary-300 text-xs sm:text-sm hidden md:table-cell">
+                    <td className="py-4 px-6 text-pink-300/80 text-sm font-medium hidden md:table-cell">
+                      <i className="fas fa-calendar-alt mr-2"></i>
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="py-3 sm:py-4 px-3 sm:px-6">
-                      <div className="flex items-center justify-end gap-1 sm:gap-2">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewUser(user)}
                           title="View user details"
-                          className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition-all border border-blue-500/30"
+                          className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-300 hover:from-blue-500/40 hover:to-blue-600/30 transition-all border border-blue-500/40 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 group/btn"
                         >
-                          <i className="fas fa-eye sm:mr-1"></i>
-                          <span className="hidden sm:inline">View</span>
+                          <i className="fas fa-eye mr-2 group-hover/btn:scale-110 inline-block transition-transform"></i>
+                          View
                         </button>
                         <button
                           onClick={() => handleBlockUser(user._id, user.isBlocked || false)}
                           title={user.isBlocked ? 'Unblock user' : 'Block user'}
-                          className={`p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg group/btn ${
                             user.isBlocked
-                              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30'
-                              : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 border border-yellow-500/30'
+                              ? 'bg-gradient-to-r from-emerald-500/30 to-green-600/20 text-emerald-300 hover:from-emerald-500/40 hover:to-green-600/30 border border-emerald-500/40 hover:shadow-emerald-500/20'
+                              : 'bg-gradient-to-r from-red-500/30 to-pink-600/20 text-red-300 hover:from-red-500/40 hover:to-pink-600/30 border border-red-500/40 hover:shadow-red-500/20'
                           }`}
                         >
-                          <i className={`fas ${user.isBlocked ? 'fa-unlock' : 'fa-ban'} sm:mr-1`}></i>
+                          <i className={`fas ${user.isBlocked ? 'fa-unlock' : 'fa-ban'} mr-2 group-hover/btn:scale-110 inline-block transition-transform`}></i>
                           <span className="hidden sm:inline">{user.isBlocked ? 'Unblock' : 'Block'}</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteUser(user._id)}
-                          title="Delete user"
-                          className="p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-all border border-red-500/30"
-                        >
-                          <i className="fas fa-trash sm:mr-1"></i>
-                          <span className="hidden sm:inline">Delete</span>
                         </button>
                       </div>
                     </td>
@@ -277,7 +384,7 @@ export default function UserManagement() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-primary-400">
+                  <td colSpan={5} className="py-12 text-center text-primary-400">
                     <i className="fas fa-users text-4xl mb-3 opacity-50"></i>
                     <p>No users found</p>
                   </td>
@@ -302,6 +409,19 @@ export default function UserManagement() {
 
             {/* Content */}
             <div className="p-6 space-y-6">
+              {/* Blocked Warning */}
+              {selectedUser.isBlocked && (
+                <div className="bg-gradient-to-r from-red-500/20 to-pink-500/10 border border-red-500/50 rounded-xl p-4 flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-red-500/30 flex items-center justify-center flex-shrink-0">
+                    <i className="fas fa-ban text-2xl text-red-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-red-400 font-bold text-lg">⚠️ User Blocked</p>
+                    <p className="text-red-300 text-sm">This user cannot login or access any system features</p>
+                  </div>
+                </div>
+              )}
+
               {/* Avatar & Basic Info */}
               <div className="flex items-center gap-4">
                 {loadingProfile ? (
@@ -342,36 +462,51 @@ export default function UserManagement() {
               {/* Details Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-primary-400 text-sm">User ID</label>
-                  <p className="text-white font-mono text-sm">{selectedUser._id}</p>
+                  <label className="text-primary-400 text-sm font-semibold">User ID</label>
+                  <p className="text-white font-mono text-xs mt-1 break-all">{selectedUser._id}</p>
                 </div>
                 <div>
-                  <label className="text-primary-400 text-sm">Role</label>
-                  <p className="text-white">
+                  <label className="text-primary-400 text-sm font-semibold">Role</label>
+                  <p className="text-white mt-1">
                     <span className={`px-3 py-1 rounded-full text-sm ${
                       selectedUser.role === 'admin'
                         ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                         : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                     }`}>
-                      {selectedUser.role}
+                      {selectedUser.role === 'admin' ? '👑 Admin' : '👤 User'}
                     </span>
                   </p>
                 </div>
-                <div>
-                  <label className="text-primary-400 text-sm">Status</label>
-                  <p className="text-white">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      selectedUser.isBlocked
-                        ? 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                        : 'bg-green-500/20 text-green-400 border border-green-500/30'
+                <div className="md:col-span-2">
+                  <label className="text-primary-400 text-sm font-semibold">Online Status</label>
+                  <p className="text-white mt-1">
+                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                      selectedUser.isOnline
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                     }`}>
-                      {selectedUser.isBlocked ? 'Blocked' : 'Active'}
+                      {selectedUser.isOnline ? '🟢 Online' : '⚫ Offline'}
                     </span>
                   </p>
+                  {!selectedUser.isOnline && selectedUser.lastActive && (
+                    <p className="text-xs text-primary-400 mt-1">
+                      Last seen: {new Date(selectedUser.lastActive).toLocaleString()}
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <label className="text-primary-400 text-sm">Joined</label>
-                  <p className="text-white">{new Date(selectedUser.createdAt).toLocaleDateString()}</p>
+                <div className="md:col-span-2">
+                  <label className="text-primary-400 text-sm font-semibold">Joined Date</label>
+                  <p className="text-white mt-1 flex items-center gap-2">
+                    <i className="fas fa-calendar-alt text-pink-400"></i>
+                    {new Date(selectedUser.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                    <span className="text-primary-400 text-sm">
+                      ({new Date(selectedUser.createdAt).toLocaleTimeString()})
+                    </span>
+                  </p>
                 </div>
               </div>
 
@@ -379,43 +514,20 @@ export default function UserManagement() {
               <div className="flex gap-3 pt-4 border-t border-primary-700">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg bg-primary-700 text-white hover:bg-primary-600 transition-colors"
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-primary-700 text-white hover:bg-primary-600 transition-all font-semibold hover:scale-105"
                 >
-                  Close
+                  <i className="fas fa-times mr-2"></i>Close
                 </button>
                 <button
-                  onClick={() => {
-                    handleChangeRole(selectedUser._id, selectedUser.role === 'admin' ? 'user' : 'admin');
-                    setSelectedUser({ ...selectedUser, role: selectedUser.role === 'admin' ? 'user' : 'admin' });
-                  }}
-                  className="px-4 py-2 rounded-lg bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition-colors border border-purple-500/30"
-                >
-                  <i className="fas fa-user-shield mr-2"></i>
-                  {selectedUser.role === 'admin' ? 'Make User' : 'Make Admin'}
-                </button>
-                <button
-                  onClick={() => {
-                    handleBlockUser(selectedUser._id, selectedUser.isBlocked || false);
-                    setSelectedUser({ ...selectedUser, isBlocked: !selectedUser.isBlocked });
-                  }}
-                  className={`px-4 py-2 rounded-lg transition-colors border ${
+                  onClick={() => handleBlockUser(selectedUser._id, selectedUser.isBlocked || false)}
+                  className={`flex-1 px-6 py-2.5 rounded-lg transition-all font-bold uppercase tracking-wider hover:scale-105 ${
                     selectedUser.isBlocked
-                      ? 'bg-green-500/20 text-green-400 border-green-500/30'
-                      : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
+                      ? 'bg-gradient-to-r from-emerald-500/30 to-green-600/20 text-green-400 hover:from-emerald-500/40 hover:to-green-600/30 border-2 border-green-500/50 hover:shadow-xl hover:shadow-green-500/30'
+                      : 'bg-gradient-to-r from-red-500/30 to-pink-600/20 text-red-400 hover:from-red-500/40 hover:to-pink-600/30 border-2 border-red-500/50 hover:shadow-xl hover:shadow-red-500/30'
                   }`}
                 >
                   <i className={`fas ${selectedUser.isBlocked ? 'fa-unlock' : 'fa-ban'} mr-2`}></i>
-                  {selectedUser.isBlocked ? 'Unblock' : 'Block'}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm('Delete this user?')) {
-                      handleDeleteUser(selectedUser._id);
-                    }
-                  }}
-                  className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors border border-red-500/30"
-                >
-                  <i className="fas fa-trash mr-2"></i>Delete
+                  {selectedUser.isBlocked ? '✓ Unblock User' : '⚠️ Block User'}
                 </button>
               </div>
             </div>

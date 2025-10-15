@@ -1,5 +1,8 @@
 import { api } from './apiClient';
 
+// Re-export api for direct use
+export { api };
+
 // Auth API
 export const authAPI = {
   register: (data: { email: string; password: string }) =>
@@ -29,7 +32,7 @@ export const eventsAPI = {
     time: string;
     tags: string[];
     maxParticipants: number;
-    category: string;
+    category?: string;
     cover?: string;
   }) => api.post('/events', data),
   update: (id: string, data: {
@@ -46,7 +49,7 @@ export const eventsAPI = {
   delete: (id: string) => api.delete(`/events/${id}`),
   join: (id: string) => api.post(`/events/${id}/join`),
   leave: (id: string) => api.post(`/events/${id}/leave`),
-  search: (params: { tags?: string; category?: string }) =>
+  search: (params: { tags?: string }) =>
     api.get('/events/search/filter', { params }),
 };
 

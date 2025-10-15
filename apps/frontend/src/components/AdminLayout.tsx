@@ -26,6 +26,13 @@ export default function AdminLayout() {
     }
   }, [user, navigate]);
 
+  useEffect(() => {
+    // Fetch profile when user is available
+    if (user) {
+      fetchProfile();
+    }
+  }, [user?._id]);
+
   const fetchProfile = async () => {
     if (!user) return;
     try {
@@ -73,77 +80,89 @@ export default function AdminLayout() {
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: '📊' },
     { path: '/admin/users', label: 'Users', icon: '👥' },
-    { path: '/admin/activities', label: 'Activities', icon: '🎯' },
-    { path: '/admin/events', label: 'Events', icon: '📅' },
-    { path: '/admin/groups', label: 'Groups', icon: '👫' },
-    { path: '/admin/chats', label: 'Chats', icon: '💬' }
+    { path: '/admin/activities', label: 'Activities', icon: '🎯' }
   ];
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900">
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-900 via-primary-900 to-slate-900">
       {/* Sidebar */}
-      <aside className="w-64 bg-primary-800/50 backdrop-blur-sm border-r border-primary-700 shadow-2xl fixed h-full">
-        <div className="p-6 border-b border-primary-700">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-            Admin Panel
-          </h1>
-          <p className="text-primary-400 text-sm mt-1">Management Dashboard</p>
+      <aside className="w-64 bg-gradient-to-b from-primary-900/95 via-primary-800/95 to-primary-900/95 backdrop-blur-xl border-r border-primary-700/50 shadow-2xl fixed h-full">
+        <div className="p-6 border-b border-primary-700/50 bg-gradient-to-r from-primary-800/50 to-transparent">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-blue-500 flex items-center justify-center shadow-lg shadow-emerald-500/50">
+              <i className="fas fa-crown text-white text-lg"></i>
+            </div>
+            <div>
+              <h1 className="text-xl font-black bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Admin Panel
+              </h1>
+              <p className="text-primary-400 text-xs font-medium">Management Dashboard</p>
+            </div>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-2">{navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/admin'}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                  isActive
-                    ? 'bg-emerald-500/20 text-emerald-400 font-semibold'
-                    : 'text-primary-300 hover:bg-primary-700 hover:text-white'
-                }`
-              }
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+        <nav className="p-4 space-y-1.5">{navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/admin'}
+            className={({ isActive }) =>
+              `group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
+                ? 'bg-gradient-to-r from-emerald-500/20 to-blue-500/20 text-emerald-400 font-bold shadow-lg shadow-emerald-500/20 border border-emerald-500/30'
+                : 'text-primary-300 hover:bg-primary-700/50 hover:text-white hover:translate-x-1'
+              }`
+            }
+          >
+            <span className={`text-xl transition-transform duration-200 ${'group-hover:scale-110'
+              }`}>{item.icon}</span>
+            <span className="font-semibold">{item.label}</span>
+            <i className="fas fa-chevron-right ml-auto text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+          </NavLink>
+        ))}
         </nav>
 
 
         {/* User Info */}
-        <div className="p-4 border-t border-white/10">
-          <div 
-            className="flex items-center gap-3 mb-3 cursor-pointer hover:bg-primary-700 rounded-lg p-2 transition-colors"
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-primary-700/50 bg-gradient-to-t from-primary-900 to-transparent">
+          <div
+            className="flex items-center gap-3 mb-3 cursor-pointer hover:bg-gradient-to-r hover:from-primary-700/50 hover:to-transparent rounded-xl p-3 transition-all duration-200 group"
             onClick={handleOpenProfile}
           >
             {profile?.avatar ? (
-              <img
-                src={profile.avatar.startsWith('http') ? profile.avatar : `http://localhost:3000${profile.avatar}`}
-                alt={profile.name || user?.email}
-                className="w-10 h-10 rounded-full object-cover"
-              />
+              <div className="relative">
+                <img
+                  src={profile.avatar.startsWith('http') ? profile.avatar : `http://localhost:3000${profile.avatar}`}
+                  alt={profile.name || user?.email}
+                  className="w-11 h-11 rounded-xl object-cover ring-2 ring-emerald-500/50 group-hover:ring-emerald-400 transition-all"
+                />
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-primary-900"></div>
+              </div>
             ) : (
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <span className="text-emerald-400 font-bold">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/30 to-blue-500/30 flex items-center justify-center ring-2 ring-emerald-500/50 group-hover:ring-emerald-400 transition-all">
+                <span className="text-emerald-400 font-bold text-lg">
                   {user?.email?.charAt(0).toUpperCase()}
                 </span>
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold truncate">
+              <p className="text-white font-bold truncate group-hover:text-emerald-400 transition-colors">
                 {profile?.name || user?.email?.split('@')[0]}
               </p>
-              <p className="text-xs text-primary-400">Admin • Click to edit</p>
+              <p className="text-xs text-emerald-400/80 flex items-center gap-1">
+                Click to edit
+              </p>
             </div>
+            <i className="fas fa-cog text-primary-400 group-hover:text-emerald-400 group-hover:rotate-90 transition-all duration-300"></i>
           </div>
           <button
             onClick={() => {
               logOut();
               navigate('/');
             }}
-            className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg px-4 py-2 text-sm font-semibold transition-colors"
+            className="w-full bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30 text-red-400 rounded-xl px-4 py-2.5 text-sm font-bold transition-all duration-200 border border-red-500/30 hover:border-red-500/50 hover:shadow-lg hover:shadow-red-500/20 group"
           >
+            <i className="fas fa-sign-out-alt mr-2 group-hover:translate-x-1 transition-transform"></i>
             Log out
           </button>
         </div>
@@ -160,7 +179,7 @@ export default function AdminLayout() {
           <div className="bg-primary-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-primary-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="sticky top-0 bg-primary-800 border-b border-primary-700 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Admin Profile</h2>
+              <h2 className="text-xl font-bold text-white font-['Poppins']">Admin Profile</h2>
               <button onClick={() => setShowProfileModal(false)} className="text-primary-400 hover:text-white transition-colors">
                 <i className="fas fa-times text-xl"></i>
               </button>
@@ -199,7 +218,7 @@ export default function AdminLayout() {
                           className="w-full bg-primary-700 text-white rounded-lg px-3 py-2 border border-primary-600 focus:border-emerald-400 focus:outline-none text-xl font-bold"
                         />
                       ) : (
-                        <h3 className="text-2xl font-bold text-white">{profile?.name || 'No name set'}</h3>
+                        <h3 className="text-2xl font-bold text-white font-['Poppins']">{profile?.name || 'No name set'}</h3>
                       )}
                       <p className="text-primary-300 mt-1">{user?.email}</p>
                     </div>

@@ -12,17 +12,10 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads/activities'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'cover-' + uniqueSuffix + path.extname(file.originalname));
-  }
-});
+import { uploadBuffer } from '../lib/cloudinary.js';
 
+// Use memoryStorage to upload buffers to Cloudinary
+const storage = multer.memoryStorage();
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -40,15 +33,21 @@ const upload = multer({
 });
 
 // Upload cover image endpoint
-router.post('/upload-cover', auth, upload.single('cover'), (req, res) => {
+router.post('/upload-cover', auth, upload.single('cover'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    
-    // Return the URL to access the file
-    const fileUrl = `/uploads/activities/${req.file.filename}`;
-    res.json({ url: fileUrl });
+
+    const buffer = req.file.buffer;
+    try {
+      const pub = `events/cover-${Date.now()}-${Math.round(Math.random()*1e6)}`;
+      const uploaded = await uploadBuffer(buffer, { public_id: pub, folder: 'wego/events', resource_type: 'image' });
+      return res.json({ url: uploaded.secure_url, public_id: uploaded.public_id });
+    } catch (upErr) {
+      console.error('Cloudinary upload error for cover:', upErr);
+      return res.status(500).json({ error: 'Failed to upload cover image' });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -89,10 +88,35 @@ router.get('/:id', async (req, res) => {
 // Create event (requires authentication)
 router.post('/', auth, async (req, res) => {
   try {
-    const event = new Activity({
+    // Prepare event data
+    const eventData = {
       ...req.body,
       createdBy: req.user._id
-    });
+    };
+    
+    // Handle location field - convert string to object if needed
+    if (req.body.location) {
+      if (typeof req.body.location === 'string') {
+        eventData.location = {
+          address: req.body.location,
+          coordinates: {
+            type: 'Point',
+            coordinates: [0, 0] // Default coordinates
+          }
+        };
+      } else if (typeof req.body.location === 'object' && !req.body.location.address) {
+        // If location is object but doesn't have address field
+        eventData.location = {
+          address: req.body.location.address || '',
+          coordinates: req.body.location.coordinates || {
+            type: 'Point',
+            coordinates: [0, 0]
+          }
+        };
+      }
+    }
+    
+    const event = new Activity(eventData);
     
     await event.save();
     
@@ -206,7 +230,21 @@ router.post('/:id/join', auth, async (req, res) => {
     }
     
     await event.populate('participants.user', 'email');
-    
+    // Emit updated participants to the chat room so connected clients refresh member lists in real time
+    try {
+      const io = req.app.get('io');
+      if (io && chat) {
+        // repopulate to ensure user info is available
+        await chat.populate('participants.user', 'email username isOnline');
+        const parts = chat.participants
+          .filter(p => p.user)
+          .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+        io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
+      }
+    } catch (emitErr) {
+      console.error('Failed to emit chat:participants after event join:', emitErr);
+    }
+
     res.json({ 
       message: 'Successfully joined event', 
       activity: event,
@@ -228,7 +266,30 @@ router.post('/:id/leave', auth, async (req, res) => {
     
     await event.removeParticipant(req.user._id);
     await event.populate('participants.user', 'email');
-    
+    // If this event has a linked chat, remove the user from the chat participants and emit update
+    try {
+      if (event.chat) {
+        const chat = await Chat.findById(event.chat);
+        if (chat) {
+          // Remove participant entries that match this user (safe guards for nulls)
+          chat.participants = chat.participants.filter(p => !(p.user && p.user.toString() === req.user._id.toString()));
+          await chat.save();
+
+          // Emit updated participants
+          const io = req.app.get('io');
+          if (io) {
+            await chat.populate('participants.user', 'email username isOnline');
+            const parts = chat.participants
+              .filter(p => p.user)
+              .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+            io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
+          }
+        }
+      }
+    } catch (emitErr) {
+      console.error('Failed to update chat participants after leaving event:', emitErr);
+    }
+
     res.json({ message: 'Successfully left event', activity: event });
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -238,22 +299,18 @@ router.post('/:id/leave', auth, async (req, res) => {
 // Search/filter events
 router.get('/search/filter', async (req, res) => {
   try {
-    const { tags, category } = req.query;
+    const { tags } = req.query;
     const filters = { status: 'published', visibility: 'public' };
-    
-    if (category) {
-      filters.category = category;
-    }
-    
+
     if (tags) {
       filters.tags = { $in: tags.split(',') };
     }
-    
+
     const events = await Activity.find(filters)
       .populate('createdBy', 'email')
       .sort({ date: 1 })
       .limit(50);
-    
+
     res.json(events);
   } catch (error) {
     res.status(500).json({ error: error.message });

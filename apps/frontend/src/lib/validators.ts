@@ -9,7 +9,7 @@ export const CreateActivitySchema = z.object({
   time: z.string().min(1, 'Please select a time'),
   tags: z.array(z.string().min(1)).min(1, 'Please select at least 1 tag'),
   maxParticipants: z.number().min(2, 'Minimum 2 participants required'),
-  category: z.string().min(1, 'Please select a category')
+  
 });
 
 export const SignUpSchema = z.object({

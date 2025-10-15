@@ -152,7 +152,7 @@ chatSchema.methods.addMessage = async function(senderId, content, type = 'text',
 // Add a participant to the chat
 chatSchema.methods.addParticipant = async function(userId, role = 'member') {
   // Check if user is already a participant
-  const existingParticipant = this.participants.find(p => p.user.equals(userId));
+  const existingParticipant = this.participants.find(p => p.user && p.user.equals(userId));
   
   if (existingParticipant) {
     throw new Error('User is already a participant');
@@ -170,7 +170,7 @@ chatSchema.methods.addParticipant = async function(userId, role = 'member') {
 
 // Remove a participant from the chat
 chatSchema.methods.removeParticipant = async function(userId) {
-  const index = this.participants.findIndex(p => p.user.equals(userId));
+  const index = this.participants.findIndex(p => p.user && p.user.equals(userId));
   
   if (index === -1) {
     throw new Error('User is not a participant');
@@ -206,7 +206,7 @@ chatSchema.methods.markAsRead = async function(userId, messageIds = []) {
   }
   
   // Update participant's lastRead
-  const participant = this.participants.find(p => p.user.equals(userId));
+  const participant = this.participants.find(p => p.user && p.user.equals(userId));
   if (participant) {
     participant.lastRead = new Date();
   }
@@ -216,7 +216,7 @@ chatSchema.methods.markAsRead = async function(userId, messageIds = []) {
 
 // Get unread message count for a user
 chatSchema.methods.getUnreadCount = function(userId) {
-  const participant = this.participants.find(p => p.user.equals(userId));
+  const participant = this.participants.find(p => p.user && p.user.equals(userId));
   if (!participant) return 0;
   
   return this.messages.filter(msg => 

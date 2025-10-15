@@ -5,7 +5,7 @@ import axios, {
 } from "axios";
 
 export const api: AxiosInstance = axios.create({
-  baseURL: "http://localhost:5000/api", // MongoDB API endpoint
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api", // override with VITE_API_URL in production
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -50,14 +50,15 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized - could redirect to login or refresh token
-      localStorage.removeItem('token');
-      window.location.href = '/auth/signin';
-      return Promise.reject(new Error('กรุณาเข้าสู่ระบบใหม่อีกครั้ง'));
+      // Don't redirect automatically - let components handle it
+      // Only redirect if token is invalid (not just missing permissions)
+      // localStorage.removeItem('token');
+      // window.location.href = '/auth/signin';
+      return Promise.reject(error); // Return error object so component can check status
     }
 
     if (error.response?.status === 403) {
-      return Promise.reject(new Error('คุณไม่มีสิทธิ์ในการดำเนินการนี้'));
+      return Promise.reject(error); // Let component handle forbidden
     }
 
     if (error.response?.status === 404) {

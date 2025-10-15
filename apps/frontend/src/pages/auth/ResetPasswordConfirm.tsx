@@ -19,6 +19,11 @@ export default function ResetPasswordConfirm() {
   const [reason, setReason] = useState('');
 
   const [pass, setPass] = useState('');
+
+  // Reset scroll on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const [pass2, setPass2] = useState('');
   const [touchedPass, setTouchedPass] = useState(false);
   const [touchedPass2, setTouchedPass2] = useState(false);

@@ -132,7 +132,7 @@ export default function AdminLayout() {
             {profile?.avatar ? (
               <div className="relative">
                 <img
-                  src={profile.avatar.startsWith('http') ? profile.avatar : `http://localhost:3000${profile.avatar}`}
+                  src={profile.avatar && profile.avatar.startsWith('http') ? profile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${profile.avatar}`}
                   alt={profile.name || user?.email}
                   className="w-11 h-11 rounded-xl object-cover ring-2 ring-emerald-500/50 group-hover:ring-emerald-400 transition-all"
                 />
@@ -197,7 +197,7 @@ export default function AdminLayout() {
                   <div className="flex items-center gap-4">
                     {profile?.avatar ? (
                       <img
-                        src={profile.avatar.startsWith('http') ? profile.avatar : `http://localhost:3000${profile.avatar}`}
+                        src={profile.avatar.startsWith('http') ? profile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${profile.avatar}`}
                         alt={profile.name || user?.email}
                         className="w-20 h-20 rounded-full object-cover border-2 border-emerald-400/30"
                       />

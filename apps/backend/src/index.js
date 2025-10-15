@@ -68,6 +68,11 @@ app.use('/api/directmessages', directMessageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadsRoutes);
 
+// Simple health check
+app.get('/_health', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString(), commit: process.env.COMMIT_ID || null });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

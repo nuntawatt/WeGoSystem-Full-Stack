@@ -135,7 +135,8 @@ export default function Create() {
 
         try {
           const token = localStorage.getItem('token');
-          const uploadResponse = await fetch('http://localhost:5000/api/events/upload-cover', {
+          const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '');
+          const uploadResponse = await fetch(`${apiBase}/api/events/upload-cover`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`

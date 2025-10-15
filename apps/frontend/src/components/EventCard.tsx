@@ -111,7 +111,7 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
   } else {
     // If backend returns a relative path like /uploads/..., prefix with backend origin
     if (event.cover.startsWith('/')) {
-      coverImage = `http://localhost:5000${event.cover}`;
+  coverImage = `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${event.cover}`;
     } else {
       coverImage = event.cover;
     }

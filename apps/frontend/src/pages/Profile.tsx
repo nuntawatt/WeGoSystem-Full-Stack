@@ -63,6 +63,8 @@ export default function Profile() {
 
   const openFilePicker = () => fileInputRef.current?.click();
 
+  const _apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '');
+
   const onSelectFile = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -102,7 +104,7 @@ export default function Profile() {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch('http://localhost:5000/api/profiles/avatar', {
+  const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -161,7 +163,7 @@ export default function Profile() {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch('http://localhost:5000/api/profiles/avatar', {
+  const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {

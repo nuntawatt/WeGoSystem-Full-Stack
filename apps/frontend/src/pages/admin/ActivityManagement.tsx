@@ -296,7 +296,7 @@ export default function ActivityManagement() {
                       <div className="flex items-center gap-2 sm:gap-3">
                         {getActivityImage(activity) ? (
                           <img
-                            src={getActivityImage(activity)!.startsWith('http') ? getActivityImage(activity)! : `http://localhost:5000${getActivityImage(activity)}`}
+                            src={getActivityImage(activity)!.startsWith('http') ? getActivityImage(activity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(activity)}`}
                             alt={activity.title}
                             className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-emerald-500/30 group-hover:ring-emerald-400/50 transition-all"
                             onError={(e) => {
@@ -415,7 +415,7 @@ export default function ActivityManagement() {
               {getActivityImage(selectedActivity) && (
                 <div className="rounded-2xl overflow-hidden ring-2 ring-emerald-500/30 shadow-2xl">
                   <img
-                    src={getActivityImage(selectedActivity)!.startsWith('http') ? getActivityImage(selectedActivity)! : `http://localhost:5000${getActivityImage(selectedActivity)}`}
+                    src={getActivityImage(selectedActivity)!.startsWith('http') ? getActivityImage(selectedActivity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(selectedActivity)}`}
                     alt={selectedActivity.title}
                     className="w-full h-80 object-cover"
                     onError={(e) => {
@@ -431,7 +431,7 @@ export default function ActivityManagement() {
                   {selectedActivity.images.map((img, idx) => (
                     <div key={idx} className="rounded-xl overflow-hidden ring-2 ring-primary-600/30 hover:ring-emerald-400/50 transition-all cursor-pointer">
                       <img
-                        src={img.startsWith('http') ? img : `http://localhost:5000${img}`}
+                        src={img.startsWith('http') ? img : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${img}`}
                         alt={`${selectedActivity.title} - Image ${idx + 1}`}
                         className="w-full h-32 object-cover hover:scale-110 transition-transform"
                         onError={(e) => {

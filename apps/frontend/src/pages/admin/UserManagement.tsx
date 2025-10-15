@@ -294,7 +294,7 @@ export default function UserManagement() {
                       <div className="flex items-center gap-3">
                         {user.profile?.avatar ? (
                           <img
-                            src={user.profile.avatar.startsWith('http') ? user.profile.avatar : `http://localhost:3000${user.profile.avatar}`}
+                            src={user.profile.avatar.startsWith('http') ? user.profile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${user.profile.avatar}`}
                             alt={user.profile.name || user.email}
                             className={`w-12 h-12 rounded-xl object-cover ring-2 transition-all ${
                               user.isBlocked 
@@ -426,9 +426,9 @@ export default function UserManagement() {
               <div className="flex items-center gap-4">
                 {loadingProfile ? (
                   <div className="w-20 h-20 rounded-full bg-primary-700 animate-pulse"></div>
-                ) : userProfile?.avatar ? (
+                  ) : userProfile?.avatar ? (
                   <img
-                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `http://localhost:3000${userProfile.avatar}`}
+                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${userProfile.avatar}`}
                     alt={userProfile.name || selectedUser.email}
                     className="w-20 h-20 rounded-full object-cover border-2 border-blue-400/30"
                   />

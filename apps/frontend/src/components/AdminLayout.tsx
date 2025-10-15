@@ -141,13 +141,13 @@ export default function AdminLayout() {
             ) : (
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/30 to-blue-500/30 flex items-center justify-center ring-2 ring-emerald-500/50 group-hover:ring-emerald-400 transition-all">
                 <span className="text-emerald-400 font-bold text-lg">
-                  {user?.email?.charAt(0).toUpperCase()}
+                  {user?.username ? user.username.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : '')}
                 </span>
               </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="text-white font-bold truncate group-hover:text-emerald-400 transition-colors">
-                {profile?.name || user?.email?.split('@')[0]}
+                {profile?.name || user?.username || user?.email?.split('@')[0]}
               </p>
               <p className="text-xs text-emerald-400/80 flex items-center gap-1">
                 Click to edit
@@ -218,7 +218,7 @@ export default function AdminLayout() {
                           className="w-full bg-primary-700 text-white rounded-lg px-3 py-2 border border-primary-600 focus:border-emerald-400 focus:outline-none text-xl font-bold"
                         />
                       ) : (
-                        <h3 className="text-2xl font-bold text-white font-['Poppins']">{profile?.name || 'No name set'}</h3>
+                        <h3 className="text-2xl font-bold text-white font-['Poppins']">{profile?.name || user?.username || 'No name set'}</h3>
                       )}
                       <p className="text-primary-300 mt-1">{user?.email}</p>
                     </div>

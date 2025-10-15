@@ -84,13 +84,31 @@ router.get('/', async (req, res) => {
         sortOptions = { date: 1 };
     }
 
-    const activities = await Activity.find(filters)
-      .populate('createdBy', 'email')
-      .populate('participants.user', 'email')
+    let activities = await Activity.find(filters)
+      .populate('createdBy', 'email username')
+      .populate('participants.user', 'email username')
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
       .lean();
+
+    // Fill missing creator username from profiles if available
+    try {
+      const missing = activities.filter(a => a.createdBy && !a.createdBy.username).map(a => String(a.createdBy._id));
+      if (missing.length > 0) {
+        const profiles = await Profile.find({ userId: { $in: missing } }).select('userId name');
+        const map = new Map(profiles.map(p => [String(p.userId), p.name]));
+        activities = activities.map(a => {
+          if (a.createdBy && !a.createdBy.username) {
+            const name = map.get(String(a.createdBy._id));
+            if (name) a.createdBy.username = name;
+          }
+          return a;
+        });
+      }
+    } catch (e) {
+      console.warn('Could not backfill creator username from profiles', e.message);
+    }
 
     const total = await Activity.countDocuments(filters);
     const totalPages = Math.ceil(total / limit);

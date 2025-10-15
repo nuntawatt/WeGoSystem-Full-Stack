@@ -147,7 +147,7 @@ export default function AdminLayout() {
             )}
             <div className="flex-1 min-w-0">
               <p className="text-white font-bold truncate group-hover:text-emerald-400 transition-colors">
-                {profile?.name || user?.username || user?.email?.split('@')[0]}
+                {user?.username || profile?.name || user?.email?.split('@')[0]}
               </p>
               <p className="text-xs text-emerald-400/80 flex items-center gap-1">
                 Click to edit
@@ -203,10 +203,10 @@ export default function AdminLayout() {
                       />
                     ) : (
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400/20 to-blue-500/20 flex items-center justify-center flex-shrink-0">
-                        <span className="text-emerald-400 font-bold text-3xl">
-                          {user?.email?.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
+                          <span className="text-emerald-400 font-bold text-3xl">
+                            {user?.username ? user.username.charAt(0).toUpperCase() : (user?.email?.charAt(0).toUpperCase())}
+                          </span>
+                        </div>
                     )}
                     <div className="flex-1">
                       {editMode ? (

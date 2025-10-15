@@ -198,10 +198,34 @@ router.get('/activities/stats', async (req, res) => {
 // Get all activities
 router.get('/activities', async (req, res) => {
   try {
-    const activities = await Activity.find()
+    let activities = await Activity.find()
       .populate('createdBy', 'email username')
       .populate('participants.user', 'email username')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // If some creators don't have username set, try to fill from Profile.name
+    try {
+      const missingCreatorIds = activities
+        .filter(a => a.createdBy && !a.createdBy.username)
+        .map(a => String(a.createdBy._id));
+
+      if (missingCreatorIds.length > 0) {
+        const profiles = await Profile.find({ userId: { $in: missingCreatorIds } }).select('userId name');
+        const profileMap = new Map(profiles.map(p => [String(p.userId), p.name]));
+        activities = activities.map(a => {
+          if (a.createdBy && !a.createdBy.username) {
+            const name = profileMap.get(String(a.createdBy._id));
+            if (name) {
+              a.createdBy.username = name;
+            }
+          }
+          return a;
+        });
+      }
+    } catch (pfErr) {
+      console.warn('Could not attach profile names to activities:', pfErr.message);
+    }
 
     res.status(200).json({
       activities

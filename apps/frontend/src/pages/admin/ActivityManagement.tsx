@@ -9,7 +9,7 @@ interface Activity {
   location?: string | { address?: string; coordinates?: { lat: number; lng: number } };
   maxParticipants: number;
   participants: string[];
-  createdBy: { _id: string; email: string };
+  createdBy: { _id: string; email: string; username?: string };
   status: string;
   createdAt: string;
   coverImage?: string;
@@ -48,6 +48,12 @@ export default function ActivityManagement() {
         console.log('Attempting to fetch from admin endpoint...');
         const response = await api.get('/admin/activities');
         console.log('Admin API success! Activities:', response.data.activities?.length);
+        // Debug: log sample payload to inspect createdBy shape
+        try {
+          console.log('Admin activities payload (sample):', response.data.activities && response.data.activities.length ? response.data.activities[0] : null);
+        } catch (e) {
+          console.log('Could not stringify activities payload', e);
+        }
         setActivities(response.data.activities || []);
         setUsingPublicApi(false);
       } catch (adminError: any) {
@@ -147,6 +153,22 @@ export default function ActivityManagement() {
       if (validImage) return validImage;
     }
     return null;
+  };
+
+  // Helper to get creator display name robustly
+  const getCreatorDisplay = (activity: Activity): string => {
+    const cb: any = (activity as any).createdBy;
+    if (!cb) return 'Unknown';
+    if (typeof cb === 'string') return cb;
+    return cb.username || (cb.email ? cb.email.split('@')[0] : 'Unknown');
+  };
+
+  const getCreatorInitial = (activity: Activity): string => {
+    const cb: any = (activity as any).createdBy;
+    if (!cb) return '?';
+    if (typeof cb === 'string') return cb.charAt(0).toUpperCase();
+    const name = cb.username || cb.email || '';
+    return name ? name.charAt(0).toUpperCase() : '?';
   };
 
   if (loading) {
@@ -339,7 +361,7 @@ export default function ActivityManagement() {
                       <div className="flex items-center gap-2 text-pink-300/80 text-xs sm:text-sm">
                         <i className="fas fa-user-circle"></i>
                         <span className="font-medium truncate max-w-[100px] xl:max-w-[120px]">
-                          {activity.createdBy?.email?.split('@')[0] || 'Unknown'}
+                          {getCreatorDisplay(activity)}
                         </span>
                       </div>
                     </td>
@@ -520,11 +542,11 @@ export default function ActivityManagement() {
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/20 flex items-center justify-center">
                     <span className="text-purple-300 font-black text-lg">
-                      {selectedActivity.createdBy?.email?.charAt(0).toUpperCase() || '?'}
+                      {getCreatorInitial(selectedActivity)}
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-semibold">{selectedActivity.createdBy?.email || 'Unknown'}</p>
+                    <p className="text-white font-semibold">{getCreatorDisplay(selectedActivity)}</p>
                     <p className="text-xs text-primary-400">Activity Creator</p>
                   </div>
                 </div>

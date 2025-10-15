@@ -29,6 +29,36 @@ const upload = multer({
 });
 
 // Get profile by userId
+// Public: List profiles (paginated)
+router.get('/', async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, parseInt(req.query.limit) || 20);
+    const skip = (page - 1) * limit;
+
+    const q = req.query.q ? req.query.q.trim() : null;
+    const filter = {};
+    if (q) {
+      const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      filter.$or = [{ name: re }, { bio: re }];
+    }
+
+    const [profiles, total] = await Promise.all([
+      Profile.find(filter)
+        .skip(skip)
+        .limit(limit)
+        .select('-__v')
+        .populate({ path: 'userId', select: 'username email' }),
+      Profile.countDocuments(filter)
+    ]);
+
+    res.json({ profiles, page, limit, total });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get profile by userId
 router.get('/:userId', async (req, res) => {
   try {
     let profile = await Profile.findOne({ userId: req.params.userId });

@@ -7,26 +7,25 @@ dotenv.config();
 
 // Initialize cloudinary
 if (process.env.CLOUDINARY_URL) {
-  // Parse CLOUDINARY_URL (format: cloudinary://<api_key>:<api_secret>@<cloud_name>) and configure explicitly
+  // Parse CLOUDINARY_URL (format: cloudinary://<api_key>:<api_secret>@<cloud_name>) using URL for robustness
   try {
-    const url = process.env.CLOUDINARY_URL;
-    // simple parse
-    const m = url.match(/^cloudinary:\/\/(?:(.+?):(.+?)@)?(.+)$/);
-    if (m) {
-      const api_key = m[1];
-      const api_secret = m[2];
-      const cloud_name = m[3];
-      if (api_key && api_secret && cloud_name) {
-        cloudinary.config({ cloud_name, api_key, api_secret, secure: true });
-      } else {
-        // fallback to letting the library parse it
-        cloudinary.config({ secure: true });
-      }
+    const raw = process.env.CLOUDINARY_URL;
+    const parsed = new URL(raw);
+    // URL.username and URL.password contain credentials for non-http schemes as well
+    const api_key = parsed.username || undefined;
+    const api_secret = parsed.password || undefined;
+    const cloud_name = parsed.hostname || undefined;
+
+    if (api_key && api_secret && cloud_name) {
+      cloudinary.config({ cloud_name, api_key, api_secret, secure: true });
     } else {
+      // Let the library pick up CLOUDINARY_URL if it can; set secure to true as a safe default
       cloudinary.config({ secure: true });
     }
   } catch (e) {
-    console.warn('Warning: failed to configure Cloudinary from CLOUDINARY_URL:', e && e.message);
+    // Non-fatal: if parsing fails, let cloudinary library try to handle the env var
+    console.debug('Cloudinary: failed to parse CLOUDINARY_URL with URL parser, falling back to library parsing:', e && e.message);
+    cloudinary.config({ secure: true });
   }
 } else if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
   cloudinary.config({
@@ -45,7 +44,18 @@ try {
   const hasKey = !!process.env.CLOUDINARY_API_KEY;
   const hasSecret = !!process.env.CLOUDINARY_API_SECRET;
   const hasCloud = !!process.env.CLOUDINARY_CLOUD_NAME;
-  console.debug('Cloudinary env presence:', { hasUrl, hasCloud, hasKey, hasSecret });
+  // Also report whether we were able to parse credentials from CLOUDINARY_URL
+  let parsedFromUrl = false;
+  try {
+    if (process.env.CLOUDINARY_URL) {
+      const p = new URL(process.env.CLOUDINARY_URL);
+      parsedFromUrl = !!(p.username && p.password && p.hostname);
+    }
+  } catch (e) {
+    parsedFromUrl = false;
+  }
+
+  console.debug('Cloudinary env presence:', { hasUrl, hasCloud, hasKey, hasSecret, parsedFromUrl });
 } catch (err) {
   // ignore
 }

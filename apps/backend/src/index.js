@@ -38,7 +38,7 @@ const io = new Server(httpServer, {
   }
 });
 
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 10000; // use Render's PORT when provided, fallback to 10000 for local runs
 
 // Middleware
 app.use(cors({
@@ -332,7 +332,8 @@ io.on('connection', (socket) => {
 // Make io accessible to routes
 app.set('io', io);
 
-httpServer.listen(port, () => {
+// Bind to 0.0.0.0 so Render can route traffic properly
+httpServer.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${port}`);
   console.log(`⚡ Socket.io is ready for connections`);
 });

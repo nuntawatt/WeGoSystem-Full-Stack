@@ -38,24 +38,31 @@ if (process.env.CLOUDINARY_URL) {
   console.warn('Cloudinary not configured: set CLOUDINARY_URL or CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET');
 }
 
-// Debug: show whether env vars are present (do not print secret values)
+// Debug: report whether Cloudinary is configured and where (no secrets)
 try {
-  const hasUrl = !!process.env.CLOUDINARY_URL;
-  const hasKey = !!process.env.CLOUDINARY_API_KEY;
-  const hasSecret = !!process.env.CLOUDINARY_API_SECRET;
-  const hasCloud = !!process.env.CLOUDINARY_CLOUD_NAME;
-  // Also report whether we were able to parse credentials from CLOUDINARY_URL
-  let parsedFromUrl = false;
-  try {
-    if (process.env.CLOUDINARY_URL) {
+  let configuredFrom = 'none';
+  let configuredCloudName = null;
+
+  // If CLOUDINARY_URL is present and contains a hostname, assume it configured Cloudinary
+  if (process.env.CLOUDINARY_URL) {
+    try {
       const p = new URL(process.env.CLOUDINARY_URL);
-      parsedFromUrl = !!(p.username && p.password && p.hostname);
+      if (p.hostname) {
+        configuredFrom = 'CLOUDINARY_URL';
+        configuredCloudName = p.hostname;
+      }
+    } catch (e) {
+      // ignore parse errors
     }
-  } catch (e) {
-    parsedFromUrl = false;
   }
 
-  console.debug('Cloudinary env presence:', { hasUrl, hasCloud, hasKey, hasSecret, parsedFromUrl });
+  // If separate env vars provided, prefer that for reporting
+  if (configuredFrom === 'none' && process.env.CLOUDINARY_CLOUD_NAME) {
+    configuredFrom = 'separate_env_vars';
+    configuredCloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  }
+
+  console.info('Cloudinary configuration:', { configuredFrom, cloudName: configuredCloudName });
 } catch (err) {
   // ignore
 }

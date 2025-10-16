@@ -5,7 +5,7 @@ dotenv.config();
 
 async function resetUserStatus() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/WeGo');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/wego-dev');
     console.log('Connected to MongoDB');
 
     const db = mongoose.connection.db;

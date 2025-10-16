@@ -91,7 +91,7 @@ export default function Home() {
                               border border-white/10 backdrop-blur-sm hover:border-blue-500/40 
                               transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
                 <Users className="w-6 h-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-3xl font-bold text-white mb-1">150+</div>
+                <div className="text-3xl font-bold text-white mb-1">50+</div>
                 <div className="text-sm text-slate-400 font-medium">ผู้ใช้งาน</div>
               </div>
             </div>
@@ -103,7 +103,7 @@ export default function Home() {
                               border border-white/10 backdrop-blur-sm hover:border-amber-500/40 
                               transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
                 <Calendar className="w-6 h-6 text-amber-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-3xl font-bold text-white mb-1">50+</div>
+                <div className="text-3xl font-bold text-white mb-1">10+</div>
                 <div className="text-sm text-slate-400 font-medium">กิจกรรม</div>
               </div>
             </div>
@@ -127,7 +127,7 @@ export default function Home() {
               ทำไมต้องเลือก WeGo?
             </h2>
             <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
-              ทุกสิ่งที่คุณต้องการเพื่อเชื่อมต่อ สำรวจ และเติบโตในมหาวิทยาลัย
+              ทุกสิ่งที่คุณต้องการเพื่อเชื่อมต่อ สำรวจ และเติบโตไปด้วยกันในที่เดียว
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

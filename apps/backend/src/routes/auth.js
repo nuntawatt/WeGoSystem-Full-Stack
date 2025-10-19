@@ -370,16 +370,16 @@ router.post('/forgot-password', async (req, res) => {
   const sent = await sendEmail({ to: email, subject: 'WeGo — OTP สำหรับรีเซ็ตรหัสผ่าน', html: emailHtml });
 
   console.log('[email] sendEmail returned:', sent);
-  if (sent && (sent.id || sent.messageId || sent.status)) {
-    console.log('✅ OTP email sent via configured provider - details:', { id: sent.id || sent.messageId, status: sent.status });
-  } else if (sent) {
-    console.log('✅ OTP email sent via configured provider');
+  if (sent && sent.ok) {
+    console.log(`✅ OTP email sent via provider=${sent.provider}`);
+  } else {
+    console.warn('⚠️ OTP email was not sent by any provider', sent);
   }
 
   const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
   res.json({
     message: 'If the email exists, an OTP has been sent',
-    ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp } : {})
+    ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp, note: 'No email provider configured in development' } : {})
   });
   } catch (error) {
     console.error('Forgot password error:', error);

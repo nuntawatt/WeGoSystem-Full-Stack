@@ -1,7 +1,10 @@
 // apps/frontend/src/components/MemberListDM.tsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { useDM } from '../hooks/useDM';
+import UserInfoCard from './UserInfoCard';
 
 interface Member {
   id: string;
@@ -10,6 +13,8 @@ interface Member {
   avatar?: string;
   username?: string;
   isOnline?: boolean;
+  bio?: string;
+  createdAt?: string;
 }
 
 interface MemberListDMProps {
@@ -19,6 +24,9 @@ interface MemberListDMProps {
 export default function MemberListDM({ members }: MemberListDMProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [hoveredMember, setHoveredMember] = useState<Member | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+  const [infoModalMember, setInfoModalMember] = useState<Member | null>(null);
 
   const { openDM } = useDM();
 
@@ -64,6 +72,33 @@ export default function MemberListDM({ members }: MemberListDMProps) {
             <div 
               key={member.id} 
               className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-slate-800/40 to-slate-700/40 hover:from-slate-700/60 hover:to-slate-600/60 transition-all duration-300 group border border-slate-600/30 hover:border-amber-500/40 cursor-pointer shadow-lg hover:shadow-xl"
+              onMouseEnter={(e) => {
+                setHoveredMember(member);
+                setTooltipPosition({ x: e.clientX, y: e.clientY });
+              }}
+              onMouseMove={(e) => {
+                if (hoveredMember?.id === member.id) {
+                  setTooltipPosition({ x: e.clientX, y: e.clientY });
+                }
+              }}
+              onMouseLeave={() => {
+                setHoveredMember(null);
+                setTooltipPosition(null);
+              }}
+              onClick={async () => {
+                try {
+                  // Try to fetch latest profile (ensures bio is available)
+                  const res = await api.get(`/profiles/${member.id}`).catch(() => null);
+                  const prof = res && res.data ? res.data : null;
+                  setInfoModalMember({
+                    ...member,
+                    bio: (prof && (prof.bio || prof.description)) ? (prof.bio || prof.description) : (member.bio || '')
+                  });
+                } catch (err) {
+                  console.error('Failed to load profile for modal:', err);
+                  setInfoModalMember(member);
+                }
+              }}
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="relative flex-shrink-0">
@@ -105,7 +140,10 @@ export default function MemberListDM({ members }: MemberListDMProps) {
               {!isMe && (
                 <button 
                   className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500/20 to-amber-600/20 hover:from-amber-500/30 hover:to-amber-600/30 opacity-0 group-hover:opacity-100 transition-all duration-300 text-amber-400 hover:text-amber-300"
-                  onClick={() => handleDM(member)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDM(member);
+                  }}
                   title="Send direct message"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -117,6 +155,48 @@ export default function MemberListDM({ members }: MemberListDMProps) {
           );
         })}
       </div>
+
+      {/* UserInfoCard - Tooltip Mode */}
+      {hoveredMember && tooltipPosition && (
+        <UserInfoCard
+          user={{
+            id: hoveredMember.id,
+            name: hoveredMember.username || hoveredMember.name,
+            username: hoveredMember.username || hoveredMember.name.split('@')[0],
+            email: hoveredMember.name,
+            role: hoveredMember.role,
+            avatar: hoveredMember.avatar,
+            isOnline: hoveredMember.isOnline,
+            createdAt: hoveredMember.createdAt || new Date().toISOString(),
+            bio: hoveredMember.bio
+          }}
+          mode="tooltip"
+          position={tooltipPosition}
+          onClose={() => {
+            setHoveredMember(null);
+            setTooltipPosition(null);
+          }}
+        />
+      )}
+
+      {/* UserInfoCard - Modal Mode */}
+      {infoModalMember && (
+        <UserInfoCard
+          user={{
+            id: infoModalMember.id,
+            name: infoModalMember.username || infoModalMember.name,
+            username: infoModalMember.username || infoModalMember.name.split('@')[0],
+            email: infoModalMember.name,
+            role: infoModalMember.role,
+            avatar: infoModalMember.avatar,
+            isOnline: infoModalMember.isOnline,
+            createdAt: infoModalMember.createdAt || new Date().toISOString(),
+            bio: infoModalMember.bio
+          }}
+          mode="modal"
+          onClose={() => setInfoModalMember(null)}
+        />
+      )}
     </div>
   );
 }

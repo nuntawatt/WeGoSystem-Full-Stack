@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
 import { socket } from '../../lib/socket';
-import UserInfoCard from '../../components/UserInfoCard';
 
 interface User {
   _id: string;
@@ -34,9 +33,7 @@ export default function UserManagement() {
   const [showModal, setShowModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [hoveredUser, setHoveredUser] = useState<User | null>(null);
-  const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
-  const [infoModalUser, setInfoModalUser] = useState<User | null>(null);
+  
 
   // Reset scroll on mount
   useEffect(() => {
@@ -295,20 +292,7 @@ export default function UserManagement() {
                 filteredUsers.map((user) => (
                   <tr 
                     key={user._id} 
-                    className="border-t border-primary-600/30 hover:bg-gradient-to-r hover:from-primary-700/40 hover:to-transparent transition-all duration-200 group cursor-pointer"
-                    onMouseEnter={(e) => {
-                      setHoveredUser(user);
-                      setTooltipPosition({ x: e.clientX, y: e.clientY });
-                    }}
-                    onMouseMove={(e) => {
-                      if (hoveredUser?._id === user._id) {
-                        setTooltipPosition({ x: e.clientX, y: e.clientY });
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      setHoveredUser(null);
-                      setTooltipPosition(null);
-                    }}
+                    className="border-t border-primary-600/30 hover:bg-gradient-to-r hover:from-primary-700/40 hover:to-transparent transition-all duration-200 group"
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
@@ -381,7 +365,7 @@ export default function UserManagement() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setInfoModalUser(user);
+                            handleViewUser(user);
                           }}
                           title="View user details"
                           className="px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-300 hover:from-blue-500/40 hover:to-blue-600/30 transition-all border border-blue-500/40 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 group/btn"
@@ -558,45 +542,9 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* UserInfoCard - Tooltip Mode (on hover) */}
-      {hoveredUser && tooltipPosition && (
-        <UserInfoCard
-          user={{
-            id: hoveredUser._id,
-            name: hoveredUser.profile?.name || hoveredUser.username || 'N/A',
-            username: hoveredUser.username || hoveredUser.email,
-            email: hoveredUser.email,
-            role: hoveredUser.role,
-            avatar: hoveredUser.profile?.avatar,
-            isOnline: hoveredUser.isOnline || false,
-            createdAt: hoveredUser.createdAt
-          }}
-          mode="tooltip"
-          position={tooltipPosition}
-          onClose={() => {
-            setHoveredUser(null);
-            setTooltipPosition(null);
-          }}
-        />
-      )}
+      {/* Tooltip hover preview removed - View button opens modal instead */}
 
-      {/* UserInfoCard - Modal Mode (on click) */}
-      {infoModalUser && (
-        <UserInfoCard
-          user={{
-            id: infoModalUser._id,
-            name: infoModalUser.profile?.name || infoModalUser.username || 'N/A',
-            username: infoModalUser.username || infoModalUser.email,
-            email: infoModalUser.email,
-            role: infoModalUser.role,
-            avatar: infoModalUser.profile?.avatar,
-            isOnline: infoModalUser.isOnline || false,
-            createdAt: infoModalUser.createdAt
-          }}
-          mode="modal"
-          onClose={() => setInfoModalUser(null)}
-        />
-      )}
+      {/* View uses the existing User Details modal (handleViewUser) */}
     </div>
   );
 }

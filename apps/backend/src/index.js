@@ -23,6 +23,11 @@ import DirectMessage from './models/directmessage.js';
 
 dotenv.config();
 
+// Validate email env for developer clarity
+if (process.env.EMAIL_USER && !process.env.EMAIL_PASSWORD) {
+  console.warn('⚠️ EMAIL_USER is set but EMAIL_PASSWORD is missing. If using Gmail, create an App Password and set EMAIL_PASSWORD to that value.');
+}
+
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,6 +35,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const httpServer = createServer(app);
 const frontendOrigin = process.env.FRONTEND_URL || 'http://localhost:5173';
+console.log('CORS/Frontend origin configured as:', frontendOrigin);
 
 const io = new Server(httpServer, {
   cors: {
@@ -134,7 +140,14 @@ io.on('connection', (socket) => {
       console.log(`💬 Socket ${socket.id} joined chat ${chatId}`);
 
       // Send current participant snapshot to the joining socket so their UI can render members immediately
-      const chat = await Chat.findById(chatId).populate('participants.user', 'email username isOnline');
+      const chat = await Chat.findById(chatId).populate({
+        path: 'participants.user',
+        select: 'email username isOnline createdAt',
+        populate: {
+          path: 'profile',
+          select: 'avatar bio'
+        }
+      });
       if (chat) {
         const parts = chat.participants
           .filter(p => p.user)
@@ -143,7 +156,10 @@ io.on('connection', (socket) => {
             email: p.user.email,
             username: p.user.username,
             isOnline: !!p.user.isOnline,
-            role: p.role
+            role: p.role,
+            avatar: p.user.profile?.avatar || '',
+            bio: p.user.profile?.bio || '',
+            createdAt: p.user.createdAt
           }));
         socket.emit('chat:participants', { participants: parts });
       }

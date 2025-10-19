@@ -90,7 +90,8 @@ export default function DirectChat() {
                 role: p.role,
                 avatar: prof.avatar || '',
                 username: p.user.username || prof.name || p.user.email.split('@')[0],
-                isOnline: p.user.isOnline || false
+                isOnline: p.user.isOnline || false,
+                bio: prof.bio || ''
               };
             });
 
@@ -188,7 +189,9 @@ export default function DirectChat() {
           role: p.role || 'member',
           avatar: p.avatar || '',
           username: p.username || p.email?.split('@')[0] || p.id,
-          isOnline: !!p.isOnline
+          isOnline: !!p.isOnline,
+          bio: p.bio || '',
+          createdAt: p.createdAt || new Date().toISOString()
         }));
 
       setMembersWithProfiles(members);

@@ -9,7 +9,13 @@ import auth from '../middleware/auth.js';
 const router = express.Router();
 
 // In-memory OTP storage (for production, use Redis or database)
-const otpStore = new Map(); // { email: { otp, expiresAt } }
+// We store only a hash of the OTP (HMAC with OTP_SECRET) and expiresAt.
+// Stored shape: { hash: string, expiresAt: number }
+const otpStore = new Map();
+const OTP_SECRET = process.env.OTP_SECRET || process.env.JWT_SECRET || 'default_otp_secret';
+if (!process.env.OTP_SECRET) {
+  console.warn('⚠️ Warning: OTP_SECRET not set. Using JWT_SECRET or fallback. For better security set OTP_SECRET in env');
+}
 
 // Email sending function - supports multiple providers
 const sendOTPEmail = async (email, otp) => {
@@ -69,7 +75,7 @@ const sendOTPEmail = async (email, otp) => {
     console.log(`🔐 OTP: ${otp}`);
     console.log(`⏱️  Expires: 10 minutes`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return { success: true, mode: 'development' };
+    return { success: true, mode: 'development', devOTP: otp };
   }
 
   console.log('[email] provider configured?', hasProvider);
@@ -102,6 +108,9 @@ const sendOTPEmail = async (email, otp) => {
     // Fallback to Gmail (if configured)
     if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
       console.log('[email] attempting to send via Gmail SMTP to', process.env.EMAIL_USER);
+      if (process.env.EMAIL_USER.includes('gmail') && !process.env.EMAIL_PASSWORD) {
+        console.warn('⚠️ Gmail configured without EMAIL_PASSWORD. Use an App Password for Gmail accounts and set EMAIL_PASSWORD to the app password.');
+      }
       // Use explicit SMTP settings for Gmail and enable logger/debug to surface connection errors
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
@@ -134,7 +143,7 @@ const sendOTPEmail = async (email, otp) => {
     // No email service configured - fallback to console log
     console.warn('⚠️ No email service configured, logging OTP to console');
     console.log(`🔐 OTP for ${email}: ${otp}`);
-    return { success: true, mode: 'console' };
+    return { success: true, mode: 'console', devOTP: otp };
 
   } catch (error) {
     console.error('❌ Email send error:', error.message, error);
@@ -333,15 +342,20 @@ router.post('/forgot-password', async (req, res) => {
       return res.json({ message: 'If the email exists, an OTP has been sent' });
     }
 
-    // Generate 6-digit OTP
-    const otp = crypto.randomInt(100000, 999999).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+  // Generate 6-digit OTP
+  const otp = crypto.randomInt(100000, 999999).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-    // Store OTP
-    otpStore.set(email.toLowerCase(), { otp, expiresAt });
+  // Hash OTP using HMAC-SHA256 with OTP_SECRET
+  const hmac = crypto.createHmac('sha256', OTP_SECRET);
+  hmac.update(`${email.toLowerCase()}:${otp}`);
+  const hash = hmac.digest('hex');
 
-    // Send email
-    const emailResult = await sendOTPEmail(email, otp);
+  // Store only the hash and expiry
+  otpStore.set(email.toLowerCase(), { hash, expiresAt });
+
+  // Send email (we still send plaintext OTP via email)
+  const emailResult = await sendOTPEmail(email, otp);
     
     if (emailResult.success) {
       console.log(`✅ OTP ready: ${emailResult.mode}`);
@@ -402,17 +416,22 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Check OTP
-    const storedOTP = otpStore.get(email.toLowerCase());
-    if (!storedOTP) {
+    const stored = otpStore.get(email.toLowerCase());
+    if (!stored) {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
-    if (storedOTP.expiresAt < Date.now()) {
+    if (stored.expiresAt < Date.now()) {
       otpStore.delete(email.toLowerCase());
       return res.status(400).json({ error: 'OTP has expired' });
     }
 
-    if (storedOTP.otp !== otp) {
+    // Verify HMAC
+    const verifyHmac = crypto.createHmac('sha256', OTP_SECRET);
+    verifyHmac.update(`${email.toLowerCase()}:${otp}`);
+    const verifyHash = verifyHmac.digest('hex');
+
+    if (stored.hash !== verifyHash) {
       return res.status(400).json({ error: 'Invalid OTP' });
     }
 
@@ -426,8 +445,8 @@ router.post('/reset-password', async (req, res) => {
     user.password = newPassword;
     await user.save();
 
-    // Clear OTP
-    otpStore.delete(email.toLowerCase());
+  // Clear OTP after successful use
+  otpStore.delete(email.toLowerCase());
 
     console.log(`✅ Password reset successful for ${email}`);
     res.json({ message: 'Password reset successful' });

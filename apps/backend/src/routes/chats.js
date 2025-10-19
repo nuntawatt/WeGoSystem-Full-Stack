@@ -40,7 +40,11 @@ router.post('/direct', async (req, res) => {
     const chat = await Chat.createDirectChat(currentUserId, recipientId);
     
     // Populate user details
-  await chat.populate('participants.user', 'email username isOnline');
+  await chat.populate({
+    path: 'participants.user',
+    select: 'email username isOnline createdAt',
+    populate: { path: 'profile', select: 'avatar bio' }
+  });
 
     res.status(200).json({
       message: 'Direct chat created/retrieved successfully',
@@ -112,7 +116,11 @@ router.post('/group', async (req, res) => {
     }
 
     // Populate user details
-  await chat.populate('participants.user', 'email username isOnline');
+    await chat.populate({
+      path: 'participants.user',
+      select: 'email username isOnline createdAt',
+      populate: { path: 'profile', select: 'avatar bio' }
+    });
     await chat.populate('groupInfo.relatedActivity', 'title category');
 
     res.status(201).json({
@@ -151,7 +159,11 @@ router.get('/', async (req, res) => {
 
     // Get chats with pagination
     const chats = await Chat.find(query)
-      .populate('participants.user', 'email username isOnline')
+      .populate({
+        path: 'participants.user',
+        select: 'email username isOnline createdAt',
+        populate: { path: 'profile', select: 'avatar bio' }
+      })
       .populate('groupInfo.relatedActivity', 'title category')
       .sort({ lastMessageAt: -1 })
       .limit(parseInt(limit))
@@ -596,7 +608,11 @@ router.post('/:id/participants', async (req, res) => {
     );
 
     // Populate user details
-    await chat.populate('participants.user', 'email username');
+    await chat.populate({
+      path: 'participants.user',
+      select: 'email username isOnline createdAt',
+      populate: { path: 'profile', select: 'avatar bio' }
+    });
 
     res.status(200).json({
       message: 'Participant added successfully',
@@ -673,7 +689,11 @@ router.delete('/:id/participants/:userId', async (req, res) => {
     }
 
     // Populate user details
-    await chat.populate('participants.user', 'email username');
+    await chat.populate({
+      path: 'participants.user',
+      select: 'email username isOnline createdAt',
+      populate: { path: 'profile', select: 'avatar bio' }
+    });
 
     res.status(200).json({
       message: 'Participant removed successfully',
@@ -742,7 +762,11 @@ router.put('/:id/participants/:userId/role', async (req, res) => {
     await chat.save();
 
     // Populate user details
-    await chat.populate('participants.user', 'email username');
+    await chat.populate({
+      path: 'participants.user',
+      select: 'email username isOnline createdAt',
+      populate: { path: 'profile', select: 'avatar bio' }
+    });
 
     res.status(200).json({
       message: 'Participant role updated successfully',

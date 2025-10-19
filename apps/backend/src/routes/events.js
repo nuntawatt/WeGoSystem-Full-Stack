@@ -235,10 +235,26 @@ router.post('/:id/join', auth, async (req, res) => {
       const io = req.app.get('io');
       if (io && chat) {
         // repopulate to ensure user info is available
-        await chat.populate('participants.user', 'email username isOnline');
+        await chat.populate({
+          path: 'participants.user',
+          select: 'email username isOnline createdAt',
+          populate: {
+            path: 'profile',
+            select: 'avatar bio'
+          }
+        });
         const parts = chat.participants
           .filter(p => p.user)
-          .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+          .map(p => ({ 
+            id: p.user._id, 
+            email: p.user.email, 
+            username: p.user.username, 
+            role: p.role, 
+            isOnline: !!p.user.isOnline,
+            avatar: p.user.profile?.avatar || '',
+            bio: p.user.profile?.bio || '',
+            createdAt: p.user.createdAt
+          }));
         io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
       }
     } catch (emitErr) {
@@ -278,10 +294,26 @@ router.post('/:id/leave', auth, async (req, res) => {
           // Emit updated participants
           const io = req.app.get('io');
           if (io) {
-            await chat.populate('participants.user', 'email username isOnline');
+            await chat.populate({
+              path: 'participants.user',
+              select: 'email username isOnline createdAt',
+              populate: {
+                path: 'profile',
+                select: 'avatar bio'
+              }
+            });
             const parts = chat.participants
               .filter(p => p.user)
-              .map(p => ({ id: p.user._id, email: p.user.email, username: p.user.username, role: p.role, isOnline: !!p.user.isOnline }));
+              .map(p => ({ 
+                id: p.user._id, 
+                email: p.user.email, 
+                username: p.user.username, 
+                role: p.role, 
+                isOnline: !!p.user.isOnline,
+                avatar: p.user.profile?.avatar || '',
+                bio: p.user.profile?.bio || '',
+                createdAt: p.user.createdAt
+              }));
             io.to(`chat:${chat._id}`).emit('chat:participants', { participants: parts });
           }
         }

@@ -80,7 +80,8 @@ export default function AdminLayout() {
   const navItems = [
     { path: '/admin', label: 'Dashboard', icon: '📊' },
     { path: '/admin/users', label: 'Users', icon: '👥' },
-    { path: '/admin/activities', label: 'Activities', icon: '🎯' }
+    { path: '/admin/activities', label: 'Activities', icon: '🎯' },
+    { path: '/admin/reports', label: 'Reports', icon: '🚨' }
   ];
 
   return (

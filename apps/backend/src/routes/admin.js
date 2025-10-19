@@ -5,6 +5,7 @@ import Group from '../models/group.js';
 import Event from '../models/event.js';
 import Chat from '../models/chat.js';
 import Profile from '../models/profile.js';
+import Report from '../models/report.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -504,6 +505,8 @@ router.get('/dashboard', async (req, res) => {
       totalGroups,
       totalEvents,
       totalChats,
+      totalReports,
+      pendingReports,
       recentUsers,
       recentActivities
     ] = await Promise.all([
@@ -512,6 +515,8 @@ router.get('/dashboard', async (req, res) => {
       Group.countDocuments(),
       Event.countDocuments(),
       Chat.countDocuments(),
+      Report.countDocuments(),
+      Report.countDocuments({ status: 'pending' }),
       User.find().select('email username role createdAt').sort({ createdAt: -1 }).limit(5),
       Activity.find().select('title category status createdAt').sort({ createdAt: -1 }).limit(5)
     ]);
@@ -522,13 +527,192 @@ router.get('/dashboard', async (req, res) => {
         totalActivities,
         totalGroups,
         totalEvents,
-        totalChats
+        totalChats,
+        totalReports,
+        pendingReports
       },
       recentUsers,
       recentActivities
     });
   } catch (error) {
     console.error('Error getting dashboard stats:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ===============================
+// Reports Management
+// ===============================
+
+// Get all reports
+router.get('/reports', async (req, res) => {
+  try {
+    const { status, targetType } = req.query;
+    
+    const query = {};
+    if (status) query.status = status;
+    if (targetType) query.targetType = targetType;
+
+    const reports = await Report.find(query)
+      .populate('reportedBy', 'email username')
+      .populate('reviewedBy', 'email username')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      reports
+    });
+  } catch (error) {
+    console.error('Error getting reports:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get report by ID with target details
+router.get('/reports/:id', async (req, res) => {
+  try {
+    const report = await Report.findById(req.params.id)
+      .populate('reportedBy', 'email username')
+      .populate('reviewedBy', 'email username');
+
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+
+    // Fetch target details based on targetType
+    let targetDetails = null;
+    if (report.targetType === 'group') {
+      targetDetails = await Group.findById(report.targetId)
+        .populate('createdBy', 'email username')
+        .select('name description members');
+    } else if (report.targetType === 'activity') {
+      targetDetails = await Activity.findById(report.targetId)
+        .populate('createdBy', 'email username')
+        .select('title description category');
+    } else if (report.targetType === 'user') {
+      targetDetails = await User.findById(report.targetId)
+        .select('email username role isBlocked');
+    }
+
+    res.status(200).json({
+      report,
+      targetDetails
+    });
+  } catch (error) {
+    console.error('Error getting report:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update report status
+router.put('/reports/:id', async (req, res) => {
+  try {
+    const { status, adminNotes } = req.body;
+
+    if (!['pending', 'reviewing', 'resolved', 'dismissed'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status' });
+    }
+
+    const report = await Report.findById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+
+    report.status = status;
+    if (adminNotes) report.adminNotes = adminNotes;
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+
+    await report.save();
+    await report.populate('reportedBy', 'email username');
+    await report.populate('reviewedBy', 'email username');
+
+    res.status(200).json({
+      message: 'Report updated successfully',
+      report
+    });
+  } catch (error) {
+    console.error('Error updating report:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Take action on reported content
+router.post('/reports/:id/action', async (req, res) => {
+  try {
+    const { action, reason } = req.body; // action: 'delete', 'block_user', 'warn'
+    const report = await Report.findById(req.params.id);
+
+    if (!report) {
+      return res.status(404).json({ message: 'Report not found' });
+    }
+
+    let result = {};
+
+    switch (action) {
+      case 'delete':
+        // Delete the reported content
+        if (report.targetType === 'group') {
+          await Group.findByIdAndDelete(report.targetId);
+          result.message = 'Group deleted successfully';
+        } else if (report.targetType === 'activity') {
+          await Activity.findByIdAndDelete(report.targetId);
+          result.message = 'Activity deleted successfully';
+        }
+        
+        // Update report status
+        report.status = 'resolved';
+        report.adminNotes = `Content deleted. Reason: ${reason || 'Violated community guidelines'}`;
+        break;
+
+      case 'block_user':
+        // Block the content owner
+        let ownerId;
+        if (report.targetType === 'group') {
+          const group = await Group.findById(report.targetId);
+          ownerId = group?.createdBy;
+        } else if (report.targetType === 'activity') {
+          const activity = await Activity.findById(report.targetId);
+          ownerId = activity?.createdBy;
+        } else if (report.targetType === 'user') {
+          ownerId = report.targetId;
+        }
+
+        if (ownerId) {
+          await User.findByIdAndUpdate(ownerId, { isBlocked: true });
+          result.message = 'User blocked successfully';
+        }
+
+        report.status = 'resolved';
+        report.adminNotes = `User blocked. Reason: ${reason || 'Repeated violations'}`;
+        break;
+
+      case 'warn':
+        // Just update report with warning note
+        report.status = 'resolved';
+        report.adminNotes = `Warning issued. Reason: ${reason || 'First-time offense'}`;
+        result.message = 'Warning issued';
+        break;
+
+      case 'dismiss':
+        report.status = 'dismissed';
+        report.adminNotes = `Report dismissed. Reason: ${reason || 'No violation found'}`;
+        result.message = 'Report dismissed';
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Invalid action' });
+    }
+
+    report.reviewedBy = req.user._id;
+    report.reviewedAt = new Date();
+    await report.save();
+
+    res.status(200).json({
+      ...result,
+      report
+    });
+  } catch (error) {
+    console.error('Error taking action on report:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

@@ -6,6 +6,10 @@ const groupSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   members: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -24,13 +28,10 @@ const groupSchema = new mongoose.Schema({
   }
 });
 
-// Add owner as first member with owner role
+// Add owner as first member if owner exists
 groupSchema.pre('save', function(next) {
-  if (this.isNew) {
-    this.members.push({
-      userId: this.owner,
-      role: 'owner'
-    });
+  if (this.isNew && this.owner && !this.members.includes(this.owner)) {
+    this.members.unshift(this.owner);
   }
   this.updatedAt = new Date();
   next();

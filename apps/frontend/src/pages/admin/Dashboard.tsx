@@ -10,6 +10,8 @@ interface DashboardStats {
     totalGroups: number;
     totalEvents: number;
     totalChats: number;
+    totalReports?: number;
+    pendingReports?: number;
   };
   recentUsers: any[];
   recentActivities: any[];
@@ -148,6 +150,34 @@ export default function Dashboard() {
               </div>
             </div>
             <p className="text-3xl sm:text-4xl font-black text-white mb-2">{stats.totalGroups}</p>
+          </div>
+        </div>
+
+        {/* Reports Card */}
+        <div className="group relative bg-gradient-to-br from-red-500/20 via-red-600/10 to-transparent border border-red-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-red-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden col-span-2 md:col-span-1"
+             onClick={() => navigate('/admin/reports')}>
+          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-red-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Reports</p>
+              <div className="bg-gradient-to-br from-red-500/40 to-red-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
+                <i className="fas fa-flag text-red-300 text-lg sm:text-xl"></i>
+              </div>
+            </div>
+            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-red-200 transition-colors">
+              {stats.totalReports || 0}
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-red-300/80 text-xs sm:text-sm">
+                <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+                <span className="font-medium">Manage reports</span>
+              </div>
+              {stats.pendingReports && stats.pendingReports > 0 && (
+                <span className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs text-yellow-300">
+                  {stats.pendingReports} pending
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

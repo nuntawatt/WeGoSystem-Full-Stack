@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { eventsAPI } from '../lib/api';
 import { toast } from './Toasts';
 import { useAuth } from '../hooks/useAuth';
+import ReportModal from './ReportModal';
 
 interface EventCardProps {
   event: {
@@ -28,6 +29,7 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isJoining, setIsJoining] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const handleJoin = async () => {
     if (!user) {
@@ -118,29 +120,43 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
   }
 
   return (
-    <article className="card overflow-hidden group hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 border-2 border-transparent hover:border-amber-500/30">
-      <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
-        <img
-          src={coverImage}
-          alt={event.title}
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          onError={(e) => {
-            // Fallback if image fails to load
-            e.currentTarget.src = `https://placehold.co/600x400/1e293b/f59e0b?text=${encodeURIComponent(event.title)}`;
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-        
-        {/* Participant limit badge with animation */}
-        {maxParticipants && (
-          <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/10">
-            <span className={displayIsFullyBooked ? 'text-red-400' : 'text-green-400'}>
-              {displayedPopularity}/{maxParticipants}
-            </span>
-            <span className="text-white/80 ml-1">คน</span>
-          </div>
-        )}
+    <>
+      <article className="card overflow-hidden group hover:shadow-xl hover:shadow-amber-500/10 transition-all duration-300 border-2 border-transparent hover:border-amber-500/30">
+        <div className="relative h-48 sm:h-56 md:h-64 overflow-hidden">
+          <img
+            src={coverImage}
+            alt={event.title}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.currentTarget.src = `https://placehold.co/600x400/1e293b/f59e0b?text=${encodeURIComponent(event.title)}`;
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          
+          {/* Report Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowReportModal(true);
+            }}
+            className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/10 hover:bg-red-500/20 hover:border-red-500/30 transition-colors group/report"
+          >
+            <svg className="w-4 h-4 text-slate-400 group-hover/report:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+          </button>
+          
+          {/* Participant limit badge with animation */}
+          {maxParticipants && (
+            <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/10">
+              <span className={displayIsFullyBooked ? 'text-red-400' : 'text-green-400'}>
+                {displayedPopularity}/{maxParticipants}
+              </span>
+              <span className="text-white/80 ml-1">คน</span>
+            </div>
+          )}
         
         {/* Location and Date info - show on hover */}
         <div className="absolute bottom-3 left-3 right-3 space-y-1.5 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
@@ -253,5 +269,14 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
         </div>
       </div>
     </article>
+
+    {/* Report Modal */}
+    <ReportModal
+      isOpen={showReportModal}
+      onClose={() => setShowReportModal(false)}
+      targetType="activity"
+      targetId={event.id}
+    />
+  </>
   );
 }

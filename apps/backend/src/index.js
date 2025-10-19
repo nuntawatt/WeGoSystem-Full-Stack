@@ -15,6 +15,7 @@ import chatRoutes from './routes/chats.js';
 import adminRoutes from './routes/admin.js';
 import directMessageRoutes from './routes/directmessages.js';
 import uploadsRoutes from './routes/uploads.js';
+import reportsRoutes from './routes/reports.js';
 import Chat from './models/chat.js';
 import User from './models/user.js';
 import Profile from './models/profile.js';
@@ -38,7 +39,11 @@ const io = new Server(httpServer, {
   }
 });
 
-const port = process.env.PORT || 10000; // use Render's PORT when provided, fallback to 10000 for local runs
+// Port selection logic:
+// - When deployed on Render, Render sets PORT and we should use it.
+// - For local testing you can set LOCAL_PORT to override the default local port.
+// - FALLBACK: 10000
+const port = process.env.PORT || process.env.LOCAL_PORT || 10000;
 
 // Middleware
 app.use(cors({
@@ -67,6 +72,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/directmessages', directMessageRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/uploads', uploadsRoutes);
+app.use('/api/reports', reportsRoutes);
 
 // Simple health check
 app.get('/_health', (req, res) => {

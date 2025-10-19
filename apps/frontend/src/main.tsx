@@ -7,6 +7,12 @@ import './styles/index.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './hooks/useAuth';
 import "@fortawesome/fontawesome-free/css/all.min.css";
+import { startDevToolsProtection } from './lib/devtools-protection';
+
+// Enable DevTools protection in production
+if (import.meta.env.PROD) {
+  startDevToolsProtection();
+}
 
 const qc = new QueryClient();
 

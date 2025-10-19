@@ -4,8 +4,14 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
+// Normalize VITE_API_URL: if provided without "/api" suffix, append it.
+const _rawApiBase = (import.meta.env.VITE_API_URL as string) || '';
+const _defaultBase = 'http://localhost:10000';
+const _baseNoSlash = (_rawApiBase || _defaultBase).replace(/\/$/, '');
+const _baseUrl = _baseNoSlash.endsWith('/api') ? _baseNoSlash : `${_baseNoSlash}/api`;
+
 export const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api", // override with VITE_API_URL in production
+  baseURL: _baseUrl, // override with VITE_API_URL in production
   timeout: 10000,
   withCredentials: true,
   headers: {

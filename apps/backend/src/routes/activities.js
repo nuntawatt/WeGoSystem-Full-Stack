@@ -1,7 +1,9 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Activity from '../models/activity.js';
 import Chat from '../models/chat.js';
 import User from '../models/user.js';
+import Report from '../models/report.js';
 import auth from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
@@ -175,6 +177,66 @@ router.get('/:id', async (req, res) => {
     res.json(activity);
   } catch (error) {
     console.error('Get activity by id error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check whether current user already reported this activity (resolve chat id or activity id)
+router.get('/:id/has-reported', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    let activity = await Activity.findById(id);
+    if (!activity) {
+      // try chat -> relatedActivity
+      try {
+        const chat = await Chat.findById(id);
+        if (chat) {
+          const related = chat.groupInfo && chat.groupInfo.relatedActivity;
+          if (related) activity = await Activity.findById(related);
+        }
+      } catch (e) {
+        console.warn('[HAS-REPORTED] chat resolution error:', e.message || e);
+      }
+    }
+
+    if (!activity) {
+      try {
+        activity = await Activity.findOne({ chat: id });
+      } catch (e) {
+        console.warn('[HAS-REPORTED] find by chat field error:', e.message || e);
+      }
+    }
+
+    if (!activity) return res.json({ reported: false });
+
+    // Check embedded reports
+    const embedded = Array.isArray(activity.reports) && activity.reports.some(r => String(r.user) === String(userId));
+    if (embedded) return res.json({ reported: true });
+
+    // Check reports collection
+    const existing = await Report.findOne({ targetType: 'activity', targetId: activity._id, reportedBy: userId });
+    if (existing) return res.json({ reported: true });
+
+    res.json({ reported: false });
+  } catch (error) {
+    console.error('Has-reported error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get activity by chat id (helper for client-side resolution)
+router.get('/by-chat/:chatId', async (req, res) => {
+  try {
+    const { chatId } = req.params;
+    const activity = await Activity.findOne({ 'chat': chatId }).populate('createdBy', 'email username');
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found for chat' });
+    }
+    res.json({ activity });
+  } catch (error) {
+    console.error('Error finding activity by chat:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -452,40 +514,6 @@ router.post('/:id/rate', auth, async (req, res) => {
   }
 });
 
-// Report activity
-router.post('/:id/report', auth, async (req, res) => {
-  try {
-    const { reason, description = '' } = req.body;
-    
-    if (!reason) {
-      return res.status(400).json({ error: 'Report reason is required' });
-    }
-
-    const activity = await Activity.findById(req.params.id);
-    
-    if (!activity) {
-      return res.status(404).json({ error: 'Activity not found' });
-    }
-
-    // Check if user already reported this activity
-    const existingReport = activity.reports.find(r => r.user.equals(req.user._id));
-    
-    if (existingReport) {
-      return res.status(400).json({ error: 'You have already reported this activity' });
-    }
-
-    activity.reports.push({
-      user: req.user._id,
-      reason,
-      description
-    });
-
-    await activity.save();
-    res.json({ message: 'Report submitted successfully' });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
 
 // Cancel activity (by creator)
 router.post('/:id/cancel', auth, async (req, res) => {
@@ -623,6 +651,194 @@ router.get('/user/me', auth, async (req, res) => {
     res.json(activities);
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+});
+
+// Report an activity
+router.post('/:id/report', auth, async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    const activityId = req.params.id;
+    const reportedBy = req.user._id;
+
+    console.log('[REPORT] incoming report for activityId:', activityId, 'by user:', reportedBy);
+    console.log('[REPORT] payload reason:', reason, 'details length:', (details || '').length);
+
+    // Validate ObjectId format for activityId
+    if (!mongoose.Types.ObjectId.isValid(activityId)) {
+      console.log('[REPORT] Invalid ObjectId format:', activityId);
+      return res.status(400).json({ error: 'Invalid activity ID format' });
+    }
+
+    // Verify activity exists; if not, attempt to resolve server-side from chat id or activity.chat
+    let activity = await Activity.findById(activityId);
+    if (!activity) {
+      console.log('[REPORT] Activity not found by id, attempting to resolve as chat id or activity.chat...');
+      try {
+        // Try treat activityId as a chat id
+        const chat = await Chat.findById(activityId);
+        if (chat) {
+          const related = chat.groupInfo && chat.groupInfo.relatedActivity;
+          if (related) {
+            console.log('[REPORT] Resolved relatedActivity from chat.groupInfo:', related);
+            activity = await Activity.findById(related);
+          }
+        }
+      } catch (e) {
+        console.warn('[REPORT] error while resolving chat by id:', e.message || e);
+      }
+
+      // If still not found, try to find an activity whose chat equals this id
+      if (!activity) {
+        try {
+          activity = await Activity.findOne({ chat: activityId });
+          if (activity) console.log('[REPORT] Resolved activity by Activity.chat == id ->', activity._id);
+        } catch (e) {
+          console.warn('[REPORT] error while finding Activity by chat field:', e.message || e);
+        }
+      }
+
+      if (!activity) {
+        console.log('[REPORT] Unable to resolve activity for id:', activityId);
+        return res.status(404).json({ error: 'Activity not found' });
+      }
+    }
+
+    // Validate reason
+    const validReasons = ['spam', 'inappropriate_content', 'harassment', 'false_information', 'scam', 'other'];
+    if (!reason || !validReasons.includes(reason)) {
+      return res.status(400).json({ error: 'Invalid reason' });
+    }
+
+    // Validate details
+    if (!details || details.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide detailed description (at least 10 characters)' });
+    }
+
+    // Create report (use resolved activity._id so we don't store chat id)
+    const resolvedTargetId = activity._id || activity;
+    console.log('[REPORT] creating Report for resolved activity id:', resolvedTargetId);
+
+    const report = new Report({
+      targetType: 'activity',
+      targetId: resolvedTargetId,
+      reportedBy,
+      reason,
+      details
+    });
+
+    try {
+      await report.save();
+      await report.populate('reportedBy', 'email');
+      console.log('[REPORT] Report document saved successfully');
+    } catch (saveErr) {
+      // Check for MongoDB duplicate key error (E11000)
+      if (saveErr.code === 11000 || saveErr.message.includes('duplicate key')) {
+        console.log('[REPORT] Duplicate report detected (unique index)', reportedBy.toString());
+        return res.status(409).json({ error: 'You have already reported this activity' });
+      }
+      throw saveErr;
+    }
+
+    // Also push a lightweight embedded report into the Activity.reports array
+    try {
+      if (activity) {
+        activity.reports = activity.reports || [];
+        activity.reports.push({
+          user: reportedBy,
+          reason,
+          description: details || ''
+        });
+        await activity.save();
+        console.log('[REPORT] embedded report saved to Activity.reports for', activity._id);
+      }
+    } catch (e) {
+      console.warn('[REPORT] failed to push embedded report into activity:', e.message || e);
+    }
+
+    res.status(201).json({ 
+      message: 'Report submitted successfully', 
+      report 
+    });
+  } catch (error) {
+    console.error('[REPORT] Error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get reviews for an activity (embedded in Activity.ratings)
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const activity = await Activity.findById(req.params.id).populate('ratings.user', 'email username');
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    const reviews = (activity.ratings || []).slice().sort((a, b) => b.createdAt - a.createdAt);
+    const avgRating = reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
+
+    res.json({
+      reviews,
+      averageRating: avgRating.toFixed(1),
+      totalReviews: reviews.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create or update embedded review for an activity
+router.post('/:id/reviews', auth, async (req, res) => {
+  try {
+    // Accept either 'comment' (client) or 'review' (schema) for compatibility
+    const { rating, comment, review } = req.body;
+    const reviewText = (comment !== undefined ? comment : review) || '';
+    const activityId = req.params.id;
+    const userId = req.user._id;
+
+    const activity = await Activity.findById(activityId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    // Check membership/participation
+    const isParticipant = activity.participants?.some(p => (p.user?._id || p.user).toString() === userId.toString());
+    const isCreator = (activity.createdBy?._id || activity.createdBy)?.toString() === userId.toString();
+    if (!isParticipant && !isCreator) {
+      return res.status(403).json({ error: 'Only participants can review this activity' });
+    }
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    // Find existing rating by this user
+    activity.ratings = activity.ratings || [];
+    const existingIndex = activity.ratings.findIndex(r => r.user.toString() === userId.toString());
+    const now = new Date();
+
+    if (existingIndex !== -1) {
+      activity.ratings[existingIndex].rating = rating;
+      // store into schema field 'review'
+      activity.ratings[existingIndex].review = reviewText || activity.ratings[existingIndex].review;
+      activity.ratings[existingIndex].updatedAt = now;
+    } else {
+      activity.ratings.push({ user: userId, rating, review: reviewText, createdAt: now, updatedAt: now });
+    }
+
+    // Recalculate averageRating on activity
+    const ratings = activity.ratings;
+    activity.averageRating = ratings.length > 0 ? (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) : 0;
+
+    await activity.save();
+
+    // Return the saved/updated rating (populate the user)
+    const saved = activity.ratings.find(r => r.user.toString() === userId.toString());
+    await activity.populate({ path: 'ratings.user', select: 'email username' });
+
+    res.status(201).json(saved);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 });
 

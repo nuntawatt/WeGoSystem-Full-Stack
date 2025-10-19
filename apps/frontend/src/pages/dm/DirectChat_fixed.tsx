@@ -91,7 +91,7 @@ export default function DirectChat() {
           setMembersWithProfiles(null);
         }
       } catch (error: any) {
-        console.error('❌ Failed to fetch chat:', error);
+        console.error('Failed to fetch chat:', error);
       } finally {
         setIsLoading(false);
       }

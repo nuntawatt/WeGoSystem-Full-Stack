@@ -21,6 +21,7 @@ import Dashboard from './pages/admin/Dashboard';
 import AdminLayout from './components/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import ActivityManagement from './pages/admin/ActivityManagement';
+import ReportManagement from './pages/admin/ReportManagement';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="activities" element={<ActivityManagement />} />
+          <Route path="reports" element={<ReportManagement />} />
           <Route index element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
 

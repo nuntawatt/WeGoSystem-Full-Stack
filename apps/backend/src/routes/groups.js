@@ -1,6 +1,8 @@
 import express from 'express';
 import Group from '../models/group.js';
 import Activity from '../models/activity.js';
+import Review from '../models/review.js';
+import Report from '../models/report.js';
 import auth from '../middleware/auth.js';
 
 const router = express.Router();
@@ -201,4 +203,148 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
+// Get reviews for a group
+router.get('/:id/reviews', async (req, res) => {
+  try {
+    const reviews = await Review.find({ groupId: req.params.id })
+      .populate('userId', 'email')
+      .sort({ createdAt: -1 });
+    
+    // Calculate average rating
+    const avgRating = reviews.length > 0
+      ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length
+      : 0;
+    
+    res.json({
+      reviews,
+      averageRating: avgRating.toFixed(1),
+      totalReviews: reviews.length
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create or update review for a group
+router.post('/:id/reviews', auth, async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const groupId = req.params.id;
+    const userId = req.user._id;
+
+    // Verify group exists
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Check if user was/is a member of the group
+    const isMember = group.members.some(member => 
+      member.userId.toString() === userId.toString()
+    );
+    
+    if (!isMember) {
+      return res.status(403).json({ error: 'Only group members can review' });
+    }
+
+    // Validate rating
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+    }
+
+    // Check if review already exists
+    let review = await Review.findOne({ groupId, userId });
+    
+    if (review) {
+      // Update existing review
+      review.rating = rating;
+      review.comment = comment || review.comment;
+      await review.save();
+    } else {
+      // Create new review
+      review = new Review({
+        groupId,
+        userId,
+        rating,
+        comment
+      });
+      await review.save();
+    }
+
+    await review.populate('userId', 'email');
+    res.status(201).json(review);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Report a group
+router.post('/:id/report', auth, async (req, res) => {
+  try {
+    const { reason, details } = req.body;
+    const groupId = req.params.id;
+    const reportedBy = req.user._id;
+
+    // Verify group exists
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: 'Group not found' });
+    }
+
+    // Validate reason
+    const validReasons = ['spam', 'inappropriate_content', 'harassment', 'false_information', 'scam', 'other'];
+    if (!reason || !validReasons.includes(reason)) {
+      return res.status(400).json({ error: 'Invalid reason' });
+    }
+
+    // Validate details
+    if (!details || details.trim().length < 10) {
+      return res.status(400).json({ error: 'Please provide detailed description (at least 10 characters)' });
+    }
+
+    // Create report
+    const report = new Report({
+      targetType: 'group',
+      targetId: groupId,
+      reportedBy,
+      reason,
+      details
+    });
+
+    await report.save();
+    await report.populate('reportedBy', 'email');
+    
+    res.status(201).json({ 
+      message: 'Report submitted successfully', 
+      report 
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 export default router;
+
+// Dev-only helper: create group from activity id (useful for testing)
+// Accessible only when NODE_ENV !== 'production'
+if (process.env.NODE_ENV !== 'production') {
+  router.post('/__dev/create-from-activity/:activityId', async (req, res) => {
+    try {
+      const Activity = await import('../models/activity.js');
+      const activity = await Activity.default.findById(req.params.activityId);
+      if (!activity) return res.status(404).json({ error: 'Activity not found' });
+
+      const Group = await import('../models/group.js');
+      const group = new Group.default({
+        name: `Group for: ${activity.title}`,
+        owner: req.body.owner || activity.createdBy,
+        members: [req.body.owner || activity.createdBy],
+        isPrivate: false
+      });
+      await group.save();
+      res.status(201).json(group);
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+}

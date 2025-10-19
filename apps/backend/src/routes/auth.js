@@ -369,7 +369,12 @@ router.post('/forgot-password', async (req, res) => {
 
   const sent = await sendEmail({ to: email, subject: 'WeGo — OTP สำหรับรีเซ็ตรหัสผ่าน', html: emailHtml });
 
-  if (sent) console.log('✅ OTP email sent via configured provider');
+  console.log('[email] sendEmail returned:', sent);
+  if (sent && (sent.id || sent.messageId || sent.status)) {
+    console.log('✅ OTP email sent via configured provider - details:', { id: sent.id || sent.messageId, status: sent.status });
+  } else if (sent) {
+    console.log('✅ OTP email sent via configured provider');
+  }
 
   const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
   res.json({

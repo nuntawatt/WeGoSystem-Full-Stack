@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import User from '../models/user.js';
 import Profile from '../models/profile.js';
 import auth from '../middleware/auth.js';
+import { sendEmail } from '../utils/sendEmail.js';
 
 const router = express.Router();
 
@@ -355,18 +356,26 @@ router.post('/forgot-password', async (req, res) => {
   otpStore.set(email.toLowerCase(), { hash, expiresAt });
 
   // Send email (we still send plaintext OTP via email)
-  const emailResult = await sendOTPEmail(email, otp);
-    
-    if (emailResult.success) {
-      console.log(`✅ OTP ready: ${emailResult.mode}`);
-    }
+  const emailHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 6px 30px rgba(2,6,23,0.1);">
+        <h2 style="margin-top:0">WeGo — รหัส OTP สำหรับรีเซ็ตรหัสผ่าน</h2>
+        <p>OTP ของคุณคือ</p>
+        <h1 style="color:#f59e0b;letter-spacing:4px">${otp}</h1>
+        <p>รหัสมีอายุ ${process.env.OTP_EXPIRES_IN || '10m'}</p>
+      </div>
+    </div>
+  `;
 
-    const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
-    res.json({ 
-      message: 'If the email exists, an OTP has been sent',
-      // Send OTP back in development mode only when no email provider is configured
-      ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp } : {})
-    });
+  const sent = await sendEmail({ to: email, subject: 'WeGo — OTP สำหรับรีเซ็ตรหัสผ่าน', html: emailHtml });
+
+  if (sent) console.log('✅ OTP email sent via configured provider');
+
+  const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
+  res.json({
+    message: 'If the email exists, an OTP has been sent',
+    ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp } : {})
+  });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Failed to process request' });

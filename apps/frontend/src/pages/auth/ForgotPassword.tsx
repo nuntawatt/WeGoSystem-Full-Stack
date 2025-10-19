@@ -41,7 +41,8 @@ export default function ForgotPassword() {
       
       setStep('otp');
     } catch (error: any) {
-      toast(error?.response?.data?.error || 'เกิดข้อผิดพลาด', 'error');
+      const serverMessage = error?.response?.data?.message || error?.response?.data?.error;
+      toast(serverMessage || 'เกิดข้อผิดพลาด', 'error');
     } finally {
       setLoading(false);
     }

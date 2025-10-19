@@ -369,18 +369,28 @@ router.post('/forgot-password', async (req, res) => {
 
   const sent = await sendEmail({ to: email, subject: 'WeGo — OTP สำหรับรีเซ็ตรหัสผ่าน', html: emailHtml });
 
-  console.log('[email] sendEmail returned:', sent);
-  if (sent && sent.ok) {
-    console.log(`✅ OTP email sent via provider=${sent.provider}`);
-  } else {
-    console.warn('⚠️ OTP email was not sent by any provider', sent);
+  console.log('[email] sendEmail returned:', sent && { ok: sent.ok, provider: sent.provider, code: sent.code, reason: sent.reason });
+
+  if (!sent || !sent.ok) {
+    // Resend domain verification required
+    if (sent && sent.reason === 'DOMAIN_REQUIRED') {
+      return res.status(400).json({
+        message:
+          'Email provider (Resend) ต้องยืนยันโดเมนก่อนถึงจะส่งหาผู้อื่นได้ — ให้ verify domain ใน Resend และตั้ง FROM_EMAIL เป็นอีเมลโดเมนนั้น หรือทดสอบส่งไปอีเมลเจ้าของบัญชี Resend เท่านั้น',
+      });
+    }
+
+    // No provider configured
+    if (sent && sent.provider === 'none') {
+      return res.status(500).json({ message: 'No email provider configured' });
+    }
+
+    // Generic failure
+    return res.status(500).json({ message: 'Email send failed' });
   }
 
-  const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
-  res.json({
-    message: 'If the email exists, an OTP has been sent',
-    ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp, note: 'No email provider configured in development' } : {})
-  });
+  // Success path
+  return res.json({ message: 'ส่ง OTP แล้ว' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Failed to process request' });

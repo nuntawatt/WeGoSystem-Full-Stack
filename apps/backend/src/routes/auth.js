@@ -154,13 +154,11 @@ const sendOTPEmail = async (email, otp) => {
   }
 };
 
-// Send password reset link email (JWT token)
+// Send password reset link email (JWT token) - now uses sendEmail utility
 const sendResetEmail = async (email, token) => {
-  console.log('[email] sendResetEmail called for', email);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const resetLink = `${frontendUrl.replace(/\/$/, '')}/auth/reset-password-confirm?token=${encodeURIComponent(token)}`;
-
-  const emailHtml = `
+  const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 6px 30px rgba(2,6,23,0.1);">
         <h2 style="margin-top:0">WeGo Password Reset</h2>
@@ -174,77 +172,14 @@ const sendResetEmail = async (email, token) => {
       </div>
     </div>
   `;
+  const text = `Reset your password with this link: ${resetLink}`;
 
-  const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
-  const isDevelopment = process.env.NODE_ENV !== 'production';
-  console.log('[email] provider configured?', hasProvider);
-  if (!hasProvider && isDevelopment) {
-    console.log('────────────────────────────────────────────');
-    console.log('✉️ [DEV MODE] Password Reset Email');
-    console.log('To:', email);
-    console.log('Link:', resetLink);
-    console.log('────────────────────────────────────────────');
-    return { success: true, mode: 'development' };
-  }
-
-  try {
-    if (process.env.RESEND_API_KEY) {
-      console.log('[email] attempting to send reset link via Resend');
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'WeGo <noreply@wego.app>',
-          to: email,
-          subject: 'WeGo - Password reset',
-          html: emailHtml
-        })
-      });
-
-      if (response.ok) {
-        console.log(`✅ Reset link sent via Resend to ${email}`);
-        return { success: true, mode: 'resend' };
-      }
-    }
-
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-      console.log('[email] attempting to send reset link via Gmail SMTP to', process.env.EMAIL_USER);
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
-        },
-        logger: process.env.EMAIL_DEBUG === 'true',
-        debug: process.env.EMAIL_DEBUG === 'true',
-        connectionTimeout: 30 * 1000,
-        greetingTimeout: 30 * 1000,
-        socketTimeout: 30 * 1000
-      });
-
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: 'WeGo - Password reset',
-        html: emailHtml
-      });
-
-      console.log(`✅ Reset link sent via Gmail to ${email}`);
-      return { success: true, mode: 'gmail' };
-    }
-
-    console.warn('⚠️ No email service configured, logging reset link to console');
-    console.log(`Reset link for ${email}: ${resetLink}`);
-    return { success: true, mode: 'console' };
-  } catch (error) {
-    console.error('❌ Reset email send error:', error?.message || error);
-    return { success: false, mode: 'fallback', error: error?.message };
-  }
+  const result = await sendEmail({ to: email, subject: 'WeGo - Password reset', html, text });
+  // Normalize to previous shape
+  if (result.ok) return { success: true, mode: result.provider };
+  if (result.provider === 'resend' && result.reason === 'DOMAIN_REQUIRED') return { success: false, mode: 'resend', reason: 'DOMAIN_REQUIRED', error: result.error };
+  if (result.provider === 'none') return { success: false, mode: 'none', reason: 'NO_PROVIDER' };
+  return { success: false, mode: result.provider || 'unknown', error: result.result || result.error };
 };
 
 // Register
@@ -414,8 +349,14 @@ router.post('/forgot-password-link', async (req, res) => {
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const emailResult = await sendResetEmail(email, token);
 
-    if (emailResult.success) {
-      console.log(`✅ Password reset link prepared: ${emailResult.mode}`);
+    if (!emailResult.success) {
+      if (emailResult.reason === 'DOMAIN_REQUIRED') {
+        return res.status(400).json({ message: 'Email provider (Resend) ต้องยืนยันโดเมนก่อนถึงจะส่งหาผู้อื่นได้ — ให้ verify domain ใน Resend และตั้ง FROM_EMAIL เป็นอีเมลโดเมนนั้น หรือทดสอบส่งไปอีเมลเจ้าของบัญชี Resend เท่านั้น' });
+      }
+      if (emailResult.reason === 'NO_PROVIDER') {
+        return res.status(500).json({ message: 'No email provider configured' });
+      }
+      return res.status(500).json({ message: 'Email send failed' });
     }
 
     const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));

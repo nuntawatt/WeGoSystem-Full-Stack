@@ -8,4 +8,5 @@ apps/**/build/
 apps/**/.env
 apps/**/.env.*
 apps/**/.DS_Store
+apps/**/*.tsbuildinfo
 apps/**/.vscode/

@@ -46,9 +46,6 @@ const io = new Server(httpServer, {
 });
 
 // Port selection logic:
-// - When deployed on Render, Render sets PORT and we should use it.
-// - For local testing you can set LOCAL_PORT to override the default local port.
-// - FALLBACK: 10000
 const port = process.env.PORT || process.env.LOCAL_PORT || 10000;
 
 // Middleware
@@ -94,9 +91,6 @@ app.use((err, req, res, next) => {
 // ===============================
 // Socket.io Configuration
 // ===============================
-
-
-// Store active users: map userId -> Set of socketIds
 const activeUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -105,9 +99,7 @@ io.on('connection', (socket) => {
   // User authentication and join
   socket.on('user:join', async (userId) => {
     try {
-        // Avoid processing if this same socket already registered with this userId
         if (socket.userId && socket.userId === userId) {
-          // already joined on this socket for this user
           return;
         }
 
@@ -118,7 +110,6 @@ io.on('connection', (socket) => {
         socket.userId = userId;
         console.log(`👤 User ${userId} joined with socket ${socket.id}`);
 
-      // Only update DB and emit if this is the first active socket for the user
       const currentSockets = activeUsers.get(userId);
       if (currentSockets && currentSockets.size === 1) {
         await User.findByIdAndUpdate(userId, {
@@ -138,8 +129,6 @@ io.on('connection', (socket) => {
     try {
       socket.join(`chat:${chatId}`);
       console.log(`💬 Socket ${socket.id} joined chat ${chatId}`);
-
-      // Send current participant snapshot to the joining socket so their UI can render members immediately
       const chat = await Chat.findById(chatId).populate({
         path: 'participants.user',
         select: 'email username isOnline createdAt',
@@ -177,8 +166,7 @@ io.on('connection', (socket) => {
   // Send message (save to DB and broadcast)
   socket.on('message:send', async (data) => {
     const { chatId, userId, sender, content, type = 'text', fileUrl } = data;
-    // Support both field names and normalize senderId to a string id when possible
-    let senderId = userId || sender; // can be string or object
+    let senderId = userId || sender;
     if (senderId && typeof senderId === 'object') {
       if (senderId._id) senderId = senderId._id.toString();
       else if (senderId.userId) senderId = senderId.userId.toString();
@@ -187,7 +175,6 @@ io.on('connection', (socket) => {
     }
     
     try {
-      // Find chat
       const chat = await Chat.findById(chatId);
       if (!chat) {
         console.log(`❌ Chat ${chatId} not found`);
@@ -195,7 +182,6 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Check if sender is a participant
       const isParticipant = chat.participants.some(p => 
         p.user.toString() === senderId || p.user.equals(senderId)
       );
@@ -205,14 +191,11 @@ io.on('connection', (socket) => {
         return;
       }
 
-      // Add message to database
       await chat.addMessage(senderId, content.trim(), type, fileUrl);
       await chat.populate('messages.sender', 'email username');
 
-      // Get the newly added message
       let newMessage = chat.messages[chat.messages.length - 1];
 
-      // Enrich sender with profile avatar if exists
       try {
         const prof = await Profile.findOne({ userId: senderId });
         const nm = newMessage.toObject ? newMessage.toObject() : { ...newMessage };
@@ -223,10 +206,9 @@ io.on('connection', (socket) => {
         console.error('Failed to attach profile avatar to message:', profErr);
       }
 
-      // Broadcast to all users in the chat room EXCEPT the sender
       socket.to(`chat:${chatId}`).emit('message:receive', newMessage);
       
-      // Also send back to sender for confirmation (optional)
+      // Also send back to sender for confirmation
       socket.emit('message:sent', newMessage);
 
       console.log(`📤 Message sent to chat ${chatId} by user ${senderId}`);
@@ -334,7 +316,6 @@ io.on('connection', (socket) => {
           sockets.delete(socket.id);
           if (sockets.size === 0) {
             activeUsers.delete(userId);
-            // Update user offline status in database and notify
             await User.findByIdAndUpdate(userId, {
               isOnline: false,
               lastActive: new Date()
@@ -342,7 +323,6 @@ io.on('connection', (socket) => {
             io.emit('userStatusChanged', { userId, isOnline: false });
             console.log(`⚫ User ${userId} is now OFFLINE`);
           } else {
-            // Still has other active sockets; do nothing
             activeUsers.set(userId, sockets);
             console.log(`🔌 Socket ${socket.id} disconnected for user ${userId}, still online on other sockets`);
           }
@@ -358,8 +338,6 @@ io.on('connection', (socket) => {
 
 // Make io accessible to routes
 app.set('io', io);
-
-// Bind to 0.0.0.0 so Render can route traffic properly
 httpServer.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server is running on port ${port}`);
   console.log(`⚡ Socket.io is ready for connections`);

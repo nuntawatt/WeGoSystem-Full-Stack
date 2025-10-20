@@ -16,7 +16,32 @@ function maskEmail(email = '') {
  * @param {{to:string|string[], subject:string, html:string, text?:string}}
  */
 export async function sendEmail({ to, subject, html, text }) {
-  // Primary: Resend (used in prod and dev if configured)
+  // Dev-first: when not in production and SMTP credentials exist, prefer SMTP to avoid
+  // hitting Resend test-mode/domain verification during local testing.
+  const haveSmtp = !!process.env.EMAIL_USER && !!process.env.EMAIL_PASSWORD;
+  if (!isProd && haveSmtp) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: Number(process.env.EMAIL_PORT || 587),
+        secure: false,
+        requireTLS: true,
+        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
+        connectionTimeout: 10000,
+      });
+
+      const from = process.env.FROM_EMAIL || `WeGo <${process.env.EMAIL_USER}>`;
+      const info = await transporter.sendMail({ from, to, subject, html, text });
+      const recipients = [].concat(to || []);
+      console.log(`✅ Email sent via SMTP(dev) -> ${recipients.map(maskEmail).join(', ')}`);
+      return { ok: true, provider: 'smtp', result: info };
+    } catch (err) {
+      console.error('❌ SMTP(dev) error:', String(err?.message || err));
+      // Fall through and try Resend if available
+    }
+  }
+
+  // Primary: Resend (used in production, or in development if SMTP not available)
   if (process.env.RESEND_API_KEY && process.env.FROM_EMAIL) {
     try {
       const resend = new Resend(process.env.RESEND_API_KEY);
@@ -51,28 +76,7 @@ export async function sendEmail({ to, subject, html, text }) {
   }
 
   // Fallback SMTP - only allowed in non-production (dev/test)
-  const haveSmtp = !!process.env.EMAIL_USER && !!process.env.EMAIL_PASSWORD;
-  if (!isProd && haveSmtp) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: Number(process.env.EMAIL_PORT || 587),
-        secure: false,
-        requireTLS: true,
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD },
-        connectionTimeout: 10000,
-      });
-
-      const from = process.env.FROM_EMAIL || `WeGo <${process.env.EMAIL_USER}>`;
-      const info = await transporter.sendMail({ from, to, subject, html, text });
-      const recipients = [].concat(to || []);
-      console.log(`✅ Email sent via SMTP(dev) -> ${recipients.map(maskEmail).join(', ')}`);
-      return { ok: true, provider: 'smtp', result: info };
-    } catch (err) {
-      console.error('❌ SMTP(dev) error:', String(err?.message || err));
-      return { ok: false, provider: 'smtp', code: 500, reason: 'SMTP_ERROR', error: err };
-    }
-  }
+  // If SMTP fallback is not applicable, continue to 'No provider' at end.
 
   // No provider
   console.warn('⚠️ No email provider configured (Resend/SMTP missing).');

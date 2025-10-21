@@ -184,7 +184,7 @@ export default function Create() {
       };
 
       const newEvent = await createEvent(eventData);
-      toast('กิจกรรมถูกสร้างเรียบร้อยแล้ว! 🎉', 'success');
+      toast('กิจกรรมถูกสร้างเรียบร้อยแล้ว 🎉', 'success');
       navigate('/explore');
     } catch (error: any) {
       console.error('Create event error:', error);
@@ -221,7 +221,7 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="coverImage">📸 Cover Image</label>
+            <label className="label font-medium text-slate-200" htmlFor="coverImage">Cover Image</label>
             <div className="flex gap-4 items-start">
               <div className="relative w-40 h-40 bg-slate-700/30 rounded-lg overflow-hidden border border-white/10">
                 {previewImage ? (
@@ -256,7 +256,6 @@ export default function Create() {
                 )}
                 <p className="text-xs text-slate-400">
                   Recommended: 1200×800px • Max 5MB<br />
-                  Supports: JPG, PNG, WebP
                 </p>
               </div>
               <input
@@ -270,12 +269,12 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="title">📝 Activity Name</label>
+            <label className="label font-medium text-slate-200" htmlFor="title">Activity Name : </label>
             <input
               id="title"
               name="title"
               className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
-              placeholder="e.g., Saturday Hiking"
+              placeholder="Enter activity name"
               value={formData.title}
               onChange={handleChange}
               required
@@ -284,7 +283,7 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="description">📄 Description</label>
+            <label className="label font-medium text-slate-200" htmlFor="description">Description :</label>
             <textarea
               id="description"
               name="description"
@@ -298,12 +297,12 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="location">📍 Location</label>
+            <label className="label font-medium text-slate-200" htmlFor="location">Location : </label>
             <input
               id="location"
               name="location"
               className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
-              placeholder="e.g., Central Park, New York"
+              placeholder="Enter the activity location"
               value={formData.location}
               onChange={handleChange}
               required
@@ -313,7 +312,7 @@ export default function Create() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label font-medium text-slate-200" htmlFor="date">📅 Date</label>
+              <label className="label font-medium text-slate-200" htmlFor="date">Date : </label>
               <input
                 type="date"
                 id="date"
@@ -326,7 +325,7 @@ export default function Create() {
               />
             </div>
             <div>
-              <label className="label font-medium text-slate-200" htmlFor="time">⏰ Time</label>
+              <label className="label font-medium text-slate-200" htmlFor="time">Time : </label>
               <input
                 type="time"
                 id="time"
@@ -349,7 +348,7 @@ export default function Create() {
           </div>
 
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="maxParticipants">👥 Max Participants</label>
+            <label className="label font-medium text-slate-200" htmlFor="maxParticipants">Max Participants</label>
             <input
               type="number"
               id="maxParticipants"
@@ -379,7 +378,7 @@ export default function Create() {
                 Creating activity...
               </>
             ) : (
-              <>🚀 Create Activity</>
+              <>Create Activity</>
             )}
           </button>
         </form>

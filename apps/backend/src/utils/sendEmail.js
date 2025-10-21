@@ -19,7 +19,8 @@ export async function sendEmail({ to, subject, html, text }) {
   // Dev-first: when not in production and SMTP credentials exist, prefer SMTP to avoid
   // hitting Resend test-mode/domain verification during local testing.
   const haveSmtp = !!process.env.EMAIL_USER && !!process.env.EMAIL_PASSWORD;
-  if (!isProd && haveSmtp) {
+  const allowSmtpInProd = String(process.env.ALLOW_SMTP_IN_PROD || '').toLowerCase() === 'true';
+  if (( !isProd || allowSmtpInProd ) && haveSmtp) {
     try {
       const transporter = nodemailer.createTransport({
         host: process.env.EMAIL_HOST || 'smtp.gmail.com',
@@ -79,6 +80,28 @@ export async function sendEmail({ to, subject, html, text }) {
   // If SMTP fallback is not applicable, continue to 'No provider' at end.
 
   // No provider
-  console.warn('⚠️ No email provider configured (Resend/SMTP missing).');
-  return { ok: false, provider: 'none', code: 500, reason: 'NO_PROVIDER' };
+    console.warn('⚠️ No email provider configured (Resend/SMTP missing).');
+    // In development, create a free Ethereal account and send a preview email.
+    if (!isProd) {
+      try {
+        const testAccount = await nodemailer.createTestAccount();
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.ethereal.email',
+          port: 587,
+          secure: false,
+          auth: { user: testAccount.user, pass: testAccount.pass }
+        });
+
+        const from = process.env.FROM_EMAIL || `WeGo <${testAccount.user}>`;
+        const info = await transporter.sendMail({ from, to, subject, html, text });
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        console.log(`✅ Email sent via Ethereal (dev) -> Preview: ${previewUrl}`);
+        return { ok: true, provider: 'ethereal', result: { info, previewUrl } };
+      } catch (err) {
+        console.error('❌ Ethereal(dev) error:', String(err?.message || err));
+        return { ok: false, provider: 'none', code: 500, reason: 'NO_PROVIDER', error: err };
+      }
+    }
+
+    return { ok: false, provider: 'none', code: 500, reason: 'NO_PROVIDER' };
 }

@@ -10,11 +10,6 @@ const _defaultBase = 'http://localhost:10000';
 const _baseNoSlash = (_rawApiBase || _defaultBase).replace(/\/$/, '');
 const _baseUrl = _baseNoSlash.endsWith('/api') ? _baseNoSlash : `${_baseNoSlash}/api`;
 
-// Helpful debug log at runtime in dev
-if (import.meta.env.DEV) {
-  console.log('[apiClient] baseURL =', _baseUrl);
-}
-
 export const api: AxiosInstance = axios.create({
   baseURL: _baseUrl, // override with VITE_API_URL in production
   timeout: 10000,

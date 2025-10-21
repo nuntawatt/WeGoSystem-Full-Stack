@@ -102,8 +102,6 @@ export default function App() {
                   <Route path="/auth/signup" element={<SignUp />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
                   <Route path="/auth/reset" element={<ResetPasswordConfirm />} />
-                  {/* Backend reset links point to /auth/reset-password-confirm */}
-                  <Route path="/auth/reset-password-confirm" element={<ResetPasswordConfirm />} />
 
                   <Route path="*" element={<Navigate to="/" />} />
                 </Routes>

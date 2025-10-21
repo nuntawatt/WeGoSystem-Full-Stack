@@ -5,18 +5,11 @@ import crypto from 'crypto';
 import User from '../models/user.js';
 import Profile from '../models/profile.js';
 import auth from '../middleware/auth.js';
-import { sendEmail } from '../utils/sendEmail.js';
 
 const router = express.Router();
 
 // In-memory OTP storage (for production, use Redis or database)
-// We store only a hash of the OTP (HMAC with OTP_SECRET) and expiresAt.
-// Stored shape: { hash: string, expiresAt: number }
-const otpStore = new Map();
-const OTP_SECRET = process.env.OTP_SECRET || process.env.JWT_SECRET || 'default_otp_secret';
-if (!process.env.OTP_SECRET) {
-  console.warn('⚠️ Warning: OTP_SECRET not set. Using JWT_SECRET or fallback. For better security set OTP_SECRET in env');
-}
+const otpStore = new Map(); // { email: { otp, expiresAt } }
 
 // Email sending function - supports multiple providers
 const sendOTPEmail = async (email, otp) => {
@@ -76,7 +69,7 @@ const sendOTPEmail = async (email, otp) => {
     console.log(`🔐 OTP: ${otp}`);
     console.log(`⏱️  Expires: 10 minutes`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    return { success: true, mode: 'development', devOTP: otp };
+    return { success: true, mode: 'development' };
   }
 
   console.log('[email] provider configured?', hasProvider);
@@ -109,9 +102,6 @@ const sendOTPEmail = async (email, otp) => {
     // Fallback to Gmail (if configured)
     if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
       console.log('[email] attempting to send via Gmail SMTP to', process.env.EMAIL_USER);
-      if (process.env.EMAIL_USER.includes('gmail') && !process.env.EMAIL_PASSWORD) {
-        console.warn('⚠️ Gmail configured without EMAIL_PASSWORD. Use an App Password for Gmail accounts and set EMAIL_PASSWORD to the app password.');
-      }
       // Use explicit SMTP settings for Gmail and enable logger/debug to surface connection errors
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
@@ -144,7 +134,7 @@ const sendOTPEmail = async (email, otp) => {
     // No email service configured - fallback to console log
     console.warn('⚠️ No email service configured, logging OTP to console');
     console.log(`🔐 OTP for ${email}: ${otp}`);
-    return { success: true, mode: 'console', devOTP: otp };
+    return { success: true, mode: 'console' };
 
   } catch (error) {
     console.error('❌ Email send error:', error.message, error);
@@ -154,11 +144,13 @@ const sendOTPEmail = async (email, otp) => {
   }
 };
 
-// Send password reset link email (JWT token) - now uses sendEmail utility
+// Send password reset link email (JWT token)
 const sendResetEmail = async (email, token) => {
+  console.log('[email] sendResetEmail called for', email);
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   const resetLink = `${frontendUrl.replace(/\/$/, '')}/auth/reset-password-confirm?token=${encodeURIComponent(token)}`;
-  const html = `
+
+  const emailHtml = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 6px 30px rgba(2,6,23,0.1);">
         <h2 style="margin-top:0">WeGo Password Reset</h2>
@@ -172,14 +164,77 @@ const sendResetEmail = async (email, token) => {
       </div>
     </div>
   `;
-  const text = `Reset your password with this link: ${resetLink}`;
 
-  const result = await sendEmail({ to: email, subject: 'WeGo - Password reset', html, text });
-  // Normalize to previous shape
-  if (result.ok) return { success: true, mode: result.provider };
-  if (result.provider === 'resend' && result.reason === 'DOMAIN_REQUIRED') return { success: false, mode: 'resend', reason: 'DOMAIN_REQUIRED', error: result.error };
-  if (result.provider === 'none') return { success: false, mode: 'none', reason: 'NO_PROVIDER' };
-  return { success: false, mode: result.provider || 'unknown', error: result.result || result.error };
+  const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  console.log('[email] provider configured?', hasProvider);
+  if (!hasProvider && isDevelopment) {
+    console.log('────────────────────────────────────────────');
+    console.log('✉️ [DEV MODE] Password Reset Email');
+    console.log('To:', email);
+    console.log('Link:', resetLink);
+    console.log('────────────────────────────────────────────');
+    return { success: true, mode: 'development' };
+  }
+
+  try {
+    if (process.env.RESEND_API_KEY) {
+      console.log('[email] attempting to send reset link via Resend');
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'WeGo <noreply@wego.app>',
+          to: email,
+          subject: 'WeGo - Password reset',
+          html: emailHtml
+        })
+      });
+
+      if (response.ok) {
+        console.log(`✅ Reset link sent via Resend to ${email}`);
+        return { success: true, mode: 'resend' };
+      }
+    }
+
+    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
+      console.log('[email] attempting to send reset link via Gmail SMTP to', process.env.EMAIL_USER);
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD
+        },
+        logger: process.env.EMAIL_DEBUG === 'true',
+        debug: process.env.EMAIL_DEBUG === 'true',
+        connectionTimeout: 30 * 1000,
+        greetingTimeout: 30 * 1000,
+        socketTimeout: 30 * 1000
+      });
+
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: 'WeGo - Password reset',
+        html: emailHtml
+      });
+
+      console.log(`✅ Reset link sent via Gmail to ${email}`);
+      return { success: true, mode: 'gmail' };
+    }
+
+    console.warn('⚠️ No email service configured, logging reset link to console');
+    console.log(`Reset link for ${email}: ${resetLink}`);
+    return { success: true, mode: 'console' };
+  } catch (error) {
+    console.error('❌ Reset email send error:', error?.message || error);
+    return { success: false, mode: 'fallback', error: error?.message };
+  }
 };
 
 // Register
@@ -278,54 +333,26 @@ router.post('/forgot-password', async (req, res) => {
       return res.json({ message: 'If the email exists, an OTP has been sent' });
     }
 
-  // Generate 6-digit OTP
-  const otp = crypto.randomInt(100000, 999999).toString();
-  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-  // Hash OTP using HMAC-SHA256 with OTP_SECRET
-  const hmac = crypto.createHmac('sha256', OTP_SECRET);
-  hmac.update(`${email.toLowerCase()}:${otp}`);
-  const hash = hmac.digest('hex');
+    // Store OTP
+    otpStore.set(email.toLowerCase(), { otp, expiresAt });
 
-  // Store only the hash and expiry
-  otpStore.set(email.toLowerCase(), { hash, expiresAt });
-
-  // Send email (we still send plaintext OTP via email)
-  const emailHtml = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: white; border-radius: 12px; padding: 30px; box-shadow: 0 6px 30px rgba(2,6,23,0.1);">
-        <h2 style="margin-top:0">WeGo — รหัส OTP สำหรับรีเซ็ตรหัสผ่าน</h2>
-        <p>OTP ของคุณคือ</p>
-        <h1 style="color:#f59e0b;letter-spacing:4px">${otp}</h1>
-        <p>รหัสมีอายุ ${process.env.OTP_EXPIRES_IN || '10m'}</p>
-      </div>
-    </div>
-  `;
-
-  const sent = await sendEmail({ to: email, subject: 'WeGo — OTP สำหรับรีเซ็ตรหัสผ่าน', html: emailHtml });
-
-  console.log('[email] sendEmail returned:', sent && { ok: sent.ok, provider: sent.provider, code: sent.code, reason: sent.reason });
-
-  if (!sent || !sent.ok) {
-    // Resend domain verification required
-    if (sent && sent.reason === 'DOMAIN_REQUIRED') {
-      return res.status(400).json({
-        message:
-          'Email provider (Resend) ต้องยืนยันโดเมนก่อนถึงจะส่งหาผู้อื่นได้ — ให้ verify domain ใน Resend และตั้ง FROM_EMAIL เป็นอีเมลโดเมนนั้น หรือทดสอบส่งไปอีเมลเจ้าของบัญชี Resend เท่านั้น',
-      });
+    // Send email
+    const emailResult = await sendOTPEmail(email, otp);
+    
+    if (emailResult.success) {
+      console.log(`✅ OTP ready: ${emailResult.mode}`);
     }
 
-    // No provider configured
-    if (sent && sent.provider === 'none') {
-      return res.status(500).json({ message: 'No email provider configured' });
-    }
-
-    // Generic failure
-    return res.status(500).json({ message: 'Email send failed' });
-  }
-
-  // Success path
-  return res.json({ message: 'ส่ง OTP แล้ว' });
+    const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
+    res.json({ 
+      message: 'If the email exists, an OTP has been sent',
+      // Send OTP back in development mode only when no email provider is configured
+      ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp } : {})
+    });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ error: 'Failed to process request' });
@@ -349,14 +376,8 @@ router.post('/forgot-password-link', async (req, res) => {
     const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const emailResult = await sendResetEmail(email, token);
 
-    if (!emailResult.success) {
-      if (emailResult.reason === 'DOMAIN_REQUIRED') {
-        return res.status(400).json({ message: 'Email provider (Resend) ต้องยืนยันโดเมนก่อนถึงจะส่งหาผู้อื่นได้ — ให้ verify domain ใน Resend และตั้ง FROM_EMAIL เป็นอีเมลโดเมนนั้น หรือทดสอบส่งไปอีเมลเจ้าของบัญชี Resend เท่านั้น' });
-      }
-      if (emailResult.reason === 'NO_PROVIDER') {
-        return res.status(500).json({ message: 'No email provider configured' });
-      }
-      return res.status(500).json({ message: 'Email send failed' });
+    if (emailResult.success) {
+      console.log(`✅ Password reset link prepared: ${emailResult.mode}`);
     }
 
     const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
@@ -381,22 +402,17 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Check OTP
-    const stored = otpStore.get(email.toLowerCase());
-    if (!stored) {
+    const storedOTP = otpStore.get(email.toLowerCase());
+    if (!storedOTP) {
       return res.status(400).json({ error: 'Invalid or expired OTP' });
     }
 
-    if (stored.expiresAt < Date.now()) {
+    if (storedOTP.expiresAt < Date.now()) {
       otpStore.delete(email.toLowerCase());
       return res.status(400).json({ error: 'OTP has expired' });
     }
 
-    // Verify HMAC
-    const verifyHmac = crypto.createHmac('sha256', OTP_SECRET);
-    verifyHmac.update(`${email.toLowerCase()}:${otp}`);
-    const verifyHash = verifyHmac.digest('hex');
-
-    if (stored.hash !== verifyHash) {
+    if (storedOTP.otp !== otp) {
       return res.status(400).json({ error: 'Invalid OTP' });
     }
 
@@ -410,8 +426,8 @@ router.post('/reset-password', async (req, res) => {
     user.password = newPassword;
     await user.save();
 
-  // Clear OTP after successful use
-  otpStore.delete(email.toLowerCase());
+    // Clear OTP
+    otpStore.delete(email.toLowerCase());
 
     console.log(`✅ Password reset successful for ${email}`);
     res.json({ message: 'Password reset successful' });

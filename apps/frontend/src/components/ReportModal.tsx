@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
 import { toast } from './Toasts';
 import { useAuth } from '../hooks/useAuth';
@@ -20,7 +20,7 @@ const REASON_LABELS: Record<ReportReason, string> = {
   other: 'Other'
 };
 
-const MAX_WORDS = 240;
+const MAX_CHARS = 240;
 const countWords = (text: string) => (text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length);
 
 export default function ReportModal({
@@ -39,6 +39,7 @@ export default function ReportModal({
   const [submitting, setSubmitting] = useState(false);
   const [alreadyReported, setAlreadyReported] = useState(false);
   const { user } = useAuth();
+  const [isComposing, setIsComposing] = useState(false);
   
   // DEV MODE: Set to true to disable "already reported" check for testing
   const DEV_ALLOW_DUPLICATE = false;
@@ -210,8 +211,8 @@ export default function ReportModal({
       toast('Please provide detailed description (at least 10 characters)');
       return;
     }
-    if (words > MAX_WORDS) {
-      toast(`Please limit your report to ${MAX_WORDS} words or fewer`);
+    if (chars > MAX_CHARS) {
+      toast(`Please limit your report to ${MAX_CHARS} characters or fewer`);
       return;
     }
 
@@ -260,20 +261,20 @@ export default function ReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-slate-800 rounded-xl shadow-2xl max-w-xl w-full border border-slate-700 overflow-hidden max-h-[80vh] flex flex-col">
+  <div className="bg-slate-800 rounded-xl shadow-2xl max-w-md sm:max-w-lg md:max-w-xl w-full border border-slate-700 overflow-hidden max-h-[70vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 flex-shrink-0">
           <h3 className="text-lg font-semibold text-white">Report {targetType}</h3>
           <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded">✕</button>
         </div>
 
-        {/* Scrollable content area */}
-        <form onSubmit={handleSubmit} className="p-4 overflow-auto">
+  {/* Scrollable content area */}
+  <form onSubmit={handleSubmit} className="p-5 overflow-auto pb-24">
           <div className="mb-4">
             <label className="block text-sm font-medium mb-2 text-slate-300">Reason</label>
             <select
@@ -293,38 +294,34 @@ export default function ReportModal({
             <label className="block text-sm font-medium mb-2 text-slate-300">Details <span className="text-red-400">*</span></label>
             <textarea
               value={details}
-              onChange={(e) => setDetails(e.target.value)}
+              onChange={(e) => { if (!isComposing) setDetails(e.target.value); else setDetails(e.target.value); }}
+              onCompositionStart={() => setIsComposing(true)}
+              onCompositionEnd={(e) => { setIsComposing(false); setDetails((e.target as HTMLTextAreaElement).value); }}
               placeholder="Describe the issue..."
-              rows={6}
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white resize-none"
+              rows={5}
+              className="w-full min-h-[140px] px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white resize-none"
             />
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span className="text-slate-400">{chars} chars</span>
-              <span>{words}/{MAX_WORDS} words</span>
+            <div className="flex justify-end text-xs text-slate-400 mt-1">
+              <span className="text-slate-400">{chars}/{MAX_CHARS} characters</span>
             </div>
             {chars > 0 && chars < 10 && (
               <div className="text-rose-400 text-xs mt-1">Please type at least 10 characters.</div>
             )}
-            {words > MAX_WORDS && (
-              <div className="text-rose-400 text-xs mt-1">Please limit your report to {MAX_WORDS} words or fewer.</div>
+            {chars > MAX_CHARS && (
+              <div className="text-rose-400 text-xs mt-1">Please limit your report to {MAX_CHARS} characters or fewer.</div>
             )}
           </div>
 
-          <div className="flex gap-3 sticky bottom-0 bg-slate-800/80 pt-3">
-            <button
-              type="submit"
-              disabled={submitting || details.trim().length < 10 || countWords(details) > MAX_WORDS || (alreadyReported && !DEV_ALLOW_DUPLICATE)}
-              className="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg"
-            >
-              {submitting ? '⏳ Submitting...' : (alreadyReported && !DEV_ALLOW_DUPLICATE) ? '✅ Already Reported' : '🚩 Submit Report'}
-            </button>
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold rounded-lg">
-              Cancel
-            </button>
-          </div>
-
-          <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-xs text-blue-300">
-            <strong>⚠️ Note:</strong> All reports are reviewed by our moderation team. False reports may result in action against your account.
+          <div className="sticky bottom-0 bg-slate-800/80 py-4">
+            <div className="flex justify-center px-4">
+              <button
+                type="submit"
+                disabled={submitting || details.trim().length < 10 || details.trim().length > MAX_CHARS || (alreadyReported && !DEV_ALLOW_DUPLICATE)}
+                className="w-full max-w-sm px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow"
+              >
+                {submitting ? 'Submitting...' : (alreadyReported && !DEV_ALLOW_DUPLICATE) ? 'Already Reported' : 'Submit Report'}
+              </button>
+            </div>
           </div>
         </form>
       </div>

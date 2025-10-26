@@ -68,12 +68,12 @@ export default function SignUp() {
           <form onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-2">
             <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="username">
-              <span className="text-amber-400">👤</span> Username
+              <p></p> Username :
             </label>
             <input
               id="username"
               className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
-              placeholder="Your name"
+              placeholder="Your username"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
@@ -82,12 +82,12 @@ export default function SignUp() {
 
           <div className="space-y-2">
             <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
-              <span className="text-amber-400">📧</span> Email
+              <p></p> Email :
             </label>
             <input
               id="email"
               className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
-              placeholder="email"
+              placeholder="Your email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -97,7 +97,7 @@ export default function SignUp() {
 
           <div className="space-y-2">
             <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="password">
-              <span className="text-amber-400">🔒</span> Password
+              <p></p> Password :
             </label>
             <div className="relative">
               <input

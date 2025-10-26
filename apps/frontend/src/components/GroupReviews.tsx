@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
 import { toast } from './Toasts';
+import { socket } from '../lib/socket';
 
 type Review = {
   _id: string;
@@ -189,6 +190,46 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
       })();
     }
   }, [groupId]);
+
+  // Listen for realtime review events and refresh when relevant
+  useEffect(() => {
+    const onActivityReview = (payload: any) => {
+      try {
+        if (!payload) return;
+        // If we have resolved to an activity and ids match, refresh
+        if ((resolvedType === 'activity' || type === 'activity') && (String(payload.activityId) === String(resolvedId || groupId))) {
+          fetchReviews('activity', resolvedId || groupId);
+          return;
+        }
+        // In cases where the component is passed a chatId that maps to an activity, payload.activityId may match groupId
+        if (payload.activityId && String(payload.activityId) === String(groupId)) {
+          fetchReviews('activity', payload.activityId);
+          return;
+        }
+      } catch (e) {
+        console.warn('onActivityReview handler error', e);
+      }
+    };
+
+    const onGroupReview = (payload: any) => {
+      try {
+        if (!payload) return;
+        if ((resolvedType === 'group' || type === 'group') && String(payload.groupId) === String(resolvedId || groupId)) {
+          fetchReviews('group', resolvedId || groupId);
+        }
+      } catch (e) {
+        console.warn('onGroupReview handler error', e);
+      }
+    };
+
+    socket.on('activity:review', onActivityReview);
+    socket.on('group:review', onGroupReview);
+
+    return () => {
+      socket.off('activity:review', onActivityReview);
+      socket.off('group:review', onGroupReview);
+    };
+  }, [resolvedType, resolvedId, groupId, type]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -387,7 +428,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
               disabled={submitting}
               className="flex-1 px-3 py-1.5 text-sm font-medium bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-white rounded-lg transition-colors"
             >
-              {submitting ? '⏳ Submitting...' : '✅ Submit'}
+              {submitting ? 'Submitting...' : 'Submit'}
             </button>
             <button
               type="button"

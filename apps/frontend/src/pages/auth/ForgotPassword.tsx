@@ -33,10 +33,10 @@ export default function ForgotPassword() {
       // Check if OTP is returned (development mode)
       if (response.data?.devOTP) {
         setDevOTP(response.data.devOTP);
-        toast('รหัส OTP ถูกสร้างแล้ว! 🔐', 'success');
+        toast('รหัส OTP ถูกสร้างแล้ว!', 'success');
       } else {
         setDevOTP(null);
-        toast('ส่งรหัส OTP ไปยังอีเมลของคุณแล้ว 📧', 'success');
+        toast('ส่งรหัส OTP ไปยังอีเมลของคุณแล้ว', 'success');
       }
       
       setStep('otp');
@@ -66,7 +66,7 @@ export default function ForgotPassword() {
         otp,
         newPassword
       });
-      toast('รีเซ็ตรหัสผ่านสำเร็จ! 🎉', 'success');
+      toast('รีเซ็ตรหัสผ่านสำเร็จ 🎉', 'success');
       navigate('/auth/signin');
     } catch (error: any) {
       const errorMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาด';
@@ -110,13 +110,13 @@ export default function ForgotPassword() {
             <form onSubmit={handleSendOTP} className="space-y-5">
               <div className="space-y-2">
                 <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
-                  <span className="text-amber-400">📧</span> Email
+                  <p></p> Email :
                 </label>
                 <input
                   id="email"
                   type="email"
                   className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
-                  placeholder="Enter email"
+                  placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -220,7 +220,7 @@ export default function ForgotPassword() {
               {/* New Password Input */}
               <div className="space-y-2">
                 <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="newPassword">
-                  <span className="text-amber-400">🔒</span> New Password
+                  <p></p> New Password :
                 </label>
                 <div className="relative">
                   <input

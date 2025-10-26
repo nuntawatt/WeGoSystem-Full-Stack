@@ -151,6 +151,36 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Respond to explicit participant requests
+  socket.on('chat:getParticipants', async (chatId) => {
+    try {
+      const chat = await Chat.findById(chatId).populate({
+        path: 'participants.user',
+        select: 'email username isOnline createdAt',
+        populate: { path: 'profile', select: 'avatar bio' }
+      });
+      if (chat) {
+        const parts = chat.participants
+          .filter(p => p.user)
+          .map(p => ({
+            id: p.user._id,
+            email: p.user.email,
+            username: p.user.username,
+            isOnline: !!p.user.isOnline,
+            role: p.role,
+            avatar: p.user.profile?.avatar || '',
+            bio: p.user.profile?.bio || '',
+            createdAt: p.user.createdAt
+          }));
+        // emit to requester and broadcast to room
+        socket.emit('chat:participants', { participants: parts });
+        io.to(`chat:${chatId}`).emit('chat:participants', { participants: parts });
+      }
+    } catch (err) {
+      console.error('Error in chat:getParticipants handler:', err);
+    }
+  });
+
   // Leave chat room
   socket.on('chat:leave', (chatId) => {
     socket.leave(`chat:${chatId}`);

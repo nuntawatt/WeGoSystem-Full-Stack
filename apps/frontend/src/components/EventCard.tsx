@@ -129,25 +129,11 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
             className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
             onError={(e) => {
-              // Fallback if image fails to load
               e.currentTarget.src = `https://placehold.co/600x400/1e293b/f59e0b?text=${encodeURIComponent(event.title)}`;
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-          
-          {/* Report Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowReportModal(true);
-            }}
-            className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/10 hover:bg-red-500/20 hover:border-red-500/30 transition-colors group/report"
-          >
-            <svg className="w-4 h-4 text-slate-400 group-hover/report:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-            </svg>
-          </button>
-          
+
           {/* Participant limit badge with animation */}
           {maxParticipants && (
             <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-semibold shadow-lg border border-white/10">

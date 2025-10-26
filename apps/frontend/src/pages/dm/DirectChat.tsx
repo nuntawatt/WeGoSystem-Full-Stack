@@ -226,6 +226,70 @@ export default function DirectChat() {
     };
   }, [uid, user]);
 
+  // Polling fallback: refresh participants every 8 seconds in case socket events are missed
+  useEffect(() => {
+    let mounted = true;
+    let timer: any = null;
+
+    const refreshParticipants = async () => {
+      try {
+        const res = await api.get(`/chats/${uid}`);
+        const chatData = res.data.chat || res.data;
+        if (!mounted || !chatData || !chatData.participants) return;
+
+        // collect participant ids
+        const participantIds = (chatData.participants || [])
+          .map((p: any) => {
+            const raw = p.user ? p.user : p;
+            return raw._id || raw.id || raw.userId || raw.uid || null;
+          })
+          .filter(Boolean);
+
+        // fetch profiles in parallel (reuse same approach as initial fetchChat)
+        const profileReqs = participantIds.map((id: string) => api.get(`/profiles/${id}`).catch(() => null));
+        const profiles = await Promise.all(profileReqs);
+        const profilesById: Record<string, any> = {};
+        profiles.forEach((r: any, idx: number) => {
+          if (!r || !r.data) return;
+          const p = r.data;
+          const key = p.userId || p._id || participantIds[idx];
+          profilesById[key] = p;
+        });
+
+        const parts = (chatData.participants || [])
+          .filter((p: any) => p && (p.user || p._id || p.userId || p.id))
+          .map((p: any) => {
+            const raw = p.user ? p.user : p;
+            const pid = raw._id || raw.id || raw.userId || raw.uid;
+            const prof = profilesById[pid] || (p.user && p.user.profile) || raw.profile || {};
+            return {
+              id: pid,
+              name: raw.email || raw.username || raw.name || String(pid),
+              role: p.role || raw.role || 'member',
+              avatar: prof?.avatar || p.avatar || '',
+              username: raw.username || (raw.email ? String(raw.email).split('@')[0] : ''),
+              isOnline: !!(raw.isOnline),
+              bio: prof?.bio || p.bio || ''
+            };
+          });
+
+        setMembersWithProfiles(parts);
+      } catch (err) {
+        // ignore polling errors silently
+        // console.debug('participant polling failed', err);
+      }
+    };
+
+    // start immediately then interval
+    refreshParticipants();
+    timer = setInterval(refreshParticipants, 8000);
+
+    return () => {
+      mounted = false;
+      if (timer) clearInterval(timer);
+    };
+  }, [uid]);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -247,7 +311,7 @@ export default function DirectChat() {
       return;
     }
 
-    console.log('📤 Sending message:', { chatId: uid, userId: user._id, content });
+    console.log('Sending message: ', { chatId: uid, userId: user._id, content });
     
     // Optimistic update - แสดงข้อความทันทีก่อนส่งไป backend
     const tempMessage = {
@@ -290,7 +354,7 @@ export default function DirectChat() {
           <div className="text-6xl mb-4">😔</div>
           <div className="text-lg font-semibold">Chat room not found</div>
           <Link to="/explore" className="inline-flex px-6 py-3 font-semibold text-white rounded-lg bg-amber-500 hover:bg-amber-400 transition-all duration-300">
-            🔍 Back to Explore
+            Back to Explore
           </Link>
         </div>
       </section>

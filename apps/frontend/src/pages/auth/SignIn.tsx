@@ -68,7 +68,7 @@ export default function SignIn() {
           <form onSubmit={submit} className="space-y-5">
           <div className="space-y-2">
             <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
-              <span className="text-amber-400">📧</span> Email
+              <p></p>Email :
             </label>
             <input
               id="email"
@@ -85,7 +85,7 @@ export default function SignIn() {
           {/* Password */}
           <div className="space-y-2">
             <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="password">
-              <span className="text-amber-400">🔒</span> Password
+              <p></p>Password :
             </label>
             <div className="relative">
               <input

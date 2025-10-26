@@ -832,9 +832,24 @@ router.post('/:id/reviews', auth, async (req, res) => {
 
     await activity.save();
 
-    // Return the saved/updated rating (populate the user)
-    const saved = activity.ratings.find(r => r.user.toString() === userId.toString());
+    // Populate the rating user so clients receive username/email (and avatar if available)
     await activity.populate({ path: 'ratings.user', select: 'email username' });
+
+    // Find the saved/updated rating after population
+    const saved = activity.ratings.find(r => r.user.toString() === userId.toString());
+
+    // Emit realtime event to the activity chat room so connected clients can update reviews
+    try {
+      const io = req.app.get('io');
+      if (io && activity.chat) {
+        io.to(activity.chat.toString()).emit('activity:review', {
+          activityId: activity._id,
+          review: saved
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to emit activity:review event', e && e.message ? e.message : e);
+    }
 
     res.status(201).json(saved);
   } catch (error) {

@@ -272,6 +272,20 @@ router.post('/:id/reviews', auth, async (req, res) => {
     }
 
     await review.populate('userId', 'email');
+
+    // Emit realtime event for group reviews so clients can refresh if needed
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('group:review', {
+          groupId,
+          review
+        });
+      }
+    } catch (e) {
+      console.warn('Failed to emit group:review event', e && e.message ? e.message : e);
+    }
+
     res.status(201).json(review);
   } catch (error) {
     res.status(400).json({ error: error.message });

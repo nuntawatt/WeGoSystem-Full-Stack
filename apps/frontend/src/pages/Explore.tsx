@@ -76,13 +76,13 @@ export default function Explore() {
                 <div className="absolute inset-0 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
               </div>
               <div className="text-xl font-bold text-white">กำลังโหลดกิจกรรม...</div>
-              <div className="text-sm text-slate-400">รอสักครู่นะ 🎯</div>
+              <div className="text-sm text-slate-400">รอสักครู่...</div>
             </div>
         </div>
       ) : filtered.length ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
           {filtered.map((ev) => {
-            // Check if current user is a participant (robustly handle string IDs and object shapes)
+            // Check if current user is a participant
             const isParticipant = !!(user && ev.participants?.some((p: any) => {
               if (!p) return false;
               const pid = typeof p === 'string' ? p : (p.user?._id || p.user);

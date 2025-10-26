@@ -140,7 +140,6 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
               <span className={displayIsFullyBooked ? 'text-red-400' : 'text-green-400'}>
                 {displayedPopularity}/{maxParticipants}
               </span>
-              <span className="text-white/80 ml-1">คน</span>
             </div>
           )}
         

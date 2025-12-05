@@ -1,4 +1,4 @@
-# WeGo - Social Activity Platform
+# 👋🏻 WeGo - Social Activity Platform
 
 > Connect, plan, and explore activities with like-minded people
 
@@ -87,9 +87,6 @@ npm run dev
 - `GET /api/profiles/:userId` - Get profile
 - `POST /api/profiles` - Create/update profile
 - `POST /api/profiles/avatar` - Upload avatar
-
-**Full API documentation**: See [API.md](docs/API.md) _(coming soon)_
-
 ---
 
 ## Acknowledgments

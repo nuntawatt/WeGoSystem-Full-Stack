@@ -1,4 +1,4 @@
-# 🌍 WeGo - Social Activity Platform
+# WeGo - Social Activity Platform
 
 > Connect, plan, and explore activities with like-minded people
 
@@ -6,19 +6,19 @@ A full-stack social platform for discovering and organizing activities and event
 
 ---
 
-## ✨ Features
+## Features
 
-- 🎯 **Activities**: Create, browse, join events (playgame, outdoor, social, learning)
-- 💬 **Real-time Chat**: Direct messages & group chats for activities
-- 👤 **User Profiles**: Customizable profiles with avatars
-- ⭐ **Ratings**: Rate activities and provide feedback
-- 📍 **Geolocation**: Find nearby activities
-- �️ **Media Upload**: Activity images and profile avatars
-- 🔐 **Secure Auth**: JWT authentication with bcrypt
+- **Activities**: Create, browse, join events (playgame, outdoor, social, learning)
+- **Real-time Chat**: Direct messages & group chats for activities
+- **User Profiles**: Customizable profiles with avatars
+- **Ratings**: Rate activities and provide feedback
+- **Geolocation**: Find nearby activities
+- **Media Upload**: Activity images and profile avatars
+- **Secure Auth**: JWT authentication with bcrypt
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 **Backend**: Node.js, Express, MongoDB, JWT, Multer, Socket.io  
 **Frontend**: React, TypeScript, Vite, TailwindCSS, React Query, Axios  
@@ -26,7 +26,7 @@ A full-stack social platform for discovering and organizing activities and event
 
 ---
 
-## � Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js v22.17.0+
@@ -57,7 +57,7 @@ npm run dev
 
 ---
 
-## 📚 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - Register new user
@@ -92,18 +92,12 @@ npm run dev
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Thanks to all contributors who helped build this platform
 - Inspired by social activity platforms like Meetup and Eventbrite
-- Built with ❤️ using modern web technologies
+- Built with using modern web technologies
 
 ---
 
-<div align="center">
 
-**⭐ Star this repository if you find it helpful!**
-
-Made with ❤️ by [Nuntawat](https://github.com/nuntawatt)
-
-</div>

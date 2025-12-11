@@ -23,13 +23,13 @@ const getThemeColors = () => {
 
 // Custom class configuration for professional styling
 const getSwalClasses = () => ({
-  popup: 'rounded-sm border border-slate-200 dark:border-slate-700 shadow-xl',
+  popup: 'rounded-xl border border-slate-200 dark:border-slate-700 shadow-xl',
   title: 'text-slate-800 dark:text-slate-100 font-serif font-medium',
   htmlContainer: 'text-slate-600 dark:text-slate-300',
-  confirmButton: 'rounded-sm px-6 py-2.5 font-medium transition-colors',
-  cancelButton: 'rounded-sm px-6 py-2.5 font-medium transition-colors',
-  denyButton: 'rounded-sm px-6 py-2.5 font-medium transition-colors',
-  input: 'rounded-sm border focus:ring-2 focus:ring-teal-500/20',
+  confirmButton: 'rounded-lg px-6 py-2.5 font-medium transition-colors',
+  cancelButton: 'rounded-lg px-6 py-2.5 font-medium transition-colors',
+  denyButton: 'rounded-lg px-6 py-2.5 font-medium transition-colors',
+  input: 'rounded-lg border focus:ring-2 focus:ring-teal-500/20',
   validationMessage: 'text-red-500 dark:text-red-400',
 });
 
@@ -38,7 +38,7 @@ const getSwalClasses = () => ({
  */
 export const swal = Swal.mixin({
   customClass: getSwalClasses(),
-  buttonsStyling: true,
+  buttonsStyling: false, // Use custom styling
   showClass: {
     popup: 'animate-fade-in'
   },
@@ -60,6 +60,39 @@ export const swal = Swal.mixin({
     const htmlContainer = Swal.getHtmlContainer();
     if (htmlContainer) {
       htmlContainer.style.color = colors.text;
+    }
+    // Style confirm button
+    const confirmBtn = Swal.getConfirmButton();
+    if (confirmBtn) {
+      confirmBtn.style.backgroundColor = '#0d9488';
+      confirmBtn.style.color = '#ffffff';
+      confirmBtn.style.padding = '0.625rem 1.5rem';
+      confirmBtn.style.borderRadius = '0.5rem';
+      confirmBtn.style.fontWeight = '500';
+      confirmBtn.style.border = 'none';
+      confirmBtn.style.cursor = 'pointer';
+    }
+    // Style cancel button
+    const cancelBtn = Swal.getCancelButton();
+    if (cancelBtn) {
+      cancelBtn.style.backgroundColor = '#64748b';
+      cancelBtn.style.color = '#ffffff';
+      cancelBtn.style.padding = '0.625rem 1.5rem';
+      cancelBtn.style.borderRadius = '0.5rem';
+      cancelBtn.style.fontWeight = '500';
+      cancelBtn.style.border = 'none';
+      cancelBtn.style.cursor = 'pointer';
+    }
+    // Style deny button
+    const denyBtn = Swal.getDenyButton();
+    if (denyBtn) {
+      denyBtn.style.backgroundColor = '#dc2626';
+      denyBtn.style.color = '#ffffff';
+      denyBtn.style.padding = '0.625rem 1.5rem';
+      denyBtn.style.borderRadius = '0.5rem';
+      denyBtn.style.fontWeight = '500';
+      denyBtn.style.border = 'none';
+      denyBtn.style.cursor = 'pointer';
     }
   },
   confirmButtonColor: '#0d9488', // teal-600
@@ -123,8 +156,8 @@ export const showSuccess = (title = 'สำเร็จ!', text = '') => {
     title,
     text,
     icon: 'success',
-    confirmButtonText: 'ตกลง',
-    timer: 2000,
+    confirmButtonText: 'Close',
+    timer: 3000,
     timerProgressBar: true,
   });
 };
@@ -137,7 +170,7 @@ export const showError = (title = 'เกิดข้อผิดพลาด', 
     title,
     text,
     icon: 'error',
-    confirmButtonText: 'ตกลง',
+    confirmButtonText: 'Close',
   });
 };
 
@@ -149,7 +182,19 @@ export const showInfo = (title: string, text = '') => {
     title,
     text,
     icon: 'info',
-    confirmButtonText: 'ตกลง',
+    confirmButtonText: 'Close',
+  });
+};
+
+/**
+ * Warning notification
+ */
+export const showWarning = (title: string, text = '') => {
+  return swal.fire({
+    title,
+    text,
+    icon: 'warning',
+    confirmButtonText: 'Close',
   });
 };
 

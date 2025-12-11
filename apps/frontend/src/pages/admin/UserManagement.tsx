@@ -208,46 +208,46 @@ export default function UserManagement() {
 
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-sm bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Users</p>
+            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Users</p>
           </div>
           <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-sm bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
               <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Admins</p>
+            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Admins</p>
           </div>
           <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-sm bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
               <Wifi className="w-5 h-5 text-teal-600 dark:text-teal-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Online</p>
+            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Online</p>
           </div>
           <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isOnline && !u.isBlocked).length}</p>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-sm bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
               <Ban className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Blocked</p>
+            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Blocked</p>
           </div>
           <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
         </div>
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-5 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -256,13 +256,13 @@ export default function UserManagement() {
               placeholder="Search by email or username..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
+              className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm px-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none cursor-pointer transition-all"
+            className="bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg px-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none cursor-pointer transition-all"
           >
             <option value="all">All Roles</option>
             <option value="user">User Only</option>
@@ -272,27 +272,27 @@ export default function UserManagement() {
       </div>
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50 dark:bg-slate-700">
               <tr>
-                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
                   <div className="flex items-center gap-2"><User className="w-4 h-4" /> User</div>
                 </th>
-                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
                   <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> Email</div>
                 </th>
-                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
                   <div className="flex items-center gap-2"><Shield className="w-4 h-4" /> Role</div>
                 </th>
-                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider hidden md:table-cell">
+                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider hidden md:table-cell">
                   <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Joined</div>
                 </th>
-                <th className="text-right py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                <th className="text-right py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
                   <div className="flex items-center gap-2 justify-end"><Settings className="w-4 h-4" /> Actions</div>
                 </th>
               </tr>

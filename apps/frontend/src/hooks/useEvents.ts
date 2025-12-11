@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { eventsAPI } from '../lib/api';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError } from '../lib/swal';
 
 export interface Event {
   _id: string;
@@ -54,12 +54,12 @@ export function useEvents() {
       setIsLoading(true);
       const response = await eventsAPI.create(eventData);
       setEvents(prev => [...prev, response.data]);
-      toast('Event created successfully!');
+      showSuccess('สร้างกิจกรรมสำเร็จ!', 'Event created successfully!');
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to create event';
       setError(errorMessage);
-      toast(errorMessage);
+      showError('สร้างไม่สำเร็จ', errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -73,12 +73,12 @@ export function useEvents() {
       setEvents(prev => prev.map(event =>
         event._id === id ? response.data : event
       ));
-      toast('Event updated successfully!');
+      showSuccess('อัพเดทสำเร็จ!', 'Event updated successfully!');
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to update event';
       setError(errorMessage);
-      toast(errorMessage);
+      showError('อัพเดทไม่สำเร็จ', errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -90,11 +90,11 @@ export function useEvents() {
       setIsLoading(true);
       await eventsAPI.delete(id);
       setEvents(prev => prev.filter(event => event._id !== id));
-      toast('Event deleted successfully!');
+      showSuccess('ลบกิจกรรมสำเร็จ!', 'Event deleted successfully!');
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to delete event';
       setError(errorMessage);
-      toast(errorMessage);
+      showError('ลบไม่สำเร็จ', errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -107,11 +107,11 @@ export function useEvents() {
       setEvents(prev => prev.map(event =>
         event._id === id ? response.data.activity : event
       ));
-      toast('Successfully joined event!');
+      showSuccess('เข้าร่วมสำเร็จ!', 'Successfully joined event!');
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to join event';
-      toast(errorMessage);
+      showError('เข้าร่วมไม่สำเร็จ', errorMessage);
       throw error;
     }
   };
@@ -122,11 +122,11 @@ export function useEvents() {
       setEvents(prev => prev.map(event =>
         event._id === id ? response.data.activity : event
       ));
-      toast('Successfully left event!');
+      showSuccess('ออกจากกิจกรรมสำเร็จ!', 'Successfully left event!');
       return response.data;
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || 'Failed to leave event';
-      toast(errorMessage);
+      showError('ออกจากกิจกรรมไม่สำเร็จ', errorMessage);
       throw error;
     }
   };

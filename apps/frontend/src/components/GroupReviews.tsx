@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
-import { toast } from './Toasts';
+import { showSuccess, showError, showWarning } from '../lib/swal';
 import { socket } from '../lib/socket';
 
 type Review = {
@@ -99,9 +99,9 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
         }
 
         setReviewsData({ reviews: [], averageRating: '0.0', totalReviews: 0 });
-        toast(`❌ ${msg}`);
+        showError('โหลดรีวิวไม่สำเร็จ', msg);
       } else {
-        toast(msg);
+        showError('เกิดข้อผิดพลาด', msg);
       }
     } finally {
       setLoading(false);
@@ -229,7 +229,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
     e.preventDefault();
     
     if (!rating || rating < 1 || rating > 5) {
-      toast('Please select a rating between 1 and 5');
+      showWarning('กรุณาเลือกคะแนน', 'Please select a rating between 1 and 5');
       return;
     }
 
@@ -244,7 +244,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
         comment: comment.trim()
       });
       
-      toast('Review submitted successfully!');
+      showSuccess('ส่งรีวิวสำเร็จ!', 'Review submitted successfully!');
       setShowReviewForm(false);
       setRating(5);
       setComment('');
@@ -252,7 +252,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
     } catch (error: any) {
       console.error('Error submitting review:', error);
       const errorMsg = error?.response?.data?.error || error?.message || 'Failed to submit review';
-      toast(`${errorMsg}`);
+      showError('ส่งรีวิวไม่สำเร็จ', errorMsg);
 
       if (type === 'group') {
         try {
@@ -267,7 +267,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
             if (relatedActivity) {
               console.log('Posting review to activity fallback:', relatedActivity);
               await api.post(`/activities/${relatedActivity}/reviews`, { rating, comment: comment.trim() });
-              toast('Review submitted successfully (activity fallback)');
+              showSuccess('ส่งรีวิวสำเร็จ!', 'Review submitted successfully (activity fallback)');
               setShowReviewForm(false);
               setRating(5);
               setComment('');
@@ -289,7 +289,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                   console.log('Posting review to activity-by-chat fallback:', `/activities/${matched._id}/reviews`, { rating, comment: comment.trim() });
                   const postRes = await api.post(`/activities/${matched._id}/reviews`, { rating, comment: comment.trim() });
                   console.log('Activity fallback post response:', postRes);
-                  toast('Review submitted successfully (activity-by-chat fallback)');
+                  showSuccess('ส่งรีวิวสำเร็จ!', 'Review submitted successfully (activity-by-chat fallback)');
                   setShowReviewForm(false);
                   setRating(5);
                   setComment('');
@@ -297,13 +297,13 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                   return;
                 } else {
                   console.warn('No activity found with matching chat id');
-                  toast('This chat is not linked to an activity. Cannot fallback.');
+                  showWarning('ไม่พบกิจกรรม', 'This chat is not linked to an activity. Cannot fallback.');
                 }
               } catch (actsErr) {
                 console.warn('Activity list lookup failed during fallback:', actsErr);
                 const ae = actsErr as any;
                 const aMsg = ae?.response?.data?.error || ae?.message;
-                if (aMsg) toast(`${aMsg}`);
+                if (aMsg) showError('เกิดข้อผิดพลาด', aMsg);
               }
             }
           }
@@ -311,7 +311,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
           console.warn('Fallback submit failed:', innerErr);
           const ie = innerErr as any;
           const innerMsg = ie?.response?.data?.error || ie?.message;
-          if (innerMsg) toast(`${innerMsg}`);
+          if (innerMsg) showError('เกิดข้อผิดพลาด', innerMsg);
         }
       }
     } finally {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { toast } from './Toasts';
+import { showSuccess } from '../lib/swal';
 import { Star, X } from 'lucide-react';
 
 export default function RatingDialog() {
@@ -9,7 +9,7 @@ export default function RatingDialog() {
 
   const submit = () => {
     setOpen(false);
-    toast(`Thanks! You rated ${stars} stars`);
+    showSuccess('ขอบคุณ!', `Thanks! You rated ${stars} stars`);
     setStars(0);
     setNote('');
   };

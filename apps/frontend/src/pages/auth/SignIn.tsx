@@ -1,8 +1,10 @@
 // Sign in page
 import { useState, useEffect } from 'react';
 import GoogleSignIn from '../../components/GoogleSignIn';
+import FloatingInput from '../../components/FloatingInput';
+import FloatingPasswordInput from '../../components/FloatingPasswordInput';
 import { SignInSchema } from '../../lib/validators';
-import { toast } from '../../components/Toasts';
+import { showSuccess, showError } from '../../lib/swal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -28,12 +30,12 @@ export default function SignIn() {
     if (loading) return;
 
     const parsed = SignInSchema.safeParse({ email, password: pass });
-    if (!parsed.success) return toast(parsed.error.errors[0].message, 'error');
+    if (!parsed.success) return showError('ข้อมูลไม่ถูกต้อง', parsed.error.errors[0].message);
 
     try {
       setLoading(true);
       const result = await signIn(email.trim(), pass);
-      toast('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับมา 🎉', 'success');
+      showSuccess('เข้าสู่ระบบสำเร็จ!', 'ยินดีต้อนรับกลับมา 🎉');
       
       // Redirect admins to dashboard, others to intended location or explore
       if (result && result.role === 'admin') {
@@ -42,7 +44,7 @@ export default function SignIn() {
         nav(from === '/' ? '/explore' : from, { replace: true });
       }
     } catch (err: any) {
-      toast(err?.message || 'เข้าสู่ระบบไม่สำเร็จ', 'error');
+      showError('เข้าสู่ระบบไม่สำเร็จ', err?.message || 'กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function SignIn() {
     <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-12 px-4 bg-slate-50 dark:bg-slate-900">
       <div className="w-full max-w-md">
         {/* Professional Card */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
           {/* Header */}
           <header className="text-center mb-8">
             <h2 className="text-2xl font-light text-slate-800 dark:text-white mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
@@ -61,67 +63,29 @@ export default function SignIn() {
             <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to your WeGo account</p>
           </header>
 
-          <form onSubmit={submit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
-              Email
-            </label>
-            <input
+          <form onSubmit={submit} className="space-y-6">
+            <FloatingInput
               id="email"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="your@email.com"
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
               disabled={loading}
             />
-          </div>
 
-          {/* Password */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none pr-12"
-                placeholder="••••••••"
-                type={showPw ? 'text' : 'password'}
-                value={pass}
-                onChange={(e) => setPass(e.target.value)}
-                autoComplete="current-password"
-                disabled={loading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
-                aria-label={showPw ? 'Hide password' : 'Show password'}
-                title={showPw ? 'Hide password' : 'Show password'}
-                disabled={loading}
-              >
-                {showPw ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5.477 20 1 12 1 12a20.76 20.76 0 0 1 5.06-5.94" />
-                    <path d="M10.73 5.08A11 11 0 0 1 12 4c6.523 0 11 8 11 8a20.76 20.76 0 0 1-4.17 4.92" />
-                    <path d="M14.12 14.12A3 3 0 1 1 9.88 9.88" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M1 12s4.5-8 11-8 11 8 11 8-4.5 8-11 8-11-8-11-8Z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
+            <FloatingPasswordInput
+              id="password"
+              label="Password"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)}
+              autoComplete="current-password"
+              disabled={loading}
+            />
 
           {/* Submit Button */}
           <button 
-            className="w-full mt-6 py-3.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
+            className="w-full mt-2 py-3.5 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-lg shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
             type="submit" 
             disabled={loading}
           >

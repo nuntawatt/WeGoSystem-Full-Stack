@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
-import { toast } from '../../components/Toasts';
+import { showSuccess, showError } from '../../lib/swal';
 import { Flag, Search, RefreshCw, Eye, Check, X, Clock, AlertTriangle, User, Calendar, FileText } from 'lucide-react';
 
 type Report = {
@@ -71,7 +71,7 @@ export default function ReportManagement() {
       setReports(response.data.reports);
     } catch (error: any) {
       console.error('Error fetching reports:', error);
-      toast(error?.response?.data?.error || 'Failed to load reports');
+      showError('โหลดรายงานไม่สำเร็จ', error?.response?.data?.error || 'Failed to load reports');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function ReportManagement() {
       setSelectedReport(response.data);
     } catch (error: any) {
       console.error('Error fetching report details:', error);
-      toast(error?.response?.data?.error || 'Failed to load report details');
+      showError('โหลดรายละเอียดไม่สำเร็จ', error?.response?.data?.error || 'Failed to load report details');
     }
   };
 
@@ -94,14 +94,14 @@ export default function ReportManagement() {
         status,
         adminNotes: notes
       });
-      toast('Report status updated');
+      showSuccess('อัพเดทสถานะสำเร็จ!', 'Report status updated');
       fetchReports();
       if (selectedReport?.report._id === reportId) {
         fetchReportDetails(reportId);
       }
     } catch (error: any) {
       console.error('Error updating report:', error);
-      toast(error?.response?.data?.error || 'Failed to update report');
+      showError('อัพเดทไม่สำเร็จ', error?.response?.data?.error || 'Failed to update report');
     } finally {
       setProcessing(false);
     }
@@ -114,14 +114,14 @@ export default function ReportManagement() {
         action,
         reason: actionReason
       });
-      toast(`Action "${action}" completed successfully`);
+      showSuccess('ดำเนินการสำเร็จ!', `Action "${action}" completed successfully`);
       setActionModal({ show: false, action: '' });
       setActionReason('');
       fetchReports();
       setSelectedReport(null);
     } catch (error: any) {
       console.error('Error taking action:', error);
-      toast(error?.response?.data?.error || 'Failed to complete action');
+      showError('ดำเนินการไม่สำเร็จ', error?.response?.data?.error || 'Failed to complete action');
     } finally {
       setProcessing(false);
     }

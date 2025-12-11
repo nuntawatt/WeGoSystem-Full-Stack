@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { activitiesAPI } from '../lib/api';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError } from '../lib/swal';
 
 export type Activity = { _id?: string; title: string; description?: string; date: Date; participants: string[]; };
 
@@ -16,10 +16,10 @@ export function useActivities() {
     mutationFn: activitiesAPI.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast('สร้างกิจกรรมสำเร็จ');
+      showSuccess('สร้างกิจกรรมสำเร็จ!', 'กิจกรรมของคุณถูกสร้างแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'สร้างกิจกรรมไม่สำเร็จ');
+      showError('สร้างกิจกรรมไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -28,10 +28,10 @@ export function useActivities() {
       activitiesAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast('อัพเดทกิจกรรมสำเร็จ');
+      showSuccess('อัพเดทกิจกรรมสำเร็จ!', 'ข้อมูลถูกบันทึกแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'อัพเดทกิจกรรมไม่สำเร็จ');
+      showError('อัพเดทกิจกรรมไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -39,10 +39,10 @@ export function useActivities() {
     mutationFn: activitiesAPI.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast('ลบกิจกรรมสำเร็จ');
+      showSuccess('ลบกิจกรรมสำเร็จ!', 'กิจกรรมถูกลบแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ลบกิจกรรมไม่สำเร็จ');
+      showError('ลบกิจกรรมไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -50,10 +50,10 @@ export function useActivities() {
     mutationFn: activitiesAPI.join,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast('เข้าร่วมกิจกรรมสำเร็จ');
+      showSuccess('เข้าร่วมกิจกรรมสำเร็จ!', 'คุณเข้าร่วมแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'เข้าร่วมกิจกรรมไม่สำเร็จ');
+      showError('เข้าร่วมกิจกรรมไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -61,10 +61,10 @@ export function useActivities() {
     mutationFn: activitiesAPI.leave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast('ออกจากกิจกรรมสำเร็จ');
+      showSuccess('ออกจากกิจกรรมสำเร็จ!', 'คุณออกจากกิจกรรมแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ออกจากกิจกรรมไม่สำเร็จ');
+      showError('ออกจากกิจกรรมไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 

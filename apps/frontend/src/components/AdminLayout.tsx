@@ -90,7 +90,7 @@ export default function AdminLayout() {
       <aside className="w-64 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 shadow-sm fixed h-full">
         <div className="p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-sm bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
               <Shield className="w-5 h-5 text-teal-700 dark:text-teal-400" />
             </div>
             <div>
@@ -111,9 +111,9 @@ export default function AdminLayout() {
             to={item.path}
             end={item.path === '/admin'}
             className={({ isActive }) =>
-              `group flex items-center gap-3 px-4 py-3 rounded-sm transition-colors ${isActive
+              `group flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
                 ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 font-medium'
-                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`
             }
           >
@@ -128,7 +128,7 @@ export default function AdminLayout() {
         {/* User Info */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div
-            className="flex items-center gap-3 mb-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-sm p-3 transition-colors group"
+            className="flex items-center gap-3 mb-3 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg p-3 transition-colors group"
             onClick={handleOpenProfile}
           >
             {profile?.avatar ? (
@@ -162,7 +162,7 @@ export default function AdminLayout() {
               logOut();
               navigate('/');
             }}
-            className="w-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-sm px-4 py-2.5 text-sm font-medium transition-colors border border-red-200 dark:border-red-800 flex items-center justify-center gap-2"
+            className="w-full bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors border border-red-200 dark:border-red-800 flex items-center justify-center gap-2"
           >
             <LogOut className="w-4 h-4" />
             Log out
@@ -178,7 +178,7 @@ export default function AdminLayout() {
       {/* Profile Modal */}
       {showProfileModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowProfileModal(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 shadow-lg" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-slate-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 shadow-lg" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Admin Profile</h2>
@@ -217,7 +217,7 @@ export default function AdminLayout() {
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                           placeholder="Your name"
-                          className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none text-xl font-medium"
+                          className="w-full bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none text-xl font-medium"
                         />
                       ) : (
                         <h3 className="text-2xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>{profile?.name || user?.username || 'No name set'}</h3>
@@ -235,10 +235,10 @@ export default function AdminLayout() {
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                         placeholder="Tell us about yourself..."
                         rows={4}
-                        className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none resize-none"
+                        className="w-full bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none resize-none"
                       />
                     ) : (
-                      <p className="text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-700 rounded-sm p-3">
+                      <p className="text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-700 rounded-lg p-3">
                         {profile?.bio || 'No bio added yet'}
                       </p>
                     )}
@@ -253,7 +253,7 @@ export default function AdminLayout() {
                         value={formData.avatar}
                         onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
                         placeholder="https://example.com/avatar.jpg"
-                        className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none"
+                        className="w-full bg-slate-50 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:outline-none"
                       />
                     </div>
                   )}
@@ -263,7 +263,7 @@ export default function AdminLayout() {
                     <div>
                       <label className="text-slate-500 dark:text-slate-400 text-sm">Role</label>
                       <p className="text-slate-800 dark:text-white mt-1">
-                        <span className="px-3 py-1 rounded-sm text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
+                        <span className="px-3 py-1 rounded-lg text-sm bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800">
                           Admin
                         </span>
                       </p>
@@ -282,14 +282,14 @@ export default function AdminLayout() {
                       <>
                         <button
                           onClick={() => setEditMode(false)}
-                          className="flex-1 px-4 py-2 rounded-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                           disabled={loading}
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSaveProfile}
-                          className="flex-1 px-4 py-2 rounded-sm bg-teal-700 text-white hover:bg-teal-600 transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-500 transition-colors"
                           disabled={loading}
                         >
                           {loading ? (
@@ -306,13 +306,13 @@ export default function AdminLayout() {
                       <>
                         <button
                           onClick={() => setShowProfileModal(false)}
-                          className="flex-1 px-4 py-2 rounded-sm bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                          className="flex-1 px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
                         >
                           Close
                         </button>
                         <button
                           onClick={() => setEditMode(true)}
-                          className="px-4 py-2 rounded-sm bg-teal-700 text-white hover:bg-teal-600 transition-colors"
+                          className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-500 transition-colors"
                         >
                           Edit Profile
                         </button>

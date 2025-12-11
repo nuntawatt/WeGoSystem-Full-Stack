@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { toast } from './Toasts';
+import { showSuccess } from '../lib/swal';
 import { Calendar, Save } from 'lucide-react';
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -32,7 +32,7 @@ export default function AvailabilityPicker() {
 
   const save = () => {
     localStorage.setItem('wego_availability', JSON.stringify(avail));
-    toast('Availability saved');
+    showSuccess('บันทึกสำเร็จ!', 'เวลาว่างของคุณถูกบันทึกแล้ว');
   };
 
   return (

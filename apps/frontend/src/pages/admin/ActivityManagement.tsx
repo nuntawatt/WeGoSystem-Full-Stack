@@ -188,15 +188,15 @@ export default function ActivityManagement() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Activity Management</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">Manage all activities in the system</p>
+          <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base">Manage all activities in the system</p>
           {usingPublicApi && (
-            <div className="mt-2 px-3 py-1 rounded-sm bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs inline-flex items-center gap-2">
+            <div className="mt-2 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs inline-flex items-center gap-2">
               <span>Using public API - Please login as admin for full access</span>
             </div>
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchActivities} className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors">
+          <button onClick={fetchActivities} className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors">
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
@@ -205,27 +205,27 @@ export default function ActivityManagement() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-sm bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
                 <ActivityIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
               </div>
               <div className="flex-1">
-                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Activities</p>
+                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Activities</p>
               </div>
             </div>
             <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredActivities.length}</p>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-sm bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
-                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Published</p>
+                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Published</p>
               </div>
             </div>
             <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
@@ -233,14 +233,14 @@ export default function ActivityManagement() {
             </p>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-sm bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
                 <Users className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="flex-1">
-                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Participants</p>
+                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Participants</p>
               </div>
             </div>
             <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
@@ -248,14 +248,14 @@ export default function ActivityManagement() {
             </p>
           </div>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-sm bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
                 <ImageIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="flex-1">
-                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Categories</p>
+                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Categories</p>
               </div>
             </div>
             <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
@@ -266,7 +266,7 @@ export default function ActivityManagement() {
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-5 sm:p-6 shadow-sm">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 sm:p-6 shadow-sm">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
@@ -274,38 +274,38 @@ export default function ActivityManagement() {
             placeholder="Search activities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
+            className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
           />
         </div>
       </div>
 
       {/* Activities Table */}
-      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gradient-to-r from-primary-700/70 to-primary-600/50">
+            <thead className="bg-slate-50 dark:bg-slate-700">
               <tr>
-                <th className="text-left py-4 px-4 lg:px-6 text-emerald-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
+                <th className="text-left py-4 px-4 lg:px-6 text-teal-700 dark:text-teal-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
                   <i className="fas fa-layer-group mr-1 sm:mr-2"></i>
                   <span className="hidden sm:inline">Activity</span>
                 </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-amber-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
+                <th className="text-left py-4 px-4 lg:px-6 text-amber-700 dark:text-amber-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
                   <i className="fas fa-map-marker-alt mr-1 sm:mr-2"></i>
                   <span className="hidden lg:inline">Location</span>
                 </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-blue-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
+                <th className="text-left py-4 px-4 lg:px-6 text-blue-700 dark:text-blue-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
                   <i className="fas fa-users mr-1 sm:mr-2"></i>
                   <span className="hidden sm:inline">Participants</span>
                 </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-pink-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
+                <th className="text-left py-4 px-4 lg:px-6 text-pink-700 dark:text-pink-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
                   <i className="fas fa-user-circle mr-1 sm:mr-2"></i>
                   <span className="hidden xl:inline">Creator</span>
                 </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-cyan-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">
+                <th className="text-left py-4 px-4 lg:px-6 text-cyan-700 dark:text-cyan-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">
                   <i className="fas fa-calendar mr-1 sm:mr-2"></i>
                   <span>Created</span>
                 </th>
-                <th className="text-right py-4 px-4 lg:px-6 text-gray-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
+                <th className="text-right py-4 px-4 lg:px-6 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
                   <i className="fas fa-cog mr-1 sm:mr-2"></i>
                   <span className="hidden sm:inline">Actions</span>
                 </th>
@@ -314,29 +314,29 @@ export default function ActivityManagement() {
             <tbody>
               {filteredActivities.length > 0 ? (
                 filteredActivities.map((activity) => (
-                  <tr key={activity._id} className="border-t border-primary-600/30 hover:bg-gradient-to-r hover:from-primary-700/40 hover:to-transparent transition-all duration-200 group">
+                  <tr key={activity._id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
                     <td className="py-3 px-4 lg:px-6">
                       <div className="flex items-center gap-2 sm:gap-3">
                         {getActivityImage(activity) ? (
                           <img
                             src={getActivityImage(activity)!.startsWith('http') ? getActivityImage(activity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(activity)}`}
                             alt={activity.title}
-                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-emerald-500/30 group-hover:ring-emerald-400/50 transition-all"
+                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-teal-500/30 group-hover:ring-teal-400/50 transition-all"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-emerald-500/30 to-blue-500/30 flex items-center justify-center flex-shrink-0 ring-2 ring-emerald-500/20 group-hover:ring-emerald-400/40 transition-all">
-                            <i className="fas fa-image text-xl sm:text-2xl text-emerald-300"></i>
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 dark:from-teal-500/30 dark:to-blue-500/30 flex items-center justify-center flex-shrink-0 ring-2 ring-teal-500/20 group-hover:ring-teal-400/40 transition-all">
+                            <i className="fas fa-image text-xl sm:text-2xl text-teal-600 dark:text-teal-400"></i>
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-white font-bold text-xs sm:text-sm group-hover:text-emerald-300 transition-colors truncate">{activity.title}</p>
-                          <p className="text-primary-400 text-xs truncate hidden sm:block">{activity.description}</p>
+                          <p className="text-slate-900 dark:text-white font-bold text-xs sm:text-sm group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors truncate">{activity.title}</p>
+                          <p className="text-slate-500 dark:text-slate-400 text-xs truncate hidden sm:block">{activity.description}</p>
                           <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-xs font-bold ${activity.status === 'published'
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
+                              : 'bg-slate-100 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400 border border-slate-200 dark:border-gray-500/30'
                             }`}>
                             {activity.status === 'published' ? '✓' : '○'}
                             <span className="hidden sm:inline ml-1">{activity.status === 'published' ? 'Published' : 'Draft'}</span>
@@ -345,7 +345,7 @@ export default function ActivityManagement() {
                       </div>
                     </td>
                     <td className="py-3 px-4 lg:px-6 hidden md:table-cell">
-                      <div className="flex items-center gap-2 text-amber-300/80 text-xs sm:text-sm">
+                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-xs sm:text-sm">
                         <i className="fas fa-map-marker-alt"></i>
                         <span className="font-medium truncate max-w-[120px] lg:max-w-[150px]">
                           {getLocationString(activity.location)}
@@ -353,26 +353,26 @@ export default function ActivityManagement() {
                       </div>
                     </td>
                     <td className="py-3 px-4 lg:px-6">
-                      <div className="text-blue-300/80 text-xs sm:text-sm font-medium whitespace-nowrap">
+                      <div className="text-blue-700 dark:text-blue-400 text-xs sm:text-sm font-medium whitespace-nowrap">
                         <i className="fas fa-users mr-1 sm:mr-2"></i>
                         {activity.participants?.length || 0} / {activity.maxParticipants}
                       </div>
                     </td>
                     <td className="py-3 px-4 lg:px-6 hidden lg:table-cell">
-                      <div className="flex items-center gap-2 text-pink-300/80 text-xs sm:text-sm">
+                      <div className="flex items-center gap-2 text-pink-700 dark:text-pink-400 text-xs sm:text-sm">
                         <i className="fas fa-user-circle"></i>
                         <span className="font-medium truncate max-w-[100px] xl:max-w-[120px]">
                           {getCreatorDisplay(activity)}
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 lg:px-6 text-cyan-300/80 text-xs sm:text-sm font-medium hidden xl:table-cell">
+                    <td className="py-3 px-4 lg:px-6 text-cyan-700 dark:text-cyan-400 text-xs sm:text-sm font-medium hidden xl:table-cell">
                       <div className="flex flex-col">
                         <span className="flex items-center gap-1 sm:gap-2">
                           <i className="fas fa-calendar-alt"></i>
                           {new Date(activity.createdAt).toLocaleDateString()}
                         </span>
-                        <span className="text-xs text-primary-400">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
                           {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
@@ -382,7 +382,7 @@ export default function ActivityManagement() {
                         <button
                           onClick={() => handleViewActivity(activity)}
                           title="View activity"
-                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-300 hover:from-blue-500/40 hover:to-blue-600/30 transition-all border border-blue-500/40 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 group/btn"
+                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-500/40 transition-all border border-blue-200 dark:border-blue-500/40 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 group/btn"
                         >
                           <i className="fas fa-eye group-hover/btn:scale-110 inline-block transition-transform"></i>
                           <span className="hidden sm:inline ml-2">View</span>
@@ -390,7 +390,7 @@ export default function ActivityManagement() {
                         <button
                           onClick={() => handleDeleteActivity(activity._id)}
                           title="Delete activity"
-                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-red-500/30 to-pink-500/20 text-red-300 hover:from-red-500/40 hover:to-pink-500/30 transition-all border border-red-500/40 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 group/btn"
+                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-red-100 dark:bg-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-500/40 transition-all border border-red-200 dark:border-red-500/40 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 group/btn"
                         >
                           <i className="fas fa-trash group-hover/btn:scale-110 inline-block transition-transform"></i>
                           <span className="hidden sm:inline ml-2">Delete</span>
@@ -401,7 +401,7 @@ export default function ActivityManagement() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-primary-400">
+                  <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-slate-400">
                     <i className="fas fa-clipboard-list text-4xl mb-3 opacity-50"></i>
                     <p>No activities found</p>
                   </td>
@@ -415,18 +415,18 @@ export default function ActivityManagement() {
       {/* View Modal */}
       {showModal && selectedActivity && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-gradient-to-br from-primary-800 via-primary-900 to-primary-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-primary-600/50 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-primary-700/90 to-primary-800/90 backdrop-blur-xl border-b border-primary-600/50 px-6 py-4 flex justify-between items-center">
+            <div className="sticky top-0 bg-slate-50 dark:bg-slate-700 backdrop-blur-xl border-b border-slate-200 dark:border-slate-600 px-6 py-4 flex justify-between items-center">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/40 to-blue-500/40 flex items-center justify-center">
-                  <i className="fas fa-layer-group text-emerald-300"></i>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/30 to-blue-500/30 flex items-center justify-center">
+                  <i className="fas fa-layer-group text-teal-600 dark:text-teal-400"></i>
                 </div>
-                <h2 className="text-xl font-black text-white uppercase tracking-wider">Activity Details</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider">Activity Details</h2>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-10 h-10 rounded-xl bg-primary-700/50 hover:bg-red-500/30 text-primary-400 hover:text-red-300 transition-all hover:scale-110 hover:rotate-90"
+                className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-600 hover:bg-red-100 dark:hover:bg-red-500/30 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-300 transition-all hover:scale-110 hover:rotate-90"
               >
                 <i className="fas fa-times text-xl"></i>
               </button>
@@ -436,7 +436,7 @@ export default function ActivityManagement() {
             <div className="p-6 space-y-6">
               {/* Cover Image */}
               {getActivityImage(selectedActivity) && (
-                <div className="rounded-2xl overflow-hidden ring-2 ring-emerald-500/30 shadow-2xl">
+                <div className="rounded-2xl overflow-hidden ring-2 ring-teal-500/30 shadow-2xl">
                   <img
                     src={getActivityImage(selectedActivity)!.startsWith('http') ? getActivityImage(selectedActivity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(selectedActivity)}`}
                     alt={selectedActivity.title}
@@ -452,7 +452,7 @@ export default function ActivityManagement() {
               {selectedActivity.images && selectedActivity.images.length > 1 && (
                 <div className="grid grid-cols-3 gap-3">
                   {selectedActivity.images.map((img, idx) => (
-                    <div key={idx} className="rounded-xl overflow-hidden ring-2 ring-primary-600/30 hover:ring-emerald-400/50 transition-all cursor-pointer">
+                    <div key={idx} className="rounded-xl overflow-hidden ring-2 ring-slate-200 dark:ring-slate-600 hover:ring-teal-400/50 transition-all cursor-pointer">
                       <img
                         src={img.startsWith('http') ? img : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${img}`}
                         alt={`${selectedActivity.title} - Image ${idx + 1}`}
@@ -467,103 +467,103 @@ export default function ActivityManagement() {
               )}
 
               {/* Title & Description */}
-              <div className="bg-gradient-to-br from-primary-700/50 to-primary-800/30 rounded-2xl p-6 border border-primary-600/30">
-                <label className="text-emerald-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-600">
+                <label className="text-teal-700 dark:text-teal-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                   <i className="fas fa-heading"></i> Title
                 </label>
-                <p className="text-white font-bold text-2xl mb-4">{selectedActivity.title}</p>
+                <p className="text-slate-900 dark:text-white font-bold text-2xl mb-4">{selectedActivity.title}</p>
 
-                <label className="text-blue-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+                <label className="text-blue-700 dark:text-blue-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                   <i className="fas fa-align-left"></i> Description
                 </label>
-                <p className="text-primary-300 leading-relaxed">{selectedActivity.description}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{selectedActivity.description}</p>
               </div>
 
               {/* Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Location */}
-                <div className="bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-xl p-4 border border-amber-500/20">
-                  <label className="text-amber-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+                <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-4 border border-amber-200 dark:border-amber-500/20">
+                  <label className="text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                     <i className="fas fa-map-marker-alt"></i> Location
                   </label>
-                  <p className="text-white font-semibold">{getLocationString(selectedActivity.location)}</p>
+                  <p className="text-slate-900 dark:text-white font-semibold">{getLocationString(selectedActivity.location)}</p>
                   {hasValidCoordinates(selectedActivity.location) &&
                     typeof selectedActivity.location === 'object' &&
                     selectedActivity.location.coordinates && (
-                      <p className="text-xs text-primary-400 mt-1">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         📍 {selectedActivity.location.coordinates.lat.toFixed(6)}, {selectedActivity.location.coordinates.lng.toFixed(6)}
                       </p>
                     )}
                 </div>
 
                 {/* Max Participants */}
-                <div className="bg-gradient-to-br from-blue-500/10 to-blue-600/5 rounded-xl p-4 border border-blue-500/20">
-                  <label className="text-blue-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4 border border-blue-200 dark:border-blue-500/20">
+                  <label className="text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                     <i className="fas fa-users"></i> Max Participants
                   </label>
-                  <p className="text-white font-semibold text-2xl">{selectedActivity.maxParticipants}</p>
+                  <p className="text-slate-900 dark:text-white font-semibold text-2xl">{selectedActivity.maxParticipants}</p>
                 </div>
 
                 {/* Current Participants */}
-                <div className="bg-gradient-to-br from-cyan-500/10 to-cyan-600/5 rounded-xl p-4 border border-cyan-500/20">
-                  <label className="text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+                <div className="bg-cyan-50 dark:bg-cyan-500/10 rounded-xl p-4 border border-cyan-200 dark:border-cyan-500/20">
+                  <label className="text-cyan-700 dark:text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                     <i className="fas fa-user-friends"></i> Current Participants
                   </label>
                   <div className="flex items-center gap-3">
-                    <p className="text-white font-semibold text-2xl">{selectedActivity.participants.length}</p>
-                    <div className="flex-1 bg-primary-900/50 rounded-full h-3 overflow-hidden">
+                    <p className="text-slate-900 dark:text-white font-semibold text-2xl">{selectedActivity.participants.length}</p>
+                    <div className="flex-1 bg-slate-200 dark:bg-slate-600 rounded-full h-3 overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all"
                         style={{ width: `${Math.min((selectedActivity.participants.length / selectedActivity.maxParticipants * 100), 100)}%` }}
                       ></div>
                     </div>
                   </div>
-                  <p className="text-xs text-primary-400 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {Math.round((selectedActivity.participants.length / selectedActivity.maxParticipants * 100))}% Full
                   </p>
                 </div>
 
                 {/* Created Date */}
-                <div className="bg-gradient-to-br from-pink-500/10 to-pink-600/5 rounded-xl p-4 border border-pink-500/20">
-                  <label className="text-pink-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+                <div className="bg-pink-50 dark:bg-pink-500/10 rounded-xl p-4 border border-pink-200 dark:border-pink-500/20">
+                  <label className="text-pink-700 dark:text-pink-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                     <i className="fas fa-calendar-alt"></i> Created Date
                   </label>
-                  <p className="text-white font-semibold">{new Date(selectedActivity.createdAt).toLocaleDateString()}</p>
-                  <p className="text-xs text-primary-400 mt-1">
+                  <p className="text-slate-900 dark:text-white font-semibold">{new Date(selectedActivity.createdAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     {new Date(selectedActivity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
               </div>
 
               {/* Creator Info */}
-              <div className="bg-gradient-to-br from-purple-500/10 to-purple-600/5 rounded-xl p-4 border border-purple-500/20">
-                <label className="text-purple-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
+              <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4 border border-purple-200 dark:border-purple-500/20">
+                <label className="text-purple-700 dark:text-purple-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
                   <i className="fas fa-user-circle"></i> Created By
                 </label>
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/30 to-pink-500/20 flex items-center justify-center">
-                    <span className="text-purple-300 font-black text-lg">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 dark:from-purple-500/30 dark:to-pink-500/20 flex items-center justify-center">
+                    <span className="text-purple-700 dark:text-purple-300 font-black text-lg">
                       {getCreatorInitial(selectedActivity)}
                     </span>
                   </div>
                   <div>
-                    <p className="text-white font-semibold">{getCreatorDisplay(selectedActivity)}</p>
-                    <p className="text-xs text-primary-400">Activity Creator</p>
+                    <p className="text-slate-900 dark:text-white font-semibold">{getCreatorDisplay(selectedActivity)}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Activity Creator</p>
                   </div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-primary-600/30">
+              <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-primary-700/50 to-primary-600/30 text-white font-bold uppercase tracking-wider hover:from-primary-700/70 hover:to-primary-600/50 transition-all border border-primary-600/40 hover:scale-105"
+                  className="flex-1 px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border border-slate-200 dark:border-slate-600 hover:scale-105"
                 >
                   <i className="fas fa-times mr-2"></i>Close
                 </button>
                 <button
                   onClick={() => handleDeleteActivity(selectedActivity._id)}
-                  className="px-6 py-3 rounded-sm bg-red-600 hover:bg-red-500 text-white font-medium transition-all flex items-center gap-2"
+                  className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-all flex items-center gap-2"
                 >
                   <Trash2 className="w-4 h-4" /> ลบกิจกรรม
                 </button>

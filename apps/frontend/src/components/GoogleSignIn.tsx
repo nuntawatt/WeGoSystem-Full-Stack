@@ -29,7 +29,6 @@ export default function GoogleSignIn() {
             const token = result.data?.token;
             if (token) {
               localStorage.setItem('token', token);
-              // Reload so AuthProvider will fetch /auth/me and populate context
               window.location.href = '/explore';
             }
           } catch (err) {

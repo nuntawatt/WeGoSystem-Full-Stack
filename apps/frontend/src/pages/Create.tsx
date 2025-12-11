@@ -1,6 +1,6 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { CreateActivitySchema } from '../lib/validators';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError, showWarning } from '../lib/swal';
 import TagSelector from '../components/TagSelector';
 import { useEvents } from '../hooks/useEvents';
 import { useProfile } from '../hooks/useProfile';
@@ -72,14 +72,14 @@ export default function Create() {
   const handleImageSelect = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast('Please select an image file', 'error');
+      showError('ไฟล์ไม่ถูกต้อง', 'Please select an image file');
       return;
     }
 
     const maxSize = 5; // 5MB
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > maxSize) {
-      toast(`File too large (max ${maxSize} MB)`, 'error');
+      showError('ไฟล์ใหญ่เกินไป', `File too large (max ${maxSize} MB)`);
       return;
     }
 
@@ -116,12 +116,12 @@ export default function Create() {
     // Validate form data (category is optional)
     if (!formData.title || !formData.description || !formData.location || 
         !formData.date || !formData.time) {
-      toast('Please fill in all required fields', 'error');
+      showError('กรุณากรอกข้อมูล', 'Please fill in all required fields');
       return;
     }
 
     if (formData.maxParticipants < 2) {
-      toast('Minimum 2 participants required', 'error');
+      showError('ข้อมูลไม่ถูกต้อง', 'Minimum 2 participants required');
       return;
     }
 
@@ -165,7 +165,7 @@ export default function Create() {
           }
         } catch (uploadError) {
           console.error('Image upload error:', uploadError);
-          toast('Failed to upload image. Creating activity without image...', 'error');
+          showWarning('อัปโหลดรูปไม่สำเร็จ', 'Creating activity without image...');
         } finally {
           setUploading(false);
           setProgress(0);
@@ -184,11 +184,11 @@ export default function Create() {
       };
 
       const newEvent = await createEvent(eventData);
-      toast('กิจกรรมถูกสร้างเรียบร้อยแล้ว 🎉', 'success');
+      showSuccess('สร้างกิจกรรมสำเร็จ! 🎉', 'กิจกรรมถูกสร้างเรียบร้อยแล้ว');
       navigate('/explore');
     } catch (error: any) {
       console.error('Create event error:', error);
-      toast('ไม่สามารถสร้างกิจกรรมได้', 'error');
+      showError('ไม่สามารถสร้างกิจกรรมได้', 'กรุณาลองใหม่อีกครั้ง');
     }
   };
 

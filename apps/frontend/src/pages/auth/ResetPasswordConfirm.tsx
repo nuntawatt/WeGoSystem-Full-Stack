@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { toast } from '../../components/Toasts';
+import { showSuccess, showError } from '../../lib/swal';
 import { api } from '../../lib/apiClient';
 import { Lock, Check, AlertCircle, Loader2 } from 'lucide-react';
 
@@ -67,12 +67,12 @@ export default function ResetPasswordConfirm() {
         token,
         password: pass
       });
-      toast('Password has been reset successfully');
+      showSuccess('รีเซ็ตรหัสผ่านสำเร็จ!', 'คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่');
       setStage('done');
       nav('/auth/signin');
     } catch (error: any) {
       console.error('[resetPasswordConfirm]', error);
-      toast(error?.response?.data?.message || 'Failed to reset password');
+      showError('รีเซ็ตไม่สำเร็จ', error?.response?.data?.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }

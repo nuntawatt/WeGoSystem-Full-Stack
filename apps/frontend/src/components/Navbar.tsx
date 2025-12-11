@@ -1,8 +1,9 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
-import { Compass, Plus, LogOut, LayoutDashboard, Search } from 'lucide-react';
+import { Plus, LogOut, LayoutDashboard, Search } from 'lucide-react';
 import clsx from 'clsx';
+import logo from '../../image/logo-wego.png';
 
 const APP_NAME = import.meta.env.VITE_APP_NAME || 'WeGo';
 
@@ -32,17 +33,13 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
-      <div className="container-app flex items-center justify-between py-3">
-        {/* Brand - Professional Style */}
-        <Link to="/" className="flex items-center gap-2.5 group" aria-label={APP_NAME}>
-          <div className="p-2 rounded-lg bg-teal-700 dark:bg-teal-600 transition-transform duration-200 group-hover:scale-105">
-            <Compass className="w-5 h-5 text-white" strokeWidth={2} />
+      <div className="container-app flex items-center justify-between py-2">
+
+        <Link to="/" className="flex items-center gap-2 group" aria-label={APP_NAME}>
+          <div className="flex items-center transition-transform duration-200 group-hover:scale-105">
+            <img src={logo} alt="WeGo" className="h-9 sm:h-10 w-auto object-contain block" />
           </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-semibold text-slate-800 dark:text-white tracking-tight" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              WeGo
-            </span>
-            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 -mt-0.5 tracking-wide">Study Together</span>
+          <div className="flex flex-col justify-center">
           </div>
         </Link>
 
@@ -105,13 +102,13 @@ export default function Navbar() {
             <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-200 dark:border-slate-700">
               <NavLink
                 to="/auth/signin"
-                className="px-5 py-2 rounded-sm text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-100 transition-all duration-200"
+                className="px-5 py-2 rounded-full text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300"
               >
                 Sign in
               </NavLink>
               <NavLink
                 to="/auth/signup"
-                className="px-5 py-2 rounded-sm text-sm font-medium text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
+                className="px-5 py-2 rounded-full text-sm font-medium text-teal-600 dark:text-teal-400 border-2 border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-teal-700 dark:hover:text-teal-300 transition-all duration-300"
               >
                 Sign up
               </NavLink>

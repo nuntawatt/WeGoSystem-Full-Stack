@@ -1,4 +1,3 @@
-// apps/frontend/src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Explore from './pages/Explore';
@@ -27,7 +26,6 @@ export default function App() {
   return (
     <DMProvider>
       <Routes>
-        {/* Admin Routes - Separate Layout without Navbar */}
         <Route
           path="/admin/*"
           element={

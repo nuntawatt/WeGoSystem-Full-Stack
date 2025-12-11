@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import { useAuth } from '../hooks/useAuth';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError } from '../lib/swal';
 import { Edit3 } from 'lucide-react';
 
 const BIO_MAX = 240;
@@ -68,12 +68,12 @@ export default function Profile() {
   const onSelectFile = async (file?: File | null) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast('Please select an image file', 'error');
+      showError('ไฟล์ไม่ถูกต้อง', 'Please select an image file');
       return;
     }
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > AVATAR_MAX_MB) {
-      toast(`File too large (max ${AVATAR_MAX_MB} MB)`, 'error');
+      showError('ไฟล์ใหญ่เกินไป', `File too large (max ${AVATAR_MAX_MB} MB)`);
       return;
     }
 
@@ -125,7 +125,7 @@ export default function Profile() {
       setAvatar(data.avatarUrl);
       setUploading(false);
       setProgress(100);
-      toast('รูปโปรไฟล์อัปเดตสำเร็จ!', 'success');
+      showSuccess('รูปโปรไฟล์อัปเดตสำเร็จ!', 'รูปภาพของคุณถูกเปลี่ยนแล้ว');
 
       // Revoke local preview blob after a short delay so the DOM updates to the server URL
       if (localUrl) {
@@ -147,7 +147,7 @@ export default function Profile() {
       setUploading(false);
       setProgress(0);
       console.error('Upload error:', error);
-      toast('Failed to upload image. Please try again.', 'error');
+      showError('อัปโหลดไม่สำเร็จ', 'Failed to upload image. Please try again.');
     }
   };
 
@@ -178,26 +178,26 @@ export default function Profile() {
 
       setAvatar('');
       await updateProfile({ name, bio, avatar: '' });
-      toast('รูปโปรไฟล์ถูกลบแล้ว', 'success');
+      showSuccess('ลบรูปโปรไฟล์สำเร็จ!', 'รูปโปรไฟล์ถูกลบแล้ว');
     } catch (error) {
       console.error('Remove avatar error:', error);
-      toast('Failed to remove picture', 'error');
+      showError('ลบไม่สำเร็จ', 'Failed to remove picture');
     }
   };
 
   const save = async () => {
     try {
       if (bio.length > BIO_MAX) {
-        toast(`Bio exceeds ${BIO_MAX} characters`, 'error');
+        showError('ข้อมูลไม่ถูกต้อง', `Bio exceeds ${BIO_MAX} characters`);
         return;
       }
       await updateProfile({ name, bio, avatar });
-      toast('โปรไฟล์อัปเดตสำเร็จ! ✨', 'success');
+      showSuccess('โปรไฟล์อัปเดตสำเร็จ! ✨', 'ข้อมูลของคุณถูกบันทึกแล้ว');
       setIsEditingName(false);
       setIsEditingBio(false);
     } catch (error) {
       console.error('Update profile error:', error);
-      toast('Failed to update profile', 'error');
+      showError('อัปเดตไม่สำเร็จ', 'Failed to update profile');
     }
   };
 

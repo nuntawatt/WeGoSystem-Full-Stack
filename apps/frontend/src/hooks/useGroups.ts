@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { groupsAPI } from '../lib/api';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError } from '../lib/swal';
 
 export type Group = {
   _id?: string;
@@ -21,10 +21,10 @@ export function useGroups() {
     mutationFn: groupsAPI.create,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast('สร้างกลุ่มสำเร็จ');
+      showSuccess('สร้างกลุ่มสำเร็จ!', 'กลุ่มของคุณถูกสร้างแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'สร้างกลุ่มไม่สำเร็จ');
+      showError('สร้างกลุ่มไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -33,10 +33,10 @@ export function useGroups() {
       groupsAPI.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast('อัพเดทกลุ่มสำเร็จ');
+      showSuccess('อัพเดทกลุ่มสำเร็จ!', 'ข้อมูลกลุ่มถูกบันทึกแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'อัพเดทกลุ่มไม่สำเร็จ');
+      showError('อัพเดทกลุ่มไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -44,10 +44,10 @@ export function useGroups() {
     mutationFn: groupsAPI.delete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast('ลบกลุ่มสำเร็จ');
+      showSuccess('ลบกลุ่มสำเร็จ!', 'กลุ่มถูกลบแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ลบกลุ่มไม่สำเร็จ');
+      showError('ลบกลุ่มไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -55,10 +55,10 @@ export function useGroups() {
     mutationFn: groupsAPI.join,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast('เข้าร่วมกลุ่มสำเร็จ');
+      showSuccess('เข้าร่วมกลุ่มสำเร็จ!', 'คุณเป็นสมาชิกกลุ่มแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'เข้าร่วมกลุ่มไม่สำเร็จ');
+      showError('เข้าร่วมกลุ่มไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 
@@ -66,10 +66,10 @@ export function useGroups() {
     mutationFn: groupsAPI.leave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['groups'] });
-      toast('ออกจากกลุ่มสำเร็จ');
+      showSuccess('ออกจากกลุ่มสำเร็จ!', 'คุณออกจากกลุ่มแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ออกจากกลุ่มไม่สำเร็จ');
+      showError('ออกจากกลุ่มไม่สำเร็จ', error?.message || 'โปรดลองใหม่');
     },
   });
 

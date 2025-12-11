@@ -1,8 +1,10 @@
 // Sign up page
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from '../../components/Toasts';
+import { showSuccess, showError, showWarning } from '../../lib/swal';
 import { useAuth } from '../../hooks/useAuth';
+import FloatingInput from '../../components/FloatingInput';
+import FloatingPasswordInput from '../../components/FloatingPasswordInput';
 
 export default function SignUp() {
   const nav = useNavigate();
@@ -20,25 +22,25 @@ export default function SignUp() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return toast('โปรดกรอกชื่อ', 'error');
-    if (!email.trim()) return toast('โปรดกรอกอีเมล', 'error');
-    if (pw.length < 6) return toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร', 'error');
+    if (!name.trim()) return showError('กรุณากรอกข้อมูล', 'โปรดกรอกชื่อ');
+    if (!email.trim()) return showError('กรุณากรอกข้อมูล', 'โปรดกรอกอีเมล');
+    if (pw.length < 6) return showError('รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านอย่างน้อย 6 ตัวอักษร');
 
     try {
   setLoading(true);
   await signUp(email, pw, name.trim());
-      toast('ยินดีต้อนรับสู่ WeGo 🎉', 'success');
+      showSuccess('ยินดีต้อนรับสู่ WeGo 🎉', 'สมัครสมาชิกสำเร็จ!');
       nav('/profile');
     } catch (err: any) {
       const message = err?.message || '';
       if (message.includes('duplicate')) {
-        toast('อีเมลนี้มีบัญชีอยู่แล้ว • กด "Sign in" หรือ "Reset password"', 'error');
+        showWarning('อีเมลนี้มีบัญชีอยู่แล้ว', 'กด "Sign in" หรือ "Reset password"');
       } else if (message.includes('email')) {
-        toast('อีเมลไม่ถูกต้อง', 'error');
+        showError('อีเมลไม่ถูกต้อง', 'กรุณาตรวจสอบรูปแบบอีเมล');
       } else if (message.includes('password')) {
-        toast('รหัสผ่านน้อยเกินไป (อย่างน้อย 6 ตัวอักษร)', 'error');
+        showError('รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านน้อยเกินไป (อย่างน้อย 6 ตัวอักษร)');
       } else {
-        toast(`สมัครไม่สำเร็จ: ${err?.message || 'Unknown error'}`, 'error');
+        showError('สมัครไม่สำเร็จ', err?.message || 'Unknown error');
       }
     } finally {
       setLoading(false);
@@ -49,7 +51,7 @@ export default function SignUp() {
     <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-12 px-4 bg-slate-50 dark:bg-slate-900">
       <div className="w-full max-w-md">
         {/* Professional Card */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
           <header className="text-center mb-8">
             <h2 className="text-2xl font-light text-slate-800 dark:text-white mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
               Create <span className="italic">Account</span>
@@ -57,78 +59,36 @@ export default function SignUp() {
             <p className="text-slate-500 dark:text-slate-400 text-sm">Join the WeGo community</p>
           </header>
 
-          <form onSubmit={onSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="username">
-              Username
-            </label>
-            <input
+          <form onSubmit={onSubmit} className="space-y-6">
+            <FloatingInput
               id="username"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="Your username"
+              label="Username"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
             />
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
-              Email
-            </label>
-            <input
+            <FloatingInput
               id="email"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="your@email.com"
+              label="Email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
             />
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="password">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                id="password"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none pr-12"
-                placeholder="At least 6 characters"
-                type={showPw ? 'text' : 'password'}
-                value={pw}
-                onChange={(e) => setPw(e.target.value)}
-                autoComplete="new-password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute inset-y-0 right-0 px-4 flex items-center text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200"
-                aria-label={showPw ? 'Hide password' : 'Show password'}
-                title={showPw ? 'Hide password' : 'Show password'}
-              >
-                {showPw ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5.477 20 1 12 1 12a20.76 20.76 0 0 1 5.06-5.94" />
-                    <path d="M10.73 5.08A11 11 0 0 1 12 4c6.523 0 11 8 11 8a20.76 20.76 0 0 1-4.17 4.92" />
-                    <path d="M14.12 14.12A3 3 0 1 1 9.88 9.88" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M1 12s4.5-8 11-8 11 8 11 8-4.5 8-11 8-11-8-11-8Z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
+            <FloatingPasswordInput
+              id="password"
+              label="Password (min 6 characters)"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              autoComplete="new-password"
+            />
 
           {/* Submit Button */}
           <button 
             type="submit" 
-            className="w-full mt-6 py-3.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
+            className="w-full mt-2 py-3.5 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-lg shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
             disabled={loading}
           >
             {loading ? (

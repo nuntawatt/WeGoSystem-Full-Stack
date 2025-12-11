@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { profileAPI } from '../lib/api';
-import { toast } from '../components/Toasts';
+import { showSuccess, showError } from '../lib/swal';
 import { useAuth } from './useAuth';
 
 export type Profile = {
@@ -53,10 +53,10 @@ export function useProfile(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', currentUserId] });
-      toast('อัพเดทโปรไฟล์สำเร็จ');
+      showSuccess('อัพเดทโปรไฟล์สำเร็จ!', 'ข้อมูลของคุณถูกบันทึกแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ไม่สามารถอัพเดทโปรไฟล์ได้ โปรดลองใหม่อีกครั้ง');
+      showError('อัพเดทไม่สำเร็จ', error?.message || 'โปรดลองใหม่อีกครั้ง');
     },
   });
 
@@ -67,10 +67,10 @@ export function useProfile(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', currentUserId] });
-      toast('ลบโปรไฟล์สำเร็จ');
+      showSuccess('ลบโปรไฟล์สำเร็จ!', 'ข้อมูลถูกลบแล้ว');
     },
     onError: (error: any) => {
-      toast(error?.message || 'ไม่สามารถลบโปรไฟล์ได้ โปรดลองใหม่อีกครั้ง');
+      showError('ลบไม่สำเร็จ', error?.message || 'โปรดลองใหม่อีกครั้ง');
     },
   });
 

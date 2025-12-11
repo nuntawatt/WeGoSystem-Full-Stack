@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { eventsAPI } from '../lib/api';
-import { toast } from './Toasts';
+import { showSuccess, showError, showWarning } from '../lib/swal';
 import { useAuth } from '../hooks/useAuth';
 import ReportModal from './ReportModal';
 import { MapPin, Calendar, Users, MessageCircle, LogOut as LogOutIcon, UserPlus } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
 
   const handleJoin = async () => {
     if (!user) {
-      toast('กรุณาเข้าสู่ระบบก่อนเข้าร่วมกิจกรรม');
+      showWarning('กรุณาเข้าสู่ระบบ', 'กรุณาเข้าสู่ระบบก่อนเข้าร่วมกิจกรรม');
       navigate('/signin');
       return;
     }
@@ -42,7 +42,7 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
     try {
       setIsJoining(true);
       const response = await eventsAPI.join(event.id);
-      toast('เข้าร่วมกิจกรรมสำเร็จ!');
+      showSuccess('เข้าร่วมกิจกรรมสำเร็จ!', 'คุณเข้าร่วมแล้ว');
       
       // Navigate to group chat if chatId is returned
       if (response.data.chatId) {
@@ -52,7 +52,7 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
       }
     } catch (error: any) {
       console.error('Join error:', error);
-      toast(error?.message || 'ไม่สามารถเข้าร่วมกิจกรรมได้');
+      showError('เข้าร่วมไม่สำเร็จ', error?.message || 'ไม่สามารถเข้าร่วมกิจกรรมได้');
       setIsJoining(false);
     }
   };
@@ -61,11 +61,11 @@ export default function EventCard({ event, maxParticipants, isParticipant = fals
     try {
       setIsJoining(true);
       await eventsAPI.leave(event.id);
-      toast('ออกจากกิจกรรมสำเร็จ');
+      showSuccess('ออกจากกิจกรรมสำเร็จ!', 'คุณออกจากกิจกรรมแล้ว');
       if (onUpdate) onUpdate();
     } catch (error: any) {
       console.error('Leave error:', error);
-      toast(error.response?.data?.error || 'ไม่สามารถออกจากกิจกรรมได้');
+      showError('ออกไม่สำเร็จ', error.response?.data?.error || 'ไม่สามารถออกจากกิจกรรมได้');
     } finally {
       setIsJoining(false);
     }

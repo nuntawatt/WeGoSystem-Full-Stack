@@ -1,7 +1,7 @@
 // Socket.io chat (client-only demo)
 import { useEffect, useRef, useState } from 'react';
 import { socket } from '../lib/socket';
-import { toast } from './Toasts';
+import { showInfo } from '../lib/swal';
 import { MessageSquare, Send, Eye } from 'lucide-react';
 
 type ChatMsg = { id: string; text: string; user: string; at: number; readBy: string[] };
@@ -55,7 +55,7 @@ export default function ChatPanel({ groupId }: { groupId: string }) {
     socket.emit('chatMessage', { groupId, message: payload });
     setMsgs((s) => [...s, payload]);
     setInput('');
-    toast('Message sent');
+    showInfo('ส่งข้อความสำเร็จ!', 'Message sent');
   };
 
   return (

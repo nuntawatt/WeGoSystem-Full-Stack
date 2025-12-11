@@ -6,7 +6,7 @@ import { Users, Clock, ArrowRight, Compass, ChevronLeft, ChevronRight } from "lu
 
 const heroSlides = [
   {
-    url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&q=80",
+    url: "https://i.pinimg.com/1200x/db/35/85/db35859ede481fbe8bf0f6399e07d9a6.jpg",  
     alt: "Students collaborating in modern workspace"
   },
   {
@@ -32,7 +32,6 @@ export default function Home() {
     window.scrollTo(0, 0);
   }, []);
 
-  // Auto-advance slideshow
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
@@ -40,7 +39,6 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  // Redirect authenticated users to explore page
   if (!loading && user) {
     return <Navigate to="/explore" replace />;
   }
@@ -50,7 +48,6 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
-      {/* Hero Section with Background Slideshow */}
       <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
         {/* Background Slides */}
         {heroSlides.map((slide, index) => (
@@ -108,7 +105,7 @@ export default function Home() {
               {/* Main Heading - Elegant Serif */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight text-white mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 Discover Your
-                <span className="block font-semibold italic">Study Community</span>
+                <span className="block font-semibold italic">Find Friends</span>
               </h1>
 
               {/* Subheading */}
@@ -252,26 +249,6 @@ export default function Home() {
               <p className="text-sm text-slate-500 dark:text-slate-400">Expanding Network</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Bottom CTA - Elegant */}
-      <section className="py-20 bg-slate-900 dark:bg-slate-950">
-        <div className="container mx-auto px-6 lg:px-12 text-center">
-          <h3 className="text-3xl md:text-4xl font-light text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            Ready to Begin Your Journey?
-          </h3>
-          <p className="text-slate-400 mb-8 max-w-lg mx-auto">
-            Join thousands of students and professionals who are already discovering meaningful connections.
-          </p>
-          <Link
-            to="/auth/signup"
-            className="inline-flex items-center gap-3 px-10 py-4 bg-white text-slate-900 font-medium
-                     rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-lg"
-          >
-            Create Your Account
-            <ArrowRight className="w-5 h-5" />
-          </Link>
         </div>
       </section>
     </div>

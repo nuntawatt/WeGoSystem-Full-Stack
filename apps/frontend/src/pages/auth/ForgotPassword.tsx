@@ -1,9 +1,11 @@
 // Forgot Password page
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from '../../components/Toasts';
+import { showSuccess, showError, showInfo } from '../../lib/swal';
 import { api } from '../../lib/apiClient';
-import { Lock, Mail, ArrowLeft, Check, Eye, EyeOff, KeyRound, Send } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Check, KeyRound, Send } from 'lucide-react';
+import FloatingInput from '../../components/FloatingInput';
+import FloatingPasswordInput from '../../components/FloatingPasswordInput';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -11,7 +13,6 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [devOTP, setDevOTP] = useState<string | null>(null); // Store OTP for display
 
@@ -24,7 +25,7 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     if (!email.trim()) {
-      return toast('โปรดกรอกอีเมล', 'error');
+      return showError('กรุณากรอกข้อมูล', 'โปรดกรอกอีเมล');
     }
 
     try {
@@ -34,16 +35,16 @@ export default function ForgotPassword() {
       // Check if OTP is returned (development mode)
       if (response.data?.devOTP) {
         setDevOTP(response.data.devOTP);
-        toast('รหัส OTP ถูกสร้างแล้ว!', 'success');
+        showSuccess('รหัส OTP ถูกสร้างแล้ว!', 'กรุณากรอกรหัส OTP ด้านล่าง');
       } else {
         setDevOTP(null);
-        toast('ส่งรหัส OTP ไปยังอีเมลของคุณแล้ว', 'success');
+        showSuccess('ส่งรหัส OTP สำเร็จ!', 'ส่งรหัส OTP ไปยังอีเมลของคุณแล้ว');
       }
       
       setStep('otp');
     } catch (error: any) {
       const serverMessage = error?.response?.data?.message || error?.response?.data?.error;
-      toast(serverMessage || 'เกิดข้อผิดพลาด', 'error');
+      showError('เกิดข้อผิดพลาด', serverMessage || 'ไม่สามารถส่ง OTP ได้');
     } finally {
       setLoading(false);
     }
@@ -53,11 +54,11 @@ export default function ForgotPassword() {
     e.preventDefault();
     
     if (!otp.trim()) {
-      return toast('โปรดกรอกรหัส OTP', 'error');
+      return showError('กรุณากรอกข้อมูล', 'โปรดกรอกรหัส OTP');
     }
     
     if (newPassword.length < 6) {
-      return toast('รหัสผ่านอย่างน้อย 6 ตัวอักษร', 'error');
+      return showError('รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านอย่างน้อย 6 ตัวอักษร');
     }
 
     try {
@@ -67,11 +68,11 @@ export default function ForgotPassword() {
         otp,
         newPassword
       });
-      toast('รีเซ็ตรหัสผ่านสำเร็จ', 'success');
+      showSuccess('รีเซ็ตรหัสผ่านสำเร็จ!', 'คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่');
       navigate('/auth/signin');
     } catch (error: any) {
       const errorMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาด';
-      toast(errorMsg, 'error');
+      showError('รีเซ็ตไม่สำเร็จ', errorMsg);
     } finally {
       setLoading(false);
     }
@@ -81,17 +82,17 @@ export default function ForgotPassword() {
   const handleCopyOTP = () => {
     if (devOTP) {
       setOtp(devOTP);
-      toast('คัดลอก OTP แล้ว!', 'success');
+      showInfo('คัดลอก OTP แล้ว!', 'กรอกรหัส OTP ให้อัตโนมัติแล้ว');
     }
   };
 
   return (
     <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4 bg-slate-50 dark:bg-slate-900">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 shadow-sm">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
           {/* Header */}
           <header className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-sm mb-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-xl mb-4">
               <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
             </div>
             <h2 className="text-2xl font-serif font-medium text-slate-800 dark:text-white mb-2">
@@ -106,26 +107,20 @@ export default function ForgotPassword() {
 
           {/* Step 1: Email Input */}
           {step === 'email' && (
-            <form onSubmit={handleSendOTP} className="space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="email">
-                  <Mail className="w-4 h-4" /> Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  autoFocus
-                />
-              </div>
+            <form onSubmit={handleSendOTP} className="space-y-6">
+              <FloatingInput
+                id="email"
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                autoFocus
+              />
 
               <button 
                 type="submit" 
-                className="w-full mt-6 px-8 py-3.5 font-medium text-white rounded-sm bg-slate-800 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-100 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60" 
+                className="w-full mt-2 px-8 py-3.5 font-medium text-white rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
                 disabled={loading}
               >
                 {loading ? (
@@ -154,9 +149,9 @@ export default function ForgotPassword() {
 
           {/* Step 2: OTP & New Password */}
           {step === 'otp' && (
-            <form onSubmit={handleResetPassword} className="space-y-5">
+            <form onSubmit={handleResetPassword} className="space-y-6">
               {/* Email Display */}
-              <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
+              <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sent to:</p>
                 <p className="text-slate-800 dark:text-white font-medium flex items-center gap-2">
                   <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -172,7 +167,7 @@ export default function ForgotPassword() {
                 <input
                   id="otp"
                   type="text"
-                  className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all text-center text-2xl tracking-[0.5em] font-semibold"
+                  className="w-full px-4 py-4 rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 focus:border-teal-500 dark:focus:border-teal-400 focus:outline-none transition-all text-center text-2xl tracking-[0.5em] font-semibold"
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -183,7 +178,7 @@ export default function ForgotPassword() {
                 {/* Show OTP if in development mode */}
                 {devOTP ? (
                   <div 
-                    className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-sm p-4 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all"
+                    className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all"
                     onClick={handleCopyOTP}
                   >
                     <p className="text-xs text-emerald-700 dark:text-emerald-400 text-center font-medium mb-2 flex items-center justify-center gap-2">
@@ -207,34 +202,17 @@ export default function ForgotPassword() {
               </div>
 
               {/* New Password Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="newPassword">
-                  <Lock className="w-4 h-4" /> New Password
-                </label>
-                <div className="relative">
-                  <input
-                    id="newPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
-                    placeholder="At least 6 characters"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    autoComplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
+              <FloatingPasswordInput
+                id="newPassword"
+                label="New Password (min 6 characters)"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+              />
 
               <button 
                 type="submit" 
-                className="w-full mt-6 px-8 py-3.5 font-medium text-white rounded-sm bg-teal-700 hover:bg-teal-600 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60" 
+                className="w-full mt-2 px-8 py-3.5 font-medium text-white rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
                 disabled={loading}
               >
                 {loading ? (

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../lib/api';
-import { toast } from './Toasts';
+import { showSuccess, showError, showWarning, showInfo } from '../lib/swal';
 import { useAuth } from '../hooks/useAuth';
 
 type ReportReason =
@@ -133,7 +133,7 @@ export default function ReportModal({
     try {
       console.debug('[Report] trying direct activity id:', id);
       const path = `/activities/${id}/report`;
-      toast(`Posting report to ${path}`, 'info');
+      console.debug(`Posting report to ${path}`);
       return await submitReportTo(path, payload);
     } catch (err: any) {
       console.debug('[Report] direct activity POST failed:', id, err?.response?.status, err?.message || err);
@@ -148,7 +148,7 @@ export default function ReportModal({
             console.debug('[Report] resolved relatedActivity from chat:', relId);
             if (relId) {
               const path = `/activities/${relId}/report`;
-              toast(`Posting report to ${path}`, 'info');
+              console.debug(`Posting report to ${path}`);
               return await submitReportTo(path, payload);
             }
           }
@@ -166,7 +166,7 @@ export default function ReportModal({
           console.debug('[Report] /by-chat returned activity id:', aid);
           if (aid) {
             const path = `/activities/${aid}/report`;
-            toast(`Posting report to ${path}`, 'info');
+            console.debug(`Posting report to ${path}`);
             return await submitReportTo(path, payload);
           }
         } catch (e) {
@@ -181,7 +181,7 @@ export default function ReportModal({
           console.debug('[Report] scan matched activity:', matched?._id);
           if (matched && matched._id) {
             const path = `/activities/${matched._id}/report`;
-            toast(`Posting report to ${path}`, 'info');
+            console.debug(`Posting report to ${path}`);
             return await submitReportTo(path, payload);
           }
         } catch (e) {
@@ -196,11 +196,11 @@ export default function ReportModal({
     e.preventDefault();
 
     if (chars < 10) {
-      toast('Please provide detailed description (at least 10 characters)');
+      showWarning('กรุณาใส่รายละเอียด', 'Please provide detailed description (at least 10 characters)');
       return;
     }
     if (chars > MAX_CHARS) {
-      toast(`Please limit your report to ${MAX_CHARS} characters or fewer`);
+      showWarning('ข้อความยาวเกินไป', `Please limit your report to ${MAX_CHARS} characters or fewer`);
       return;
     }
 
@@ -213,15 +213,15 @@ export default function ReportModal({
         await resolveAndPostActivity(targetId, payload);
       } else if (targetType === 'group') {
         const path = `/groups/${targetId}/report`;
-        toast(`Posting report to ${path}`, 'info');
+        console.debug(`Posting report to ${path}`);
         await submitReportTo(path, payload);
       } else {
         const path = `/users/${targetId}/report`;
-        toast(`Posting report to ${path}`, 'info');
+        console.debug(`Posting report to ${path}`);
         await submitReportTo(path, payload);
       }
 
-      toast('Report submitted. Our moderation team will review it.');
+      showSuccess('ส่งรายงานสำเร็จ!', 'Report submitted. Our moderation team will review it.');
       setReason('spam');
       setDetails('');
       onClose();
@@ -231,13 +231,13 @@ export default function ReportModal({
       const serverError = error?.response?.data?.error || error?.message;
 
       if (status === 404) {
-        toast('Activity not found. It may have been deleted.');
+        showError('ไม่พบกิจกรรม', 'Activity not found. It may have been deleted.');
       } else if (status === 409) {
-        toast('You have already reported this activity.');
+        showWarning('รายงานแล้ว', 'You have already reported this activity.');
       } else if (status === 400) {
-        toast(serverError || 'Invalid report. Please check your input.');
+        showError('รายงานไม่ถูกต้อง', serverError || 'Invalid report. Please check your input.');
       } else {
-        toast(serverError || 'Failed to submit report. Please try again.');
+        showError('ส่งรายงานไม่สำเร็จ', serverError || 'Failed to submit report. Please try again.');
       }
     } finally {
       setSubmitting(false);

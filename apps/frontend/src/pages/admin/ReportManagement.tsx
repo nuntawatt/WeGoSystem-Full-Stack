@@ -238,7 +238,7 @@ export default function ReportManagement() {
                     <p className="text-sm text-slate-300 mb-2">{report.details}</p>
                     
                     <div className="text-xs text-slate-400">
-                      Reported by: {report.reportedBy.username || report.reportedBy.email} • 
+                      Reported by: {report.reportedBy?.username || report.reportedBy?.email || 'Unknown'} • 
                       {new Date(report.createdAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -300,7 +300,7 @@ export default function ReportManagement() {
 
               <div>
                 <h4 className="text-sm font-semibold text-slate-400 mb-1">Reported By</h4>
-                <p>{selectedReport.report.reportedBy.username || selectedReport.report.reportedBy.email}</p>
+                <p>{selectedReport.report.reportedBy?.username || selectedReport.report.reportedBy?.email || 'Unknown'}</p>
                 <p className="text-xs text-slate-400">{new Date(selectedReport.report.createdAt).toLocaleString()}</p>
               </div>
 
@@ -314,7 +314,7 @@ export default function ReportManagement() {
               {selectedReport.report.reviewedBy && (
                 <div>
                   <h4 className="text-sm font-semibold text-slate-400 mb-1">Reviewed By</h4>
-                  <p>{selectedReport.report.reviewedBy.username || selectedReport.report.reviewedBy.email}</p>
+                  <p>{selectedReport.report.reviewedBy?.username || selectedReport.report.reviewedBy?.email || 'Unknown'}</p>
                   <p className="text-xs text-slate-400">{new Date(selectedReport.report.reviewedAt!).toLocaleString()}</p>
                 </div>
               )}

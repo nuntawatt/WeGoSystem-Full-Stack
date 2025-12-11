@@ -1,5 +1,6 @@
 // Sign in page
 import { useState, useEffect } from 'react';
+import GoogleSignIn from '../../components/GoogleSignIn';
 import { SignInSchema } from '../../lib/validators';
 import { toast } from '../../components/Toasts';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
@@ -136,6 +137,9 @@ export default function SignIn() {
               <>Sign In</>
             )}
           </button>
+
+          {/* Google Sign-In */}
+          <GoogleSignIn />
 
           <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
             <p className="text-slate-500 dark:text-slate-400">

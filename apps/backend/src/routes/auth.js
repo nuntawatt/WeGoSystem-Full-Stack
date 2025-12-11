@@ -99,36 +99,38 @@ const sendOTPEmail = async (email, otp) => {
       }
     }
 
-    // Fallback to Gmail (if configured)
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-      console.log('[email] attempting to send via Gmail SMTP to', process.env.EMAIL_USER);
-      // Use explicit SMTP settings for Gmail and enable logger/debug to surface connection errors
+    // Fallback to SMTP (if configured). Support EMAIL_PASSWORD or EMAIL_PASS and configurable host/port.
+    const smtpUser = process.env.EMAIL_USER;
+    const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
+    if (smtpUser && smtpPass) {
+      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+      const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465;
+      const secure = (process.env.EMAIL_SECURE === 'true') || port === 465;
+      console.log('[email] attempting to send via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // use TLS
+        host,
+        port,
+        secure,
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
+          user: smtpUser,
+          pass: smtpPass
         },
-        // Enable verbose logger/debug only when EMAIL_DEBUG=true in env
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',
-        // reasonable timeouts
         connectionTimeout: 30 * 1000,
         greetingTimeout: 30 * 1000,
         socketTimeout: 30 * 1000
       });
 
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: process.env.EMAIL_FROM || smtpUser,
         to: email,
         subject: 'WeGo - รหัส OTP สำหรับรีเซ็ตรหัสผ่าน',
         html: emailHtml
       });
 
-      console.log(`✅ OTP sent via Gmail to ${email}`);
-      return { success: true, mode: 'gmail' };
+      console.log(`✅ OTP sent via SMTP to ${email}`);
+      return { success: true, mode: 'smtp' };
     }
 
     // No email service configured - fallback to console log
@@ -200,15 +202,20 @@ const sendResetEmail = async (email, token) => {
       }
     }
 
-    if (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD) {
-      console.log('[email] attempting to send reset link via Gmail SMTP to', process.env.EMAIL_USER);
+    const smtpUser = process.env.EMAIL_USER;
+    const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
+    if (smtpUser && smtpPass) {
+      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+      const port = process.env.EMAIL_PORT ? parseInt(process.env.EMAIL_PORT, 10) : 465;
+      const secure = (process.env.EMAIL_SECURE === 'true') || port === 465;
+      console.log('[email] attempting to send reset link via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+        host,
+        port,
+        secure,
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD
+          user: smtpUser,
+          pass: smtpPass
         },
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',
@@ -218,14 +225,14 @@ const sendResetEmail = async (email, token) => {
       });
 
       await transporter.sendMail({
-        from: process.env.EMAIL_USER,
+        from: process.env.EMAIL_FROM || smtpUser,
         to: email,
         subject: 'WeGo - Password reset',
         html: emailHtml
       });
 
-      console.log(`✅ Reset link sent via Gmail to ${email}`);
-      return { success: true, mode: 'gmail' };
+      console.log(`✅ Reset link sent via SMTP to ${email}`);
+      return { success: true, mode: 'smtp' };
     }
 
     console.warn('⚠️ No email service configured, logging reset link to console');
@@ -484,6 +491,57 @@ router.post('/reset-password-confirm', async (req, res) => {
   } catch (error) {
     console.error('reset-password-confirm error:', error);
     res.status(500).json({ message: 'Failed to reset password' });
+  }
+});
+
+// Google login using ID token from client
+router.post('/google-login', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) return res.status(400).json({ error: 'idToken is required' });
+
+    // Verify token with Google tokeninfo endpoint
+    const resp = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`);
+    if (!resp.ok) {
+      const txt = await resp.text();
+      console.error('google tokeninfo failed', resp.status, txt);
+      return res.status(400).json({ error: 'Invalid Google token' });
+    }
+
+    const payload = await resp.json();
+    // Verify the token audience matches our configured Google client id
+    if (process.env.GOOGLE_CLIENT_ID && payload.aud !== process.env.GOOGLE_CLIENT_ID) {
+      console.error('google token audience mismatch', payload.aud);
+      return res.status(400).json({ error: 'Invalid Google client id' });
+    }
+
+    const email = payload.email;
+    if (!email) return res.status(400).json({ error: 'No email in Google token' });
+
+    // Find or create user
+    let user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      user = new User({
+        email: email.toLowerCase(),
+        username: (payload.email || '').split('@')[0],
+        password: crypto.randomBytes(16).toString('hex'),
+        provider: 'google'
+      });
+      await user.save();
+
+      const profile = new Profile({
+        userId: user._id,
+        name: payload.name || user.username,
+        avatar: payload.picture || ''
+      });
+      await profile.save();
+    }
+
+    const token = jwt.sign({ _id: user._id.toString() }, process.env.JWT_SECRET);
+    res.json({ user, token });
+  } catch (error) {
+    console.error('google-login error:', error);
+    res.status(500).json({ error: 'Failed to login with Google' });
   }
 });
 

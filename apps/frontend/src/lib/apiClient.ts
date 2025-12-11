@@ -56,17 +56,13 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.response?.status === 401) {
-      // Don't redirect automatically - let components handle it
-      // Only redirect if token is invalid (not just missing permissions)
-      // localStorage.removeItem('token');
-      // window.location.href = '/auth/signin';
-      return Promise.reject(error); // Return error object so component can check status
+      return Promise.reject(error);
     }
 
     if (error.response?.status === 403) {
-      return Promise.reject(error); // Let component handle forbidden
+      return Promise.reject(error);
     }
-
+    
     if (error.response?.status === 404) {
       return Promise.reject(new Error('ไม่พบข้อมูลที่ต้องการ'));
     }

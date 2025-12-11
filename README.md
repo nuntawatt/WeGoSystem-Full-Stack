@@ -57,6 +57,25 @@ npm run dev
 
 ---
 
+## Environment variables (important)
+
+Add required env vars for backend in `apps/backend/.env` (copy from `.env.example`). Important values:
+
+- `MONGODB_URI` — MongoDB connection string
+- `JWT_SECRET` — secret for signing JWT tokens
+- `FRONTEND_URL` — e.g. `http://localhost:5173` (CORS and reset links)
+- Email / SMTP (for password reset and OTP): `EMAIL_USER`, `EMAIL_PASSWORD` (or `EMAIL_PASS`), `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_SECURE`, `EMAIL_FROM`
+- Google Sign-In: `GOOGLE_CLIENT_ID` (server-side) — used to validate ID tokens received from the frontend
+
+For frontend, set `apps/frontend/.env` (Vite requires `VITE_` prefix for public values):
+
+- `VITE_GOOGLE_CLIENT_ID` — Google OAuth client id (public)
+- `VITE_API_URL` — backend API base (e.g. `http://localhost:10000`)
+
+Security note: Do NOT put `GOOGLE_CLIENT_SECRET` in the frontend env; keep it only on the backend or in a secret manager.
+
+---
+
 ## API Endpoints
 
 ### Authentication

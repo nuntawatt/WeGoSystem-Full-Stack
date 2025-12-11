@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState } from 'react';
 import { api } from '../lib/apiClient';
 import { LayoutDashboard, Users, Activity, Flag, LogOut, Settings, X, ChevronRight, Shield } from 'lucide-react';
+import { showSuccess, showError } from '../lib/swal';
 
 interface Profile {
   name?: string;
@@ -67,10 +68,10 @@ export default function AdminLayout() {
       });
       await fetchProfile();
       setEditMode(false);
-      alert('Profile updated successfully!');
+      showSuccess('อัปเดตโปรไฟล์สำเร็จ!', '');
     } catch (error) {
       console.error('Error saving profile:', error);
-      alert('Failed to save profile');
+      showError('ไม่สามารถบันทึกโปรไฟล์ได้', 'กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }

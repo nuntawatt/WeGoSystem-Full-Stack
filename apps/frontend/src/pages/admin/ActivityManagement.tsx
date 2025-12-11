@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
 import { Activity as ActivityIcon, Search, RefreshCw, Eye, Trash2, X, MapPin, Users, Calendar, Image as ImageIcon } from 'lucide-react';
+import { confirmDelete, showError } from '../../lib/swal';
 
 interface Activity {
   _id: string;
@@ -92,7 +93,8 @@ export default function ActivityManagement() {
   };
 
   const handleDeleteActivity = async (activityId: string) => {
-    if (!confirm('Are you sure you want to delete this activity?')) return;
+    const result = await confirmDelete('กิจกรรมนี้');
+    if (!result.isConfirmed) return;
 
     try {
       await api.delete(`/admin/activities/${activityId}`);
@@ -103,7 +105,7 @@ export default function ActivityManagement() {
       }
     } catch (error) {
       console.error('Error deleting activity:', error);
-      alert('Failed to delete activity');
+      showError('ไม่สามารถลบกิจกรรมได้', 'กรุณาลองใหม่อีกครั้ง');
     }
   };
 
@@ -560,14 +562,10 @@ export default function ActivityManagement() {
                   <i className="fas fa-times mr-2"></i>Close
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm('⚠️ Are you sure you want to delete this activity? This action cannot be undone!')) {
-                      handleDeleteActivity(selectedActivity._id);
-                    }
-                  }}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-red-500/30 to-pink-500/20 text-red-300 font-bold uppercase tracking-wider hover:from-red-500/40 hover:to-pink-500/30 transition-all border border-red-500/40 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20"
+                  onClick={() => handleDeleteActivity(selectedActivity._id)}
+                  className="px-6 py-3 rounded-sm bg-red-600 hover:bg-red-500 text-white font-medium transition-all flex items-center gap-2"
                 >
-                  <i className="fas fa-trash mr-2"></i>Delete Activity
+                  <Trash2 className="w-4 h-4" /> ลบกิจกรรม
                 </button>
               </div>
             </div>

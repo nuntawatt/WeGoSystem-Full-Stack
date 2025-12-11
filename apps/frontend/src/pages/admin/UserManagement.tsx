@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
 import { socket } from '../../lib/socket';
 import { Users, Shield, Wifi, Ban, Search, User, Mail, Calendar, Settings, Eye, Lock, Unlock, Trash2, X } from 'lucide-react';
+import { confirm, showSuccess, showError } from '../../lib/swal';
 
 interface User {
   _id: string;
@@ -111,7 +112,7 @@ export default function UserManagement() {
       const currentUserId = response.data._id;
       
       if (userId === currentUserId) {
-        alert('⚠️ Cannot block yourself!\n\nYou cannot block your own admin account.');
+        showError('ไม่สามารถบล็อกตัวเองได้', 'คุณไม่สามารถบล็อกบัญชี Admin ของตัวเองได้');
         return;
       }
     } catch (error) {
@@ -120,11 +121,15 @@ export default function UserManagement() {
 
     // Confirmation message
     const user = users.find(u => u._id === userId);
-    const confirmMessage = isBlocked 
-      ? `Unblock ${user?.email || 'this user'}?\n\nThey will be able to login and use the system again.`
-      : `⚠️ Block ${user?.email || 'this user'}?\n\n⛔ This user will:\n• Cannot login to the system\n• Cannot access any features\n• Be kicked out immediately if online\n\nAre you sure?`;
+    const confirmTitle = isBlocked 
+      ? `ปลดบล็อก ${user?.email || 'ผู้ใช้นี้'}?`
+      : `บล็อก ${user?.email || 'ผู้ใช้นี้'}?`;
+    const confirmText = isBlocked
+      ? 'ผู้ใช้จะสามารถเข้าสู่ระบบและใช้งานได้อีกครั้ง'
+      : 'ผู้ใช้จะไม่สามารถเข้าสู่ระบบหรือใช้งานระบบได้';
     
-    if (!confirm(confirmMessage)) {
+    const result = await confirm(confirmTitle, confirmText, isBlocked ? 'ปลดบล็อก' : 'บล็อก', 'ยกเลิก');
+    if (!result.isConfirmed) {
       return;
     }
 
@@ -140,14 +145,18 @@ export default function UserManagement() {
       }
 
       // Success message
-      const successMsg = !isBlocked 
-        ? `✅ User blocked successfully!\n\n🚫 ${user?.email} cannot login or use the system anymore.`
-        : `✅ User unblocked successfully!\n\n✓ ${user?.email} can now login and use the system.`;
+      const successTitle = !isBlocked ? 'บล็อกผู้ใช้สำเร็จ!' : 'ปลดบล็อกผู้ใช้สำเร็จ!';
+      const successText = !isBlocked 
+        ? `${user?.email} ไม่สามารถเข้าสู่ระบบได้แล้ว`
+        : `${user?.email} สามารถเข้าสู่ระบบได้แล้ว`;
       
-      alert(successMsg);
+      showSuccess(successTitle, successText);
     } catch (error: any) {
       console.error('Error blocking user:', error);
-      alert(`❌ Failed to ${isBlocked ? 'unblock' : 'block'} user\n\n${error.response?.data?.message || 'Unknown error occurred'}`);
+      showError(
+        `ไม่สามารถ${isBlocked ? 'ปลดบล็อก' : 'บล็อก'}ผู้ใช้ได้`,
+        error.response?.data?.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'
+      );
     }
   };
   

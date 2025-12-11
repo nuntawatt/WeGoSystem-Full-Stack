@@ -16,18 +16,18 @@ dotenv.config();
 
 async function backfillActivityReports() {
   try {
-    console.log('🔄 Starting activity reports backfill...');
+    console.log('Starting activity reports backfill...');
     
     // Connect to MongoDB
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Find all activity reports
     const activityReports = await Report.find({ targetType: 'activity' })
       .sort({ createdAt: 1 })
       .lean();
 
-    console.log(`📊 Found ${activityReports.length} activity reports in reports collection`);
+    console.log(`Found ${activityReports.length} activity reports in reports collection`);
 
     let updated = 0;
     let skipped = 0;
@@ -38,7 +38,7 @@ async function backfillActivityReports() {
         const activity = await Activity.findById(report.targetId);
         
         if (!activity) {
-          console.warn(`⚠️ Activity ${report.targetId} not found for report ${report._id}`);
+          console.warn(`Activity ${report.targetId} not found for report ${report._id}`);
           skipped++;
           continue;
         }
@@ -68,10 +68,10 @@ async function backfillActivityReports() {
         updated++;
         
         if (updated % 10 === 0) {
-          console.log(`⏳ Progress: ${updated} activities updated...`);
+          console.log(`Progress: ${updated} activities updated...`);
         }
       } catch (err) {
-        console.error(`❌ Error processing report ${report._id}:`, err.message);
+        console.error(`Error processing report ${report._id}:`, err.message);
         errors++;
       }
     }
@@ -82,10 +82,10 @@ async function backfillActivityReports() {
     console.log(`   Errors: ${errors}`);
 
     await mongoose.connection.close();
-    console.log('👋 Database connection closed');
+    console.log('Database connection closed');
     process.exit(0);
   } catch (error) {
-    console.error('💥 Migration failed:', error);
+    console.error('Migration failed:', error);
     await mongoose.connection.close();
     process.exit(1);
   }

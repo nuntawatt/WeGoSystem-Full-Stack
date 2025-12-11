@@ -2,13 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { activitiesAPI } from '../lib/api';
 import { toast } from '../components/Toasts';
 
-export type Activity = {
-  _id?: string;
-  title: string;
-  description?: string;
-  date: Date;
-  participants: string[];
-};
+export type Activity = { _id?: string; title: string; description?: string; date: Date; participants: string[]; };
 
 export function useActivities() {
   const queryClient = useQueryClient();
@@ -74,12 +68,5 @@ export function useActivities() {
     },
   });
 
-  return {
-    activities,
-    createActivity,
-    updateActivity,
-    deleteActivity,
-    joinActivity,
-    leaveActivity,
-  };
+  return { activities, createActivity, updateActivity, deleteActivity, joinActivity, leaveActivity, };
 }

@@ -14,12 +14,12 @@ async function seedTestData() {
   try {
     console.log('🔌 Connecting to MongoDB...');
     await mongoose.connect(MONGODB_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('Connected to MongoDB');
 
     // Find an existing user (or use a specific user ID)
     const users = await User.find().limit(3);
     if (users.length === 0) {
-      console.log('❌ No users found. Please create users first.');
+      console.log('No users found. Please create users first.');
       process.exit(1);
     }
 
@@ -61,7 +61,7 @@ async function seedTestData() {
       }
     ];
 
-    console.log('🎯 Creating test activities...');
+    console.log('Creating test activities...');
     for (const data of activityData) {
       const activity = new Activity({
         ...data,
@@ -72,11 +72,11 @@ async function seedTestData() {
       });
       await activity.save();
       activities.push(activity);
-      console.log(`✅ Created activity: ${activity.title} (${activity._id})`);
+      console.log(`Created activity: ${activity.title} (${activity._id})`);
     }
 
     // Create groups linked to activities
-    console.log('\n👥 Creating groups linked to activities...');
+    console.log('\nCreating groups linked to activities...');
     const groups = [];
     for (let i = 0; i < activities.length; i++) {
       const activity = activities[i];
@@ -88,7 +88,7 @@ async function seedTestData() {
       });
       await group.save();
       groups.push(group);
-      console.log(`✅ Created group: ${group.name} (${group._id})`);
+      console.log(`Created group: ${group.name} (${group._id})`);
 
       // Create a chat for the group
       const chat = new Chat({
@@ -102,11 +102,11 @@ async function seedTestData() {
         messages: []
       });
       await chat.save();
-      console.log(`✅ Created chat: ${chat._id}`);
+      console.log(`Created chat: ${chat._id}`);
     }
 
     // Add some sample reviews
-    console.log('\n⭐ Creating sample reviews...');
+    console.log('\nCreating sample reviews...');
     for (let i = 0; i < Math.min(2, activities.length); i++) {
       const activity = activities[i];
       
@@ -125,12 +125,12 @@ async function seedTestData() {
           ][j % 5]
         });
         await review.save();
-        console.log(`✅ Created review for ${activity.title} by ${users[j].email}`);
+        console.log(`Created review for ${activity.title} by ${users[j].email}`);
       }
     }
 
-    console.log('\n🎉 Test data seeded successfully!');
-    console.log('\n📋 Summary:');
+    console.log('\nTest data seeded successfully!');
+    console.log('\nSummary:');
     console.log(`   Activities: ${activities.length}`);
     console.log(`   Groups: ${groups.length}`);
     console.log(`   Chats: ${groups.length}`);
@@ -140,10 +140,10 @@ async function seedTestData() {
     console.log('\n✨ You can now test reviews and reports!');
     
   } catch (error) {
-    console.error('❌ Error seeding data:', error);
+    console.error('Error seeding data:', error);
   } finally {
     await mongoose.disconnect();
-    console.log('\n👋 Disconnected from MongoDB');
+    console.log('\nDisconnected from MongoDB');
     process.exit(0);
   }
 }

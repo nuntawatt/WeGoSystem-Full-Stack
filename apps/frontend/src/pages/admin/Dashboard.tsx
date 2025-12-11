@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../lib/apiClient';
+import { Users, Activity, Flag, UserCheck, RefreshCw, ArrowRight } from 'lucide-react';
 
 interface DashboardStats {
   stats: {
@@ -58,8 +59,8 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400 mx-auto mb-4"></div>
-          <div className="text-white text-xl">Loading Dashboard...</div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-700 mx-auto mb-4"></div>
+          <div className="text-slate-700 dark:text-slate-200 text-xl">Loading Dashboard...</div>
         </div>
       </div>
     );
@@ -68,11 +69,11 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 max-w-md">
-          <p className="text-red-400 text-center">{error}</p>
+        <div className="bg-white dark:bg-slate-800 border border-red-200 dark:border-red-800 rounded-sm p-6 max-w-md shadow-sm">
+          <p className="text-red-600 dark:text-red-400 text-center">{error}</p>
           <button
             onClick={fetchDashboardStats}
-            className="mt-4 w-full btn-primary rounded-lg px-4 py-2"
+            className="mt-4 w-full bg-teal-700 hover:bg-teal-600 text-white rounded-sm px-4 py-2 transition-colors"
           >
             Retry
           </button>
@@ -90,12 +91,13 @@ export default function Dashboard() {
       {/* Header with Quick Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 font-['Poppins']">Admin Dashboard</h1>
-          <p className="text-primary-300 text-sm sm:text-base">Welcome back, {user?.email?.split('@')[0] || 'godmode'}</p>
+          <h1 className="text-2xl sm:text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Admin Dashboard</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">Welcome back, {user?.email?.split('@')[0] || 'godmode'}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchDashboardStats} className="btn-ghost px-3 py-2 text-sm rounded-lg hover:bg-white/5">
-            <i className="fas fa-sync-alt mr-2"></i>Refresh
+          <button onClick={fetchDashboardStats} className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors">
+            <RefreshCw className="w-4 h-4" />
+            Refresh
           </button>
         </div>
       </div>
@@ -103,77 +105,74 @@ export default function Dashboard() {
       {/* Stats Cards - Responsive Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {/* Total Users Card */}
-        <div className="group relative bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent border border-blue-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-blue-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden"
+        <div className="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
              onClick={() => navigate('/admin/users')}>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-blue-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Total Users</p>
-              <div className="bg-gradient-to-br from-blue-500/40 to-blue-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <i className="fas fa-users text-blue-300 text-lg sm:text-xl"></i>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">Total Users</p>
+              <div className="bg-blue-100 dark:bg-blue-900/30 p-2.5 rounded-sm">
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-blue-200 transition-colors">{stats.totalUsers}</p>
-            <div className="flex items-center gap-2 text-blue-300/80 text-xs sm:text-sm">
-              <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white mb-2">{stats.totalUsers}</p>
+            <div className="flex items-center gap-2 text-teal-700 dark:text-teal-400 text-xs sm:text-sm">
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               <span className="font-medium">Manage users</span>
             </div>
           </div>
         </div>
 
         {/* Total Activities Card */}
-        <div className="group relative bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent border border-emerald-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-emerald-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden"
+        <div className="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer"
              onClick={() => navigate('/admin/activities')}>
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-emerald-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Activities</p>
-              <div className="bg-gradient-to-br from-emerald-500/40 to-emerald-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <i className="fas fa-clipboard-list text-emerald-300 text-lg sm:text-xl"></i>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">Activities</p>
+              <div className="bg-teal-100 dark:bg-teal-900/30 p-2.5 rounded-sm">
+                <Activity className="w-5 h-5 text-teal-600 dark:text-teal-400" />
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-emerald-200 transition-colors">{stats.totalActivities}</p>
-            <div className="flex items-center gap-2 text-emerald-300/80 text-xs sm:text-sm">
-              <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white mb-2">{stats.totalActivities}</p>
+            <div className="flex items-center gap-2 text-teal-700 dark:text-teal-400 text-xs sm:text-sm">
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               <span className="font-medium">View activities</span>
             </div>
           </div>
         </div>
 
         {/* Total Groups Card - Info Only */}
-        <div className="group relative bg-gradient-to-br from-purple-500/20 via-purple-600/10 to-transparent border border-purple-500/30 rounded-2xl p-4 sm:p-6 shadow-lg transition-all duration-300 overflow-hidden opacity-60">
+        <div className="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm opacity-70">
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-purple-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Groups</p>
-              <div className="bg-gradient-to-br from-purple-500/40 to-purple-600/40 p-2.5 rounded-xl">
-                <i className="fas fa-user-friends text-purple-300 text-lg sm:text-xl"></i>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">Groups</p>
+              <div className="bg-purple-100 dark:bg-purple-900/30 p-2.5 rounded-sm">
+                <UserCheck className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white mb-2">{stats.totalGroups}</p>
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white mb-2">{stats.totalGroups}</p>
           </div>
         </div>
 
         {/* Reports Card */}
-        <div className="group relative bg-gradient-to-br from-red-500/20 via-red-600/10 to-transparent border border-red-500/30 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-red-500/50 hover:scale-105 transition-all duration-300 cursor-pointer overflow-hidden col-span-2 md:col-span-1"
+        <div className="group relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm hover:shadow-md transition-all cursor-pointer col-span-2 md:col-span-1"
              onClick={() => navigate('/admin/reports')}>
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-red-300 text-xs sm:text-sm font-semibold uppercase tracking-wider">Reports</p>
-              <div className="bg-gradient-to-br from-red-500/40 to-red-600/40 p-2.5 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                <i className="fas fa-flag text-red-300 text-lg sm:text-xl"></i>
+              <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium uppercase tracking-wider">Reports</p>
+              <div className="bg-red-100 dark:bg-red-900/30 p-2.5 rounded-sm">
+                <Flag className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white mb-2 group-hover:text-red-200 transition-colors">
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white mb-2">
               {stats.totalReports || 0}
             </p>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-red-300/80 text-xs sm:text-sm">
-                <i className="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+              <div className="flex items-center gap-2 text-teal-700 dark:text-teal-400 text-xs sm:text-sm">
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 <span className="font-medium">Manage reports</span>
               </div>
               {stats.pendingReports && stats.pendingReports > 0 && (
-                <span className="px-2 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-full text-xs text-yellow-300">
+                <span className="px-2 py-1 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-sm text-xs text-amber-700 dark:text-amber-400">
                   {stats.pendingReports} pending
                 </span>
               )}
@@ -185,30 +184,30 @@ export default function Dashboard() {
       {/* Data Tables - Responsive Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mt-6">
         {/* Recent Users Table */}
-        <div className="bg-primary-800/50 backdrop-blur-sm border border-primary-700/50 rounded-xl p-4 sm:p-6 shadow-xl">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-white">Recent Users</h2>
-            <button onClick={() => navigate('/admin/users')} className="text-blue-400 hover:text-blue-300 text-sm">
-              View all →
+            <h2 className="text-lg sm:text-xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Recent Users</h2>
+            <button onClick={() => navigate('/admin/users')} className="text-teal-700 dark:text-teal-400 hover:text-teal-600 text-sm flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-primary-600/50">
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Username</th>
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Email</th>
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Role</th>
+                <tr className="border-b border-slate-200 dark:border-slate-700">
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Username</th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Email</th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Role</th>
                 </tr>
               </thead>
               <tbody>
                 {recentUsers.length > 0 ? (
                   recentUsers.slice(0, 5).map((u: any) => (
-                    <tr key={u._id} className="border-b border-primary-700/30 hover:bg-primary-700/30 transition-colors">
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-white text-xs sm:text-sm">{u.username || 'N/A'}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-primary-300 text-xs sm:text-sm truncate max-w-[150px]">{u.email}</td>
+                    <tr key={u._id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-slate-800 dark:text-white text-xs sm:text-sm">{u.username || 'N/A'}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 text-xs sm:text-sm truncate max-w-[150px]">{u.email}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${u.role === 'admin' ? 'bg-red-500/20 text-red-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                        <span className={`px-2 py-0.5 rounded-sm text-xs ${u.role === 'admin' ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'}`}>
                           {u.role}
                         </span>
                       </td>
@@ -216,7 +215,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-primary-400 text-sm">No recent users</td>
+                    <td colSpan={3} className="py-8 text-center text-slate-400 text-sm">No recent users</td>
                   </tr>
                 )}
               </tbody>
@@ -225,30 +224,30 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activities Table */}
-        <div className="bg-primary-800/50 backdrop-blur-sm border border-primary-700/50 rounded-xl p-4 sm:p-6 shadow-xl">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-6 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-white">Recent Activities</h2>
-            <button onClick={() => navigate('/admin/activities')} className="text-green-400 hover:text-green-300 text-sm">
-              View all →
+            <h2 className="text-lg sm:text-xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Recent Activities</h2>
+            <button onClick={() => navigate('/admin/activities')} className="text-teal-700 dark:text-teal-400 hover:text-teal-600 text-sm flex items-center gap-1">
+              View all <ArrowRight className="w-3 h-3" />
             </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-primary-600/50">
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Title</th>
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Category</th>
-                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-primary-300 font-semibold text-xs sm:text-sm">Status</th>
+                <tr className="border-b border-slate-200 dark:border-slate-700">
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Title</th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Category</th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 font-medium text-xs sm:text-sm">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {recentActivities.length > 0 ? (
                   recentActivities.slice(0, 5).map((act: any) => (
-                    <tr key={act._id} className="border-b border-primary-700/30 hover:bg-primary-700/30 transition-colors">
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-white text-xs sm:text-sm truncate max-w-[150px]">{act.title}</td>
-                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-primary-300 text-xs sm:text-sm">{act.category}</td>
+                    <tr key={act._id} className="border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-slate-800 dark:text-white text-xs sm:text-sm truncate max-w-[150px]">{act.title}</td>
+                      <td className="py-2 sm:py-3 px-2 sm:px-4 text-slate-500 dark:text-slate-400 text-xs sm:text-sm">{act.category}</td>
                       <td className="py-2 sm:py-3 px-2 sm:px-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${act.status === 'published' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>
+                        <span className={`px-2 py-0.5 rounded-sm text-xs ${act.status === 'published' ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
                           {act.status}
                         </span>
                       </td>
@@ -256,7 +255,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-primary-400 text-sm">No recent activities</td>
+                    <td colSpan={3} className="py-8 text-center text-slate-400 text-sm">No recent activities</td>
                   </tr>
                 )}
               </tbody>

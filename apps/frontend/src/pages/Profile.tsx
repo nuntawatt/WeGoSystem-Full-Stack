@@ -125,11 +125,11 @@ export default function Profile() {
       setAvatar(data.avatarUrl);
       setUploading(false);
       setProgress(100);
-      toast('รูปโปรไฟล์อัปเดตสำเร็จ! ✨', 'success');
+      toast('รูปโปรไฟล์อัปเดตสำเร็จ!', 'success');
 
       // Revoke local preview blob after a short delay so the DOM updates to the server URL
       if (localUrl) {
-        const urlToRevoke: string = localUrl; // narrow type for closure
+        const urlToRevoke: string = localUrl;
         setTimeout(() => {
           try {
             URL.revokeObjectURL(urlToRevoke);
@@ -203,16 +203,20 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <section className="container-app py-8">
-        <div className="card p-4">Please sign in to view profile.</div>
+      <section className="container-app py-8 bg-slate-50 dark:bg-slate-900">
+        <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm text-center">
+          <p className="text-slate-500 dark:text-slate-400">Please sign in to view profile.</p>
+        </div>
       </section>
     );
   }
 
   if (isLoading) {
     return (
-      <section className="container-app py-8">
-        <div className="card p-4">Loading…</div>
+      <section className="container-app py-8 bg-slate-50 dark:bg-slate-900">
+        <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm text-center">
+          <p className="text-slate-500 dark:text-slate-400">Loading…</p>
+        </div>
       </section>
     );
   }
@@ -220,25 +224,22 @@ export default function Profile() {
   const firstChar = (name || user.email || '?').charAt(0).toUpperCase();
 
   return (
-    <section className="min-h-screen py-8">
+    <section className="min-h-screen py-8 bg-slate-50 dark:bg-slate-900">
       <div className="container-app">
-        {/* Header with Icon */}
-        <header className="mb-6 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-purple-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
-            Profile Settings
+        {/* Professional Header */}
+        <header className="mb-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Profile <span className="italic">Settings</span>
           </h2>
-          <p className="text-slate-400">Manage your account information and preferences</p>
+          <p className="text-slate-500 dark:text-slate-400">Manage your account information and preferences</p>
         </header>
 
         <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[320px,minmax(0,640px)] items-start justify-center">
         {/* Profile Picture Card */}
-        <aside className="card p-5 space-y-4 self-start border border-white/10 hover:border-white/20 transition-all duration-300">
-            <h3 className="text-lg font-semibold text-amber-400 font-['Poppins']">Profile Picture</h3>
+        <aside className="p-6 space-y-5 self-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
+            <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              Profile Picture
+            </h3>
             
             <div className="flex items-center gap-4">
               <div className="relative h-24 w-24 shrink-0">
@@ -247,38 +248,38 @@ export default function Profile() {
                     <img
                       src={avatar}
                       alt="Avatar"
-                      className="h-24 w-24 rounded-full object-cover ring-2 ring-amber-400/40 hover:ring-amber-400/60 transition-all duration-300 contrast-110 brightness-105"
+                      className="h-24 w-24 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
                     />
                   </>
                 ) : (
-                  <div className="grid h-24 w-24 place-items-center rounded-full bg-gradient-to-br from-slate-700 to-slate-800 text-3xl font-semibold ring-2 ring-amber-400/40">
+                  <div className="grid h-24 w-24 place-items-center rounded-full text-2xl font-medium text-teal-700 dark:text-teal-400 bg-teal-100 dark:bg-teal-900/30 ring-2 ring-slate-200 dark:ring-slate-700">
                     {firstChar}
                   </div>
                 )}
                 {uploading && (
-                  <div className="absolute -bottom-2 left-1/2 w-24 -translate-x-1/2 rounded-full bg-white/10">
+                  <div className="absolute -bottom-2 left-1/2 w-24 -translate-x-1/2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
                     <div
-                      className="h-1 rounded-full bg-gradient-to-r from-amber-400 to-pink-500"
+                      className="h-1.5 rounded-full transition-all duration-300 bg-teal-600"
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <button
                   onClick={openFilePicker}
-                  className="rounded-lg px-5 py-2.5 font-semibold text-white bg-amber-500 hover:bg-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 transition-all duration-300 disabled:opacity-60"
+                  className="rounded-sm px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 disabled:opacity-60"
                   disabled={uploading}
                 >
-                  {uploading ? '⏳ กำลังอัปโหลด…' : '📸 Upload'}
+                  {uploading ? 'กำลังอัปโหลด…' : 'Upload'}
                 </button>
                 {avatar && (
                   <button
                     onClick={removeAvatar}
-                    className="rounded-lg px-5 py-2.5 font-semibold border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 hover:border-red-400/60 text-red-300 transition-all duration-300"
+                    className="rounded-sm px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                   >
-                    🗑️ Remove
+                    Remove
                   </button>
                 )}
                 <input
@@ -288,30 +289,40 @@ export default function Profile() {
                   hidden
                   onChange={(e) => onSelectFile(e.target.files?.[0] || null)}
                 />
-                <p className="text-xs text-white/60">แนะนำไม่เกิน {AVATAR_MAX_MB}MB</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">แนะนำไม่เกิน {AVATAR_MAX_MB}MB</p>
               </div>
             </div>
 
-            <div className="border-t border-white/10 pt-4 space-y-3">
-              <div className="text-base font-semibold text-amber-400">🔐 Your account</div>
-              <div className="space-y-1.5">
-                <div className="text-sm font-medium text-slate-300">👤 {name}</div>
-                <div className="text-sm text-slate-400">📧 {user.email}</div>
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
+              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                Your account
+              </div>
+              <div className="space-y-2">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  {name}
+                </div>
+                <div className="text-sm text-slate-500 dark:text-slate-500">
+                  {user.email}
+                </div>
               </div>
             </div>
         </aside>
 
         {/* Main Details Card */}
-        <main className="card p-6 space-y-6 self-start w-full max-w-2xl border border-white/10 hover:border-white/20 transition-all duration-300">
-            <h3 className="text-xl font-semibold text-amber-400 font-['Poppins']">✏️ Your Information</h3>
+        <main className="p-8 space-y-6 self-start w-full max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
+            <h3 className="text-xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              Your Information
+            </h3>
 
-            <div className="space-y-2">
-              <label className="label font-medium text-slate-200" htmlFor="name">👤 ชื่อผู้ใช้</label>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="name">
+                ชื่อผู้ใช้
+              </label>
               <div className="relative">
                 <input
                   id="name"
                   ref={usernameRef}
-                  className={`input pr-12 transition-all duration-300 ${isEditingName ? 'ring-2 ring-amber-400/50 bg-slate-700/50' : 'hover:bg-slate-700/30'}`}
+                  className={`w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none pr-14 ${isEditingName ? 'border-teal-500 dark:border-teal-400' : ''}`}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   readOnly={!isEditingName}
@@ -324,27 +335,34 @@ export default function Profile() {
                     setIsEditingName((v: boolean) => !v);
                     setTimeout(() => usernameRef.current?.focus(), 0);
                   }}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-2 transition-all duration-300 ${
-                    isEditingName ? 'bg-amber-500 scale-105' : 'bg-white/10 hover:bg-white/20 hover:scale-105'
-                  }`}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 rounded p-2 transition-colors duration-200 ${isEditingName ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
                 >
-                  <Edit3 className="h-4 w-4 text-white" />
+                  <Edit3 className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="label font-medium text-slate-200" htmlFor="email">📧 อีเมล</label>
-              <input id="email" className="input bg-slate-700/30 cursor-not-allowed" value={user?.email || ''} readOnly />
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
+                อีเมล
+              </label>
+              <input 
+                id="email" 
+                className="w-full px-4 py-3 rounded-sm text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-not-allowed"
+                value={user?.email || ''} 
+                readOnly 
+              />
             </div>
 
-            <div className="space-y-2">
-              <label className="label font-medium text-slate-200" htmlFor="bio">📝 เกี่ยวกับคุณ</label>
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="bio">
+                เกี่ยวกับคุณ
+              </label>
               <div className="relative">
                 <textarea
                   id="bio"
                   ref={bioRef}
-                  className={`input h-32 resize-y pr-12 transition-all duration-300 ${isEditingBio ? 'ring-2 ring-amber-400/50 bg-slate-700/50' : 'hover:bg-slate-700/30'}`}
+                  className={`w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-32 pr-14 ${isEditingBio ? 'border-teal-500 dark:border-teal-400' : ''}`}
                   value={bio}
                   onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
                   readOnly={!isEditingBio}
@@ -358,19 +376,17 @@ export default function Profile() {
                     setIsEditingBio((v: boolean) => !v);
                     setTimeout(() => bioRef.current?.focus(), 0);
                   }}
-                  className={`absolute right-2 top-2 rounded-lg p-2 transition-all duration-300 ${
-                    isEditingBio ? 'bg-amber-500 scale-105' : 'bg-white/10 hover:bg-white/20 hover:scale-105'
-                  }`}
+                  className={`absolute right-3 top-3 rounded p-2 transition-colors duration-200 ${isEditingBio ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
                 >
-                  <Edit3 className="h-4 w-4 text-white" />
+                  <Edit3 className="h-4 w-4" />
                 </button>
               </div>
-              <div className="text-right text-xs text-slate-400 font-medium">{bio.length}/{BIO_MAX} ตัวอักษร</div>
+              <div className="text-right text-xs text-slate-400 dark:text-slate-500">{bio.length}/{BIO_MAX} ตัวอักษร</div>
             </div>
 
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-700">
               <button 
-                className="px-8 py-3 font-semibold text-white rounded-lg bg-amber-500 hover:bg-amber-400 transition-all duration-300 disabled:opacity-60" 
+                className="px-8 py-3 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 disabled:opacity-60" 
                 onClick={save} 
                 disabled={uploading}
               >

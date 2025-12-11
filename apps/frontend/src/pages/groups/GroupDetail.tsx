@@ -8,6 +8,7 @@ import MemberListDM from '../../components/MemberListDM';
 import GroupReviews from '../../components/GroupReviews';
 import ReportModal from '../../components/ReportModal';
 import { useAuth } from '../../hooks/useAuth';
+import { MessageSquare, AlertTriangle, Calendar, Star } from 'lucide-react';
 
 export default function GroupDetail() {
   const { id } = useParams();
@@ -21,42 +22,42 @@ export default function GroupDetail() {
   }, []);
 
   return (
-    <section className="min-h-screen py-8">
+    <section className="min-h-screen py-12 bg-slate-50 dark:bg-slate-900">
       <div className="container-app">
-        {/* Header with Icon */}
-        <header className="mb-6 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl mb-4 shadow-lg shadow-cyan-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+        {/* Header */}
+        <header className="mb-8 text-center">
+          <div className="inline-block p-3 bg-teal-700 rounded-sm mb-4">
+            <MessageSquare className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+          <h2 className="text-3xl md:text-4xl font-semibold mb-3 text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Group Details
           </h2>
-          <p className="text-slate-400">Chat, plan schedules, and rate members</p>
+          <p className="text-slate-500 dark:text-slate-400 text-lg flex items-center justify-center gap-4">
+            <span className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4" /> Chat</span>
+            <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Plan schedules</span>
+            <span className="flex items-center gap-1.5"><Star className="w-4 h-4" /> Rate members</span>
+          </p>
           
           {/* Report Button */}
           <button
             onClick={() => setShowReportModal(true)}
-            className="mt-4 text-sm text-red-400 hover:text-red-300 transition-colors flex items-center gap-2 mx-auto"
+            className="mt-4 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-500 transition-colors flex items-center gap-2 mx-auto rounded-sm border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+            <AlertTriangle className="w-4 h-4" />
             Report Group
           </button>
         </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        <ChatPanel groupId={gid} />
-        <GroupReviews groupId={gid} currentUserId={user?._id} />
-        <RatingDialog />
-      </div>
-      <div className="space-y-6">
-        <AvailabilityPicker />
-      </div>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <ChatPanel groupId={gid} />
+            <GroupReviews groupId={gid} currentUserId={user?._id} />
+            <RatingDialog />
+          </div>
+          <div className="space-y-6">
+            <AvailabilityPicker />
+          </div>
+        </div>
       </div>
 
       {/* Report Modal */}

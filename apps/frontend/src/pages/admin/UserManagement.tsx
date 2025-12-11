@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
 import { socket } from '../../lib/socket';
+import { Users, Shield, Wifi, Ban, Search, User, Mail, Calendar, Settings, Eye, Lock, Unlock, Trash2, X } from 'lucide-react';
 
 interface User {
   _id: string;
@@ -198,92 +199,92 @@ export default function UserManagement() {
 
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent border border-blue-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/40 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-users text-xl text-blue-300"></i>
+            <div className="w-11 h-11 rounded-sm bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
-            <p className="text-blue-300 text-xs font-bold uppercase tracking-wider">Total Users</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Users</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.length}</p>
+          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.length}</p>
         </div>
-        <div className="bg-gradient-to-br from-red-500/20 via-red-600/10 to-transparent border border-red-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-red-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-red-500/40 to-red-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-crown text-xl text-red-300"></i>
+            <div className="w-11 h-11 rounded-sm bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
-            <p className="text-red-300 text-xs font-bold uppercase tracking-wider">Admins</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Admins</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
+          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
         </div>
-        <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent border border-emerald-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/40 to-emerald-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-wifi text-xl text-emerald-300"></i>
+            <div className="w-11 h-11 rounded-sm bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+              <Wifi className="w-5 h-5 text-teal-600 dark:text-teal-400" />
             </div>
-            <p className="text-emerald-300 text-xs font-bold uppercase tracking-wider">Online</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Online</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.isOnline && !u.isBlocked).length}</p>
+          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isOnline && !u.isBlocked).length}</p>
         </div>
-        <div className="bg-gradient-to-br from-gray-500/20 via-gray-600/10 to-transparent border border-gray-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-gray-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-500/40 to-gray-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <i className="fas fa-ban text-xl text-gray-300"></i>
+            <div className="w-11 h-11 rounded-sm bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+              <Ban className="w-5 h-5 text-slate-600 dark:text-slate-400" />
             </div>
-            <p className="text-gray-300 text-xs font-bold uppercase tracking-wider">Blocked</p>
+            <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Blocked</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-black text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
+          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
         </div>
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl p-5 sm:p-6 shadow-2xl">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative group">
-            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-hover:scale-110 transition-transform"></i>
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search by email or username..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-primary-900/50 text-white rounded-xl pl-12 pr-4 py-3.5 border border-primary-600/50 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 focus:outline-none transition-all placeholder:text-primary-400"
+              className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
             />
           </div>
           <select
             value={filterRole}
             onChange={(e) => setFilterRole(e.target.value as any)}
-            className="bg-primary-900/50 text-white rounded-xl px-4 py-3.5 border border-primary-600/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none cursor-pointer transition-all hover:bg-primary-900/70"
+            className="bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm px-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none cursor-pointer transition-all"
           >
-            <option value="all">🔍 All Roles</option>
-            <option value="user">👤 User Only</option>
-            <option value="admin">👑 Admin Only</option>
+            <option value="all">All Roles</option>
+            <option value="user">User Only</option>
+            <option value="admin">Admin Only</option>
           </select>
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gradient-to-r from-primary-700/70 to-primary-600/50">
+            <thead className="bg-slate-50 dark:bg-slate-700">
               <tr>
-                <th className="text-left py-4 px-6 text-blue-300 font-bold text-sm uppercase tracking-wider">
-                  <i className="fas fa-user mr-2"></i>User
+                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2"><User className="w-4 h-4" /> User</div>
                 </th>
-                <th className="text-left py-4 px-6 text-emerald-300 font-bold text-sm uppercase tracking-wider">
-                  <i className="fas fa-envelope mr-2"></i>Email
+                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> Email</div>
                 </th>
-                <th className="text-left py-4 px-6 text-purple-300 font-bold text-sm uppercase tracking-wider">
-                  <i className="fas fa-shield-alt mr-2"></i>Role
+                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2"><Shield className="w-4 h-4" /> Role</div>
                 </th>
-                <th className="text-left py-4 px-6 text-amber-300 font-bold text-sm uppercase tracking-wider">
-                  <i className="fas fa-circle mr-2"></i>Status
+                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                  Status
                 </th>
-                <th className="text-left py-4 px-6 text-pink-300 font-bold text-sm uppercase tracking-wider hidden md:table-cell">
-                  <i className="fas fa-calendar mr-2"></i>Joined
+                <th className="text-left py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider hidden md:table-cell">
+                  <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Joined</div>
                 </th>
-                <th className="text-right py-4 px-6 text-gray-300 font-bold text-sm uppercase tracking-wider">
-                  <i className="fas fa-cog mr-2"></i>Actions
+                <th className="text-right py-4 px-6 text-slate-600 dark:text-slate-300 font-medium text-sm uppercase tracking-wider">
+                  <div className="flex items-center gap-2 justify-end"><Settings className="w-4 h-4" /> Actions</div>
                 </th>
               </tr>
             </thead>
@@ -292,7 +293,7 @@ export default function UserManagement() {
                 filteredUsers.map((user) => (
                   <tr 
                     key={user._id} 
-                    className="border-t border-primary-600/30 hover:bg-gradient-to-r hover:from-primary-700/40 hover:to-transparent transition-all duration-200 group"
+                    className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">

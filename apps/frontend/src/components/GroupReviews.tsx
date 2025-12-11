@@ -179,11 +179,8 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
             fetchReviews();
             return;
           }
-        } catch (e) {
-          // give up
-        }
+        } catch (e) {}
 
-        // default: treat as group but will likely 404 on server
         setResolvedType('group');
         setResolvedId(groupId);
         fetchReviews();
@@ -191,17 +188,14 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
     }
   }, [groupId]);
 
-  // Listen for realtime review events and refresh when relevant
   useEffect(() => {
     const onActivityReview = (payload: any) => {
       try {
         if (!payload) return;
-        // If we have resolved to an activity and ids match, refresh
         if ((resolvedType === 'activity' || type === 'activity') && (String(payload.activityId) === String(resolvedId || groupId))) {
           fetchReviews('activity', resolvedId || groupId);
           return;
         }
-        // In cases where the component is passed a chatId that maps to an activity, payload.activityId may match groupId
         if (payload.activityId && String(payload.activityId) === String(groupId)) {
           fetchReviews('activity', payload.activityId);
           return;
@@ -241,7 +235,6 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
 
     try {
       setSubmitting(true);
-      // prefer resolved target when available to avoid 404s
       const useType = resolvedType || type;
       const useId = resolvedId || groupId;
       const endpoint = useType === 'group' ? `/groups/${useId}/reviews` : `/activities/${useId}/reviews`;
@@ -251,20 +244,18 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
         comment: comment.trim()
       });
       
-      toast('✨ Review submitted successfully!');
+      toast('Review submitted successfully!');
       setShowReviewForm(false);
       setRating(5);
       setComment('');
-      fetchReviews(); // Refresh reviews
+      fetchReviews(); 
     } catch (error: any) {
       console.error('Error submitting review:', error);
       const errorMsg = error?.response?.data?.error || error?.message || 'Failed to submit review';
-      toast(`❌ ${errorMsg}`);
+      toast(`${errorMsg}`);
 
-      // Fallback: for group type, always try to resolve chat -> relatedActivity and post there once
       if (type === 'group') {
         try {
-          // prevent retry loops
           if ((triedFallbackRef as any).current) {
             console.warn('Already attempted fallback, aborting.');
           } else {
@@ -276,7 +267,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
             if (relatedActivity) {
               console.log('Posting review to activity fallback:', relatedActivity);
               await api.post(`/activities/${relatedActivity}/reviews`, { rating, comment: comment.trim() });
-              toast('✨ Review submitted successfully (activity fallback)');
+              toast('Review submitted successfully (activity fallback)');
               setShowReviewForm(false);
               setRating(5);
               setComment('');
@@ -284,7 +275,6 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
               return;
             } else {
               console.warn('Fallback: chat has no relatedActivity — searching activities for matching chat id');
-              // Try alternate fallback: fetch activities and find one whose chat._id matches this chat id
               try {
                 const actsRes = await api.get('/activities');
                 const activities = actsRes.data.activities || actsRes.data;
@@ -299,7 +289,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                   console.log('Posting review to activity-by-chat fallback:', `/activities/${matched._id}/reviews`, { rating, comment: comment.trim() });
                   const postRes = await api.post(`/activities/${matched._id}/reviews`, { rating, comment: comment.trim() });
                   console.log('Activity fallback post response:', postRes);
-                  toast('✨ Review submitted successfully (activity-by-chat fallback)');
+                  toast('Review submitted successfully (activity-by-chat fallback)');
                   setShowReviewForm(false);
                   setRating(5);
                   setComment('');
@@ -307,22 +297,21 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                   return;
                 } else {
                   console.warn('No activity found with matching chat id');
-                  toast('💡 This chat is not linked to an activity. Cannot fallback.');
+                  toast('This chat is not linked to an activity. Cannot fallback.');
                 }
               } catch (actsErr) {
                 console.warn('Activity list lookup failed during fallback:', actsErr);
                 const ae = actsErr as any;
                 const aMsg = ae?.response?.data?.error || ae?.message;
-                if (aMsg) toast(`❌ ${aMsg}`);
+                if (aMsg) toast(`${aMsg}`);
               }
             }
           }
         } catch (innerErr) {
           console.warn('Fallback submit failed:', innerErr);
-          // show inner error if available (cast to any for safety)
           const ie = innerErr as any;
           const innerMsg = ie?.response?.data?.error || ie?.message;
-          if (innerMsg) toast(`❌ ${innerMsg}`);
+          if (innerMsg) toast(`${innerMsg}`);
         }
       }
     } finally {
@@ -359,76 +348,81 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-3">
-        <div className="h-3 bg-white/10 rounded w-1/3"></div>
-        <div className="h-12 bg-white/10 rounded"></div>
-        <div className="h-12 bg-white/10 rounded"></div>
+      <div className="animate-pulse space-y-3 p-6 rounded-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
+        <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded-sm"></div>
+        <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded-sm"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      {/* Compact Header with Average Rating */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 p-6 rounded-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
         <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-sm bg-amber-600 flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          </div>
           {reviewsData && reviewsData.totalReviews > 0 ? (
             <>
               <div className="flex items-center gap-1">
                 {renderStars(Math.round(parseFloat(reviewsData.averageRating)))}
               </div>
-              <span className="text-sm font-medium text-slate-300">
+              <span className="text-lg font-semibold text-amber-600 dark:text-amber-400">
                 {reviewsData.averageRating}
               </span>
-              <span className="text-xs text-slate-500">
-                ({reviewsData.totalReviews} {reviewsData.totalReviews === 1 ? 'review' : 'reviews'})
+              <span className="text-xs text-slate-500 dark:text-slate-400 px-2.5 py-1 rounded-sm bg-slate-100 dark:bg-slate-700">
+                {reviewsData.totalReviews} {reviewsData.totalReviews === 1 ? 'review' : 'reviews'}
               </span>
             </>
           ) : (
-            <span className="text-sm text-slate-400">No reviews yet</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">No reviews yet</span>
           )}
         </div>
         
         {currentUserId && !showReviewForm && (
           <button
             onClick={() => setShowReviewForm(true)}
-            className="px-3 py-1.5 text-xs font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-lg transition-colors flex items-center gap-1.5"
+            className="px-4 py-2 text-sm font-medium rounded-sm transition-colors bg-teal-700 hover:bg-teal-600 text-white"
           >
-            {userHasReviewed ? '✏️ Edit' : '✨ Write'}
+            {userHasReviewed ? 'Edit Review' : 'Write Review'}
           </button>
         )}
       </div>
 
-      {/* Compact Review Form */}
+      {/* Review Form - Professional Style */}
       {showReviewForm && (
-        <form onSubmit={handleSubmitReview} className="p-3 bg-white/5 rounded-lg border border-amber-500/20 space-y-3">
+        <form onSubmit={handleSubmitReview} className="p-5 rounded-sm space-y-4 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-slate-400">Your Rating</label>
-            <div className="flex gap-1">
+            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Your Rating</label>
+            <div className="flex gap-2">
               {renderStars(rating, true, setRating)}
             </div>
           </div>
           
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-slate-400">Comment (Optional)</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Comment (Optional)</label>
             <textarea
-              className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-white placeholder-slate-500 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50 transition-colors resize-none"
+              className="w-full px-4 py-3 rounded-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none resize-none"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               placeholder="Share your thoughts..."
               rows={3}
               maxLength={500}
             />
-            <div className="text-xs text-slate-500 mt-1">{comment.length}/500</div>
+            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{comment.length}/500</div>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-3 py-1.5 text-sm font-medium bg-amber-500 hover:bg-amber-600 disabled:bg-amber-500/50 text-white rounded-lg transition-colors"
+              className="flex-1 py-3 text-sm font-medium rounded-sm transition-colors bg-teal-700 hover:bg-teal-600 text-white disabled:opacity-50"
             >
-              {submitting ? 'Submitting...' : 'Submit'}
+              {submitting ? 'Submitting...' : 'Submit Review'}
             </button>
             <button
               type="button"
@@ -437,46 +431,48 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                 setRating(5);
                 setComment('');
               }}
-              className="px-4 py-1.5 text-sm font-medium bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+              className="px-6 py-3 text-sm font-medium rounded-sm transition-colors bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200"
             >
-              ✖️
+              Cancel
             </button>
           </div>
         </form>
       )}
 
-      {/* Compact Reviews List */}
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+      {/* Reviews List - Professional Style */}
+      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
         {reviewsData && reviewsData.reviews.length > 0 ? (
           reviewsData.reviews.map((review) => (
-            <div key={review._id} className="p-3 bg-white/5 rounded-lg border border-slate-700/50 hover:border-slate-600/50 transition-colors">
+            <div key={review._id} className="p-4 rounded-sm transition-colors bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-200 truncate">
+                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
                     {review.userId.username || review.userId.email.split('@')[0]}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex gap-0.5">
                       {renderStars(review.rating)}
                     </div>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </span>
                   </div>
                 </div>
               </div>
               {review.comment && (
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{review.comment}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">{review.comment}</p>
               )}
             </div>
           ))
         ) : (
-          <div className="text-center py-6 text-slate-500">
-            <svg className="w-10 h-10 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-            </svg>
-            <p className="text-xs">No reviews yet ✨</p>
-            <p className="text-xs mt-0.5">Be the first to share!</p>
+          <div className="text-center py-10">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+              <svg className="w-8 h-8 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 font-medium">No reviews yet</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Be the first to share your experience!</p>
           </div>
         )}
       </div>

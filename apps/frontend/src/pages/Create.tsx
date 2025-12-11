@@ -193,54 +193,59 @@ export default function Create() {
   };
 
   return (
-    <section className="min-h-screen py-8">
+    <section className="min-h-screen py-8 bg-slate-50 dark:bg-slate-900">
       <div className="container-app px-4">
-        {/* Header with Icon */}
-        <header className="mb-6 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
-            Create Activity
+        {/* Professional Header */}
+        <header className="mb-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Create <span className="italic">Activity</span>
           </h2>
-          <p className="text-slate-400">Share your interests and meet like-minded people</p>
+          <p className="text-slate-500 dark:text-slate-400">Share your interests and meet like-minded people</p>
         </header>
 
         <div className="w-full max-w-3xl mx-auto">
+        {/* Professional Form Card */}
         <form
           onSubmit={onSubmit}
-          className="card p-6 space-y-5 border border-white/10 hover:border-white/20 transition-all duration-300"
+          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 space-y-6 shadow-sm"
         >
-          <div className="flex items-center justify-between pb-4 border-b border-white/10">
-            <h3 className="text-lg font-semibold text-amber-400 font-['Poppins']">Activity Details</h3>
-            <span className="text-sm text-slate-300">
-              Creator: <span className="font-medium text-amber-400">{userName}</span>
+          {/* Form Header */}
+          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+            <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              Activity Details
+            </h3>
+            <span className="text-sm text-slate-500 dark:text-slate-400 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-sm">
+              Creator: <span className="font-medium text-teal-700 dark:text-teal-400">{userName}</span>
             </span>
           </div>
 
+          {/* Cover Image Section */}
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="coverImage">Cover Image</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3" htmlFor="coverImage">
+              Cover Image
+            </label>
             <div className="flex gap-4 items-start">
-              <div className="relative w-40 h-40 bg-slate-700/30 rounded-lg overflow-hidden border border-white/10">
+              <div className="relative w-44 h-44 rounded-sm overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600">
                 {previewImage ? (
                   <img
                     src={previewImage}
                     alt="Activity cover"
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-500">
-                    📷
+                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                    <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-xs">No image</span>
                   </div>
                 )}
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-5 py-2.5 font-semibold text-white bg-amber-500 hover:bg-amber-400 rounded-lg transition-all duration-300"
+                  className="px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200"
                   disabled={isLoading}
                 >
                   Choose Image
@@ -249,13 +254,13 @@ export default function Create() {
                   <button
                     type="button"
                     onClick={removeImage}
-                    className="px-5 py-2.5 text-sm font-semibold border border-red-400/40 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg transition-all duration-300"
+                    className="px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
                   >
                     Remove
                   </button>
                 )}
-                <p className="text-xs text-slate-400">
-                  Recommended: 1200×800px • Max 5MB<br />
+                <p className="text-xs text-slate-400 dark:text-slate-500">
+                  Recommended: 1200×800px<br />Max 5MB
                 </p>
               </div>
               <input
@@ -268,13 +273,16 @@ export default function Create() {
             </div>
           </div>
 
+          {/* Activity Name */}
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="title">Activity Name : </label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="title">
+              Activity Name
+            </label>
             <input
               id="title"
               name="title"
-              className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
-              placeholder="Enter activity name"
+              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+              placeholder="Enter a catchy activity name..."
               value={formData.title}
               onChange={handleChange}
               required
@@ -282,13 +290,16 @@ export default function Create() {
             />
           </div>
 
+          {/* Description */}
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="description">Description :</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="description">
+              Description
+            </label>
             <textarea
               id="description"
               name="description"
-              className="input h-24 hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
-              placeholder="Briefly describe your activity"
+              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-28"
+              placeholder="Briefly describe your activity..."
               value={formData.description}
               onChange={handleChange}
               required
@@ -296,13 +307,16 @@ export default function Create() {
             />
           </div>
 
+          {/* Location */}
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="location">Location : </label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="location">
+              Location
+            </label>
             <input
               id="location"
               name="location"
-              className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
-              placeholder="Enter the activity location"
+              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+              placeholder="Where will this happen?"
               value={formData.location}
               onChange={handleChange}
               required
@@ -310,14 +324,18 @@ export default function Create() {
             />
           </div>
 
+          {/* Date & Time Grid */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label font-medium text-slate-200" htmlFor="date">Date : </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="date">
+                Date
+              </label>
               <input
                 type="date"
                 id="date"
                 name="date"
-                className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                style={{ colorScheme: 'light dark' }}
                 value={formData.date}
                 onChange={handleChange}
                 required
@@ -325,12 +343,15 @@ export default function Create() {
               />
             </div>
             <div>
-              <label className="label font-medium text-slate-200" htmlFor="time">Time : </label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="time">
+                Time
+              </label>
               <input
                 type="time"
                 id="time"
                 name="time"
-                className="input hover:bg-slate-700/30 focus:ring-2 focus:ring-amber-400/50 transition-all duration-300"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                style={{ colorScheme: 'light dark' }}
                 value={formData.time}
                 onChange={handleChange}
                 required
@@ -338,8 +359,12 @@ export default function Create() {
               />
             </div>
           </div>
+
+          {/* Tags */}
           <div>
-            <div className="label font-medium text-slate-200">🏷️ Tags</div>
+            <div className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Tags
+            </div>
             <TagSelector 
               value={formData.tags} 
               onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
@@ -347,13 +372,16 @@ export default function Create() {
             />
           </div>
 
+          {/* Max Participants */}
           <div>
-            <label className="label font-medium text-slate-200" htmlFor="maxParticipants">Max Participants</label>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maxParticipants">
+              Max Participants
+            </label>
             <input
               type="number"
               id="maxParticipants"
               name="maxParticipants"
-              className="input"
+              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
               placeholder="ระบุจำนวนคนที่รับได้ (ขั้นต่ำ 2 คน)"
               min={2}
               max={100}
@@ -362,19 +390,20 @@ export default function Create() {
               required
               disabled={isLoading}
             />
-            <p className="text-xs text-white/60 mt-1">
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
               ระบุจำนวนคนที่ต้องการรับเข้ากิจกรรม (ไม่นับรวมผู้สร้าง)
             </p>
           </div>
 
+          {/* Submit Button */}
           <button 
-            className="w-full py-3 text-base font-semibold text-white bg-amber-500 hover:bg-amber-400 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
+            className="w-full py-3.5 text-base font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
             type="submit"
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                 Creating activity...
               </>
             ) : (

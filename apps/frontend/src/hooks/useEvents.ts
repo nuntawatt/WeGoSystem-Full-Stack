@@ -14,11 +14,8 @@ export interface Event {
   category?: string;
   cover?: string;
   participants: string[];
-  chat?: string; // Chat ID reference
-  createdBy: {
-    _id: string;
-    email: string;
-  };
+  chat?: string;
+  createdBy: { _id: string; email: string; };
   createdAt: string;
   updatedAt: string;
 }
@@ -73,7 +70,7 @@ export function useEvents() {
     try {
       setIsLoading(true);
       const response = await eventsAPI.update(id, eventData);
-      setEvents(prev => prev.map(event => 
+      setEvents(prev => prev.map(event =>
         event._id === id ? response.data : event
       ));
       toast('Event updated successfully!');
@@ -107,7 +104,7 @@ export function useEvents() {
   const joinEvent = async (id: string) => {
     try {
       const response = await eventsAPI.join(id);
-      setEvents(prev => prev.map(event => 
+      setEvents(prev => prev.map(event =>
         event._id === id ? response.data.activity : event
       ));
       toast('Successfully joined event!');
@@ -122,7 +119,7 @@ export function useEvents() {
   const leaveEvent = async (id: string) => {
     try {
       const response = await eventsAPI.leave(id);
-      setEvents(prev => prev.map(event => 
+      setEvents(prev => prev.map(event =>
         event._id === id ? response.data.activity : event
       ));
       toast('Successfully left event!');
@@ -138,15 +135,5 @@ export function useEvents() {
     fetchEvents();
   }, []);
 
-  return {
-    events,
-    isLoading,
-    error,
-    fetchEvents,
-    createEvent,
-    updateEvent,
-    deleteEvent,
-    joinEvent,
-    leaveEvent,
-  };
+  return { events, isLoading, error, fetchEvents, createEvent, updateEvent, deleteEvent, joinEvent, leaveEvent, };
 }

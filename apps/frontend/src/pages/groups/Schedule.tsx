@@ -1,6 +1,7 @@
 // Schedule selection for group members (demo data)
 //import { useMemo } from 'react';
 import { useState, useEffect } from 'react';
+import { Calendar, Clock, Check } from 'lucide-react';
 
 type Slot = { day: string; hour: number };
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -27,38 +28,44 @@ export default function Schedule() {
   const best = Object.entries(scoreByKey).sort((a, b) => b[1] - a[1])[0]?.[0];
 
   return (
-    <section className="min-h-screen py-8">
+    <section className="min-h-screen py-8 bg-slate-50 dark:bg-slate-900">
       <div className="container-app space-y-6">
-        {/* Header with Icon */}
-        <header className="mb-6 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl mb-4 shadow-lg shadow-teal-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+        {/* Header */}
+        <header className="mb-8 text-center">
+          <div className="inline-block p-3 bg-teal-100 dark:bg-teal-900/30 rounded-sm mb-4">
+            <Calendar className="w-8 h-8 text-teal-700 dark:text-teal-400" />
           </div>
-          <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
-            Match Schedule
+          <h3 className="text-3xl font-light text-slate-800 dark:text-white mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Match <span className="italic">Schedule</span>
           </h3>
-          <p className="text-slate-400">Select your available times to find the best meeting slot</p>
+          <p className="text-slate-500 dark:text-slate-400">Select your available times to find the best meeting slot</p>
         </header>
 
-      <div className="card p-6 border border-white/10">
-        <div className="flex items-center gap-3 mb-4 text-sm">
+      <div className="bg-white dark:bg-slate-800 p-6 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
+        <div className="flex items-center gap-6 mb-6 text-sm">
           <span className="inline-flex items-center gap-2">
-            <span className="inline-block w-5 h-5 rounded bg-amber-500/30" /> ✅ Selected
+            <span className="inline-block w-5 h-5 rounded-sm bg-teal-100 dark:bg-teal-900/30" /> 
+            <span className="text-slate-600 dark:text-slate-300">Selected</span>
           </span>
-          <span className="inline-flex items-center gap-2 ml-4">
-            <span className="inline-block w-5 h-5 rounded ring-2 ring-amber-400" /> 🌟 Best Match
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-block w-5 h-5 rounded-sm ring-2 ring-amber-500" /> 
+            <span className="text-slate-600 dark:text-slate-300">Best Match</span>
           </span>
         </div>
 
+        <div className="overflow-x-auto">
         <table className="min-w-[720px] w-full border-separate border-spacing-2">
           <thead>
             <tr>
-              <th className="text-left text-slate-300 font-semibold">⏰ ชั่วโมง</th>
+              <th className="text-left text-slate-700 dark:text-slate-300 font-medium text-sm py-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>Hour</span>
+                </div>
+              </th>
               {DAYS.map((d) => (
-                <th key={d} className="text-left text-slate-300 font-semibold">
-                  {d === 'Mon' ? '🌙 จ.' : d === 'Tue' ? '🔥 อ.' : d === 'Wed' ? '💧 พ.' : d === 'Thu' ? '🌳 พฤ.' : d === 'Fri' ? '💎 ศ.' : d === 'Sat' ? '🌤️ ส.' : '☀️ อา.'}
+                <th key={d} className="text-center text-slate-700 dark:text-slate-300 font-medium text-sm py-2">
+                  {d}
                 </th>
               ))}
             </tr>
@@ -68,7 +75,7 @@ export default function Schedule() {
               const hour = 8 + row;
               return (
                 <tr key={row}>
-                  <td className="text-slate-400 text-sm font-medium">{hour}:00</td>
+                  <td className="text-slate-500 dark:text-slate-400 text-sm font-medium">{hour}:00</td>
                   {DAYS.map((d, col) => {
                     const on = picked.some((s) => s.day === d && s.hour === hour);
                     const k = `${d}-${hour}`;
@@ -77,13 +84,15 @@ export default function Schedule() {
                       <td key={col}>
                         <button
                           onClick={() => toggle(col, hour)}
-                          className={`w-20 h-10 rounded-lg text-sm font-medium transition-all duration-300 ${
-                            on ? 'bg-amber-500/30 scale-105' : 'bg-white/10 hover:bg-white/20 hover:scale-105'
-                          } ${isBest ? 'ring-2 ring-amber-400 animate-pulse-subtle' : ''}`}
+                          className={`w-20 h-10 rounded-sm text-sm font-medium transition-colors ${
+                            on 
+                              ? 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' 
+                              : 'bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300'
+                          } ${isBest ? 'ring-2 ring-amber-500' : ''}`}
                           title={k}
                           aria-pressed={on}
                         >
-                          {on ? '✔' : ''}
+                          {on && <Check className="w-4 h-4 mx-auto" />}
                         </button>
                       </td>
                     );
@@ -93,11 +102,15 @@ export default function Schedule() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
-      <div className="card p-6 border border-white/10">
-        <div className="font-semibold text-lg mb-2 text-amber-400">🎯 Best Time Match</div>
-        <div className="text-slate-200 text-lg">{best ? `📅 ${best.replace('-', ' @ ')}` : '👆 Select times from the table to see the best match'}</div>
+      <div className="bg-white dark:bg-slate-800 p-6 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
+        <div className="font-medium text-lg mb-2 text-slate-800 dark:text-white flex items-center gap-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <Calendar className="w-5 h-5 text-teal-700 dark:text-teal-400" />
+          Best Time Match
+        </div>
+        <div className="text-slate-600 dark:text-slate-300">{best ? `${best.replace('-', ' at ')}:00` : 'Select times from the table to see the best match'}</div>
         </div>
       </div>
     </section>

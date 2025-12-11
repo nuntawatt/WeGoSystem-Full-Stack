@@ -17,7 +17,6 @@ if (import.meta.env.PROD) {
 const qc = new QueryClient();
 
 const routerOptions: any = {
-  // Opt-in to v7 future behaviors to silence deprecation warnings
   future: {
     v7_startTransition: true,
     v7_relativeSplatPath: true,

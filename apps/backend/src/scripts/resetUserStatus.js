@@ -22,11 +22,11 @@ async function resetUserStatus() {
       }
     );
     
-    console.log(`✅ Reset ${result.modifiedCount} users to offline status`);
-    console.log('✅ All user statuses have been reset!');
+    console.log(`Reset ${result.modifiedCount} users to offline status`);
+    console.log('All user statuses have been reset!');
     
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   } finally {
     await mongoose.disconnect();
   }

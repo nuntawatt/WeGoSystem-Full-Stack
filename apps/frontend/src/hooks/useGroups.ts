@@ -73,12 +73,5 @@ export function useGroups() {
     },
   });
 
-  return {
-    groups,
-    createGroup,
-    updateGroup,
-    deleteGroup,
-    joinGroup,
-    leaveGroup,
-  };
+  return { groups, createGroup, updateGroup, deleteGroup, joinGroup, leaveGroup, };
 }

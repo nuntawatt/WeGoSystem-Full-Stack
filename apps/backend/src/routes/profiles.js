@@ -172,7 +172,6 @@ router.post('/avatar', auth, upload.single('avatar'), async (req, res) => {
         const parts = prev.split('/');
         const idx = parts.findIndex(p => p === 'upload');
         if (idx > -1 && parts.length > idx + 1) {
-          // everything after upload/ (may include transformations) -> get last segment as public id with extension
           const publicWithExt = parts.slice(idx + 1).join('/');
           const publicId = publicWithExt.replace(/\.[a-zA-Z0-9]+$/, '');
           await cloudinary.uploader.destroy(publicId, { resource_type: 'image' });

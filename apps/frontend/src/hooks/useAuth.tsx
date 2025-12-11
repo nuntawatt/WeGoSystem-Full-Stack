@@ -1,12 +1,7 @@
 import { useContext, createContext, useState, useEffect } from 'react';
 import { api } from '../lib/apiClient';
 
-interface User {
-  _id: string;
-  email: string;
-  username?: string;
-  role: string;
-}
+interface User {_id: string;email: string;username?: string;role: string;}
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in
     const token = localStorage.getItem('token');
     if (token) {
       api.get('/auth/me')
@@ -46,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { token, user } = response.data;
     localStorage.setItem('token', token);
     setUser(user);
-    return user; // Return user object so SignIn can check role
+    return user;
   };
 
   const signUp = async (email: string, password: string, username?: string) => {

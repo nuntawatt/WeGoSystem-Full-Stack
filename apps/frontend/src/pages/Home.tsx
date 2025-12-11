@@ -1,269 +1,277 @@
-// Landing page (Hero) with CTAs
-import { useEffect } from "react";
+// Landing page (Hero) with Professional Sophisticated Style
+import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import { Users, Calendar, Star, ArrowRight, Compass, MessageCircle, MapPin, Zap, Shield, Heart, TrendingUp } from "lucide-react";
+import { Users, Clock, ArrowRight, Compass, ChevronLeft, ChevronRight } from "lucide-react";
+
+const heroSlides = [
+  {
+    url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&q=80",
+    alt: "Students collaborating in modern workspace"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=1920&q=80",
+    alt: "Group study session at university"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=1920&q=80",
+    alt: "Professional meeting room discussion"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?w=1920&q=80",
+    alt: "Creative team brainstorming"
+  }
+];
 
 export default function Home() {
   const { user, loading } = useAuth();
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
+  // Auto-advance slideshow
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Redirect authenticated users to explore page
   if (!loading && user) {
     return <Navigate to="/explore" replace />;
   }
 
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
+
   return (
-    <div className="relative -m-4 sm:-m-6 min-h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Hero Section */}
-      <section className="relative z-10 container mx-auto px-4 sm:px-6 py-12 md:py-20">
-        <div className="max-w-5xl mx-auto space-y-12">
-          {/* Top Content - Centered */}
-          <div className="text-center space-y-6 max-w-3xl mx-auto">
-            {/* Main Heading */}
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight font-['Poppins']">
-              <span className="text-white">
-                อยู่คนเดียวไม่ต้องเหงา
-              </span>
-              <br />
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-300 bg-clip-text text-transparent">
-                เพราะพวกเราจะไปด้วยกัน
-              </span>
-            </h1>
-
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-slate-300 leading-relaxed font-light max-w-2xl mx-auto">
-              หาเพื่อนร่วมกิจกรรม จัดกลุ่ม นัดเวลา คุยกันในแชต - ครบจบในที่เดียว
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-wrap justify-center gap-4 pt-4">
-              <Link
-                to="/auth/signup"
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white
-                           bg-gradient-to-r from-purple-500 via-pink-500 to-cyan-500
-                           hover:from-purple-500/90 hover:via-pink-500/90 hover:to-cyan-500/90
-                           shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/40
-                           transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 active:scale-95
-                           animate-pulse-subtle"
-              >
-                Get Started
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-500 ease-out" />
-              </Link>
-              <Link
-                to="/explore"
-                className="group inline-flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-white
-                           border-2 border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50
-                           backdrop-blur-sm transition-all duration-500 ease-out hover:scale-110 hover:-translate-y-1 active:scale-95"
-              >
-                Explore Events
-                <Compass className="w-5 h-5 group-hover:rotate-180 transition-transform duration-700 ease-out" />
-              </Link>
-            </div>
+    <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
+      {/* Hero Section with Background Slideshow */}
+      <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
+        {/* Background Slides */}
+        {heroSlides.map((slide, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <img
+              src={slide.url}
+              alt={slide.alt}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/80" />
           </div>
+        ))}
 
-          {/* Center Image */}
-          <div className="relative group max-w-5xl mx-auto">
-            {/* Image Container */}
-            <div className="relative transform transition-all duration-700 ease-out 
-                            group-hover:scale-[1.03] group-hover:-translate-y-3">
-              <img
-                src="https://i.pinimg.com/1200x/54/57/24/545724f929914db48a3d1964f983f755.jpg"
-                alt="Friends enjoying campus activities together"
-                className="w-full h-auto rounded-2xl object-cover aspect-[16/9] shadow-2xl
-                           contrast-110 brightness-105 saturate-110
-                           group-hover:contrast-115 group-hover:brightness-110
-                           transition-all duration-700 ease-out"
-              />
-            </div>
-          </div>
+        {/* Slide Navigation */}
+        <button
+          onClick={prevSlide}
+          className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
 
-          {/* Stats - Below Image */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto pt-8">
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 
-                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
-                              border border-white/10 backdrop-blur-sm hover:border-blue-500/40 
-                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
-                <Users className="w-6 h-6 text-blue-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-3xl font-bold text-white mb-1">50+</div>
-                <div className="text-sm text-slate-400 font-medium">ผู้ใช้งาน</div>
-              </div>
-            </div>
+        {/* Slide Indicators */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+          {heroSlides.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? 'bg-white w-8' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+              aria-label={`Go to slide ${index + 1}`}
+            />
+          ))}
+        </div>
 
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 
-                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
-                              border border-white/10 backdrop-blur-sm hover:border-amber-500/40 
-                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
-                <Calendar className="w-6 h-6 text-amber-400 mb-2 group-hover:scale-110 transition-transform duration-300" />
-                <div className="text-3xl font-bold text-white mb-1">10+</div>
-                <div className="text-sm text-slate-400 font-medium">กิจกรรม</div>
-              </div>
-            </div>
+        {/* Hero Content */}
+        <div className="relative z-10 h-full flex items-center">
+          <div className="container mx-auto px-6 lg:px-12">
+            <div className="max-w-3xl">
+              {/* Main Heading - Elegant Serif */}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight text-white mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Discover Your
+                <span className="block font-semibold italic">Study Community</span>
+              </h1>
 
-            <div className="group relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-amber-500/20 
-                              rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-              <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 
-                              border border-white/10 backdrop-blur-sm hover:border-yellow-500/40 
-                              transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 cursor-default">
-                <Star className="w-6 h-6 text-yellow-400 mb-2 group-hover:scale-110 group-hover:rotate-12 transition-all duration-300" />
-                <div className="text-3xl font-bold text-white mb-1">4.8/5</div>
-                <div className="text-sm text-slate-400 font-medium">คะแนนรีวิว</div>
+              {/* Subheading */}
+              <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-10 max-w-xl font-light">
+                Connect with like-minded individuals. Schedule sessions. 
+                Collaborate in real-time. All in one elegant platform.
+              </p>
+
+              {/* CTA Buttons - Refined Style */}
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  to="/auth/signup"
+                  className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-medium
+                           rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-lg"
+                >
+                  Get Started
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
+                </Link>
+                <Link
+                  to="/explore"
+                  className="group inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-medium
+                           border border-white/30 rounded-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50"
+                >
+                  <Compass className="w-5 h-5" />
+                  Explore Sessions
+                </Link>
               </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Features Section */}
-          <div className="pt-20 pb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4 font-['Poppins']">
-              ทำไมต้องเลือก WeGo?
+      {/* Categories Preview - Muted Sophisticated Colors */}
+      <section className="py-16 bg-white dark:bg-slate-800">
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              Popular Categories
             </h2>
-            <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
-              ทุกสิ่งที่คุณต้องการเพื่อเชื่อมต่อ สำรวจ และเติบโตไปด้วยกันในที่เดียว
+            <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+              Find study groups that match your academic interests and goals
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Feature 1 */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
-                                hover:border-blue-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center mb-4
-                                  group-hover:scale-110 transition-transform duration-300">
-                    <Users className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">หาเพื่อนใหม่</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    เชื่อมต่อกับเพื่อนที่มีความสนใจและแชร์ความหลงใหลเดียวกันกับคุณ
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
-                                hover:border-amber-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center mb-4
-                                  group-hover:scale-110 transition-transform duration-300">
-                    <Calendar className="w-6 h-6 text-amber-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">จัดตารางง่าย</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    วางแผนกิจกรรมและอีเวนต์ด้วยระบบจัดตารางอัจฉริยะที่เหมาะกับทุกคน
-                  </p>
-                </div>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300" />
-                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-slate-800/30 to-slate-900/30 border border-white/10 backdrop-blur-sm
-                                hover:border-purple-500/30 transition-all duration-300 hover:scale-105 hover:-translate-y-1">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-4
-                                  group-hover:scale-110 transition-transform duration-300">
-                    <MessageCircle className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">เชื่อมต่อตลอดเวลา</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    แชทกับเพื่อนและสมาชิกกลุ่มแบบเรียลไทม์ ทุกที่ทุกเวลา
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
-          {/* How It Works Section */}
-          <div className="pt-12 pb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-white mb-4 font-['Poppins']">
-              วิธีการใช้งาน
+          <div className="flex flex-wrap justify-center gap-3">
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-teal-800/10 text-teal-800 dark:bg-teal-400/20 dark:text-teal-300 border border-teal-800/20 dark:border-teal-400/30">
+              Thesis Research
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-slate-600/10 text-slate-600 dark:bg-slate-400/20 dark:text-slate-300 border border-slate-600/20 dark:border-slate-400/30">
+              Coffee & Code
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-amber-700/10 text-amber-700 dark:bg-amber-400/20 dark:text-amber-300 border border-amber-700/20 dark:border-amber-400/30">
+              Business Strategy
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-indigo-700/10 text-indigo-700 dark:bg-indigo-400/20 dark:text-indigo-300 border border-indigo-700/20 dark:border-indigo-400/30">
+              Language Exchange
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-rose-700/10 text-rose-700 dark:bg-rose-400/20 dark:text-rose-300 border border-rose-700/20 dark:border-rose-400/30">
+              Design Workshop
+            </span>
+            <span className="px-5 py-2.5 rounded-full text-sm font-medium bg-emerald-700/10 text-emerald-700 dark:bg-emerald-400/20 dark:text-emerald-300 border border-emerald-700/20 dark:border-emerald-400/30">
+              Exam Preparation
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section - Clean & Professional */}
+      <section className="py-20 bg-slate-50 dark:bg-slate-900">
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              Why Choose <span className="italic">WeGo</span>
             </h2>
-            <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">
-              เริ่มต้นได้ง่ายๆ ในเพียง 3 ขั้นตอน
+            <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+              Everything you need to connect, explore, and grow together in one refined platform
             </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-              {/* Step 1 */}
-              <div className="relative text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-4
-                                shadow-lg shadow-purple-500/30 group-hover:shadow-2xl group-hover:shadow-purple-500/50 
-                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                  <span className="text-2xl font-bold text-white">1</span>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">สมัครฟรี</h3>
-                <p className="text-slate-400 text-sm">
-                  สร้างบัญชีของคุณได้ในไม่กี่วินาทีด้วยอีเมล
-                </p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="relative text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-cyan-500 flex items-center justify-center mx-auto mb-4
-                                shadow-lg shadow-pink-500/30 group-hover:shadow-2xl group-hover:shadow-pink-500/50 
-                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                  <span className="text-2xl font-bold text-white">2</span>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">สำรวจกิจกรรม</h3>
-                <p className="text-slate-400 text-sm">
-                  เลือกดูอีเวนต์และหากลุ่มที่ตรงกับความสนใจ
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="relative text-center group">
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center mx-auto mb-4
-                                shadow-lg shadow-cyan-500/30 group-hover:shadow-2xl group-hover:shadow-cyan-500/50 
-                                transition-all duration-300 group-hover:scale-110 group-hover:-rotate-6">
-                  <span className="text-2xl font-bold text-white">3</span>
-                </div>
-                <h3 className="text-xl font-bold text-white mb-2 font-['Poppins']">เข้าร่วมและเชื่อมต่อ</h3>
-                <p className="text-slate-400 text-sm">
-                  พบเพื่อนใหม่และเริ่มผจญภัยร่วมกันได้ทันที
-                </p>
-              </div>
-            </div>
           </div>
 
-          {/* Trust Indicators */}
-          <div className="pt-12 pb-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-              <div className="text-center group cursor-default">
-                <div className="flex justify-center mb-2">
-                  <Shield className="w-8 h-8 text-blue-400 group-hover:scale-110 transition-transform duration-300" />
-                </div>
-                <p className="text-sm text-slate-400 font-medium">ปลอดภัย</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Feature 1 */}
+            <div className="group p-8 bg-white dark:bg-slate-800 rounded-sm border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-full bg-teal-50 dark:bg-teal-900/30 flex items-center justify-center mb-6">
+                <Users className="w-6 h-6 text-teal-700 dark:text-teal-400" />
               </div>
-              
-              <div className="text-center group cursor-default">
-                <div className="flex justify-center mb-2">
-                  <Zap className="w-8 h-8 text-yellow-400 group-hover:scale-110 transition-transform duration-300" />
-                </div>
-                <p className="text-sm text-slate-400 font-medium">รวดเร็ว</p>
+              <h3 className="text-xl font-medium text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Find Your People
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
+                Connect with individuals who share your academic interests and professional aspirations.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="group p-8 bg-white dark:bg-slate-800 rounded-sm border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center mb-6">
+                <Clock className="w-6 h-6 text-amber-700 dark:text-amber-400" />
               </div>
-              
-              <div className="text-center group cursor-default">
-                <div className="flex justify-center mb-2">
-                  <Heart className="w-8 h-8 text-pink-400 group-hover:scale-110 transition-transform duration-300" />
-                </div>
-                <p className="text-sm text-slate-400 font-medium">ใส่ใจ</p>
+              <h3 className="text-xl font-medium text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Smart Scheduling
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
+                Effortlessly coordinate sessions with intelligent scheduling that works for everyone.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="group p-8 bg-white dark:bg-slate-800 rounded-sm border border-slate-200 dark:border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+              <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center mb-6">
+                <Compass className="w-6 h-6 text-indigo-700 dark:text-indigo-400" />
               </div>
-              
-              <div className="text-center group cursor-default">
-                <div className="flex justify-center mb-2">
-                  <TrendingUp className="w-8 h-8 text-green-400 group-hover:scale-110 transition-transform duration-300" />
-                </div>
-                <p className="text-sm text-slate-400 font-medium">เติบโตต่อเนื่อง</p>
-              </div>
+              <h3 className="text-xl font-medium text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Real-time Collaboration
+              </h3>
+              <p className="text-slate-500 dark:text-slate-400 leading-relaxed text-sm">
+                Engage with your group members through seamless real-time chat and coordination.
+              </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Trust Indicators - Subtle & Professional */}
+      <section className="py-16 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto text-center">
+            <div>
+              <p className="text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Secure</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Protected Platform</p>
+            </div>
+            <div>
+              <p className="text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Fast</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Instant Connection</p>
+            </div>
+            <div>
+              <p className="text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Curated</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Quality Community</p>
+            </div>
+            <div>
+              <p className="text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Growing</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Expanding Network</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Bottom CTA - Elegant */}
+      <section className="py-20 bg-slate-900 dark:bg-slate-950">
+        <div className="container mx-auto px-6 lg:px-12 text-center">
+          <h3 className="text-3xl md:text-4xl font-light text-white mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Ready to Begin Your Journey?
+          </h3>
+          <p className="text-slate-400 mb-8 max-w-lg mx-auto">
+            Join thousands of students and professionals who are already discovering meaningful connections.
+          </p>
+          <Link
+            to="/auth/signup"
+            className="inline-flex items-center gap-3 px-10 py-4 bg-white text-slate-900 font-medium
+                     rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-lg"
+          >
+            Create Your Account
+            <ArrowRight className="w-5 h-5" />
+          </Link>
         </div>
       </section>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
+import { Activity as ActivityIcon, Search, RefreshCw, Eye, Trash2, X, MapPin, Users, Calendar, Image as ImageIcon } from 'lucide-react';
 
 interface Activity {
   _id: string;
@@ -174,7 +175,7 @@ export default function ActivityManagement() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
       </div>
     );
   }
@@ -184,80 +185,78 @@ export default function ActivityManagement() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1 font-['Poppins']">Activity Management</h1>
-          <p className="text-primary-300 text-sm sm:text-base">Manage all activities in the system</p>
+          <h1 className="text-2xl sm:text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Activity Management</h1>
+          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">Manage all activities in the system</p>
           {usingPublicApi && (
-            <div className="mt-2 px-3 py-1 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300 text-xs inline-flex items-center gap-2">
-              <i className="fas fa-exclamation-triangle"></i>
+            <div className="mt-2 px-3 py-1 rounded-sm bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs inline-flex items-center gap-2">
               <span>Using public API - Please login as admin for full access</span>
             </div>
           )}
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchActivities} className="btn-ghost px-3 py-2 text-sm rounded-lg hover:bg-white/5">
-            <i className="fas fa-sync-alt mr-2"></i>Refresh
+          <button onClick={fetchActivities} className="flex items-center gap-2 px-3 py-2 text-sm rounded-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors">
+            <RefreshCw className="w-4 h-4" />
+            Refresh
           </button>
         </div>
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-gradient-to-br from-emerald-500/20 via-emerald-600/10 to-transparent border border-emerald-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-emerald-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/40 to-emerald-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fas fa-layer-group text-2xl text-emerald-300"></i>
+              <div className="w-12 h-12 rounded-sm bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                <ActivityIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
               </div>
               <div className="flex-1">
-                <p className="text-emerald-300 text-xs font-bold uppercase tracking-wider">Total</p>
-                <p className="text-emerald-300 text-xs font-bold uppercase tracking-wider">Activities</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Activities</p>
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white">{filteredActivities.length}</p>
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredActivities.length}</p>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-blue-500/20 via-blue-600/10 to-transparent border border-blue-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/40 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fas fa-check-circle text-2xl text-blue-300"></i>
+              <div className="w-12 h-12 rounded-sm bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
-                <p className="text-blue-300 text-xs font-bold uppercase tracking-wider">Published</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Published</p>
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white">
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
               {filteredActivities.filter((a) => a.status === 'published').length}
             </p>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-amber-500/20 via-amber-600/10 to-transparent border border-amber-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-amber-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/40 to-amber-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fas fa-users text-2xl text-amber-300"></i>
+              <div className="w-12 h-12 rounded-sm bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <Users className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="flex-1">
-                <p className="text-amber-300 text-xs font-bold uppercase tracking-wider">Total</p>
-                <p className="text-amber-300 text-xs font-bold uppercase tracking-wider">Participants</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Total Participants</p>
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white">
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
               {filteredActivities.reduce((sum, a) => sum + a.participants.length, 0)}
             </p>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-purple-500/20 via-purple-600/10 to-transparent border border-purple-500/30 rounded-2xl p-4 sm:p-5 hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 group cursor-pointer hover:scale-105">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/40 to-purple-600/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <i className="fas fa-tags text-2xl text-purple-300"></i>
+              <div className="w-12 h-12 rounded-sm bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="flex-1">
-                <p className="text-purple-300 text-xs font-bold uppercase tracking-wider">Categories</p>
+                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium uppercase tracking-wider">Categories</p>
               </div>
             </div>
-            <p className="text-3xl sm:text-4xl font-black text-white">
+            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
               {new Set(filteredActivities.map((a) => a.category)).size}
             </p>
           </div>
@@ -265,15 +264,15 @@ export default function ActivityManagement() {
       </div>
 
       {/* Search & Filter */}
-      <div className="bg-gradient-to-br from-primary-800/60 via-primary-700/40 to-primary-800/60 backdrop-blur-xl border border-primary-600/50 rounded-2xl p-5 sm:p-6 shadow-2xl">
-        <div className="relative group">
-          <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-emerald-400 group-hover:scale-110 transition-transform"></i>
+      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-5 sm:p-6 shadow-sm">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             placeholder="Search activities..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-primary-900/50 text-white rounded-xl pl-12 pr-4 py-3.5 border border-primary-600/50 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 focus:outline-none transition-all placeholder:text-primary-400"
+            className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-sm pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
           />
         </div>
       </div>

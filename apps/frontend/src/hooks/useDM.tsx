@@ -4,11 +4,11 @@ import { socket } from '../lib/socket';
 import { useAuth } from './useAuth';
 import { api } from '../lib/api';
 
-type DMMessage = { 
+type DMMessage = {
   _id: string;
   from: { _id: string; username: string; email: string; avatar?: string; isOnline?: boolean };
   to: { _id: string; username: string; email: string; avatar?: string; isOnline?: boolean };
-  text: string; 
+  text: string;
   isRead: boolean;
   createdAt: string;
   updatedAt: string;
@@ -125,14 +125,13 @@ export const DMProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
 
   const loadConversation = async (peerUid: string) => {
     const key = dmKeyFor(meUid, peerUid);
-    if (loadedConversations.has(key)) return; // Already loaded
-
+    if (loadedConversations.has(key)) return;
     try {
-      console.log(`📥 Loading conversation with ${peerUid}`);
+      console.log(`Loading conversation with ${peerUid}`);
       const response = await api.get(`/directmessages/conversation/${peerUid}`);
       const messages: DMMessage[] = response.data;
-      console.log(`✅ Loaded ${messages.length} messages`);
-      
+      console.log(`Loaded ${messages.length} messages`);
+
       setMessageStore((prev) => {
         const newStore = new Map(prev);
         newStore.set(key, messages);
@@ -141,50 +140,45 @@ export const DMProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
       setLoadedConversations(prev => new Set(prev).add(key));
       setForceUpdate(v => v + 1);
     } catch (error) {
-      console.error('❌ Error loading conversation:', error);
+      console.error('Error loading conversation:', error);
     }
   };
 
   const getMsgs = (peerUidArg?: string) => {
     const peerUid = peerUidArg ?? openPeerUid;
     if (!peerUid) {
-      console.log('⚠️ getMsgs: no peerUid');
+      console.log('getMsgs: no peerUid');
       return [];
     }
     const key = dmKeyFor(meUid, peerUid);
     const messages = messageStore.get(key) ?? [];
-    console.log(`📬 getMsgs(${peerUid}): key="${key}", meUid="${meUid}", found ${messages.length} messages`);
+    console.log(`getMsgs(${peerUid}): key="${key}", meUid="${meUid}", found ${messages.length} messages`);
     return messages;
   };
 
   const sendTo = (peerUid: string, text: string) => {
     const t = text.trim();
     if (!t) return;
-    
-    console.log('📤 Sending DM:', { from: meUid, to: peerUid, text: t });
-
-    // Create optimistic message with temp ID
-    const tempMsg: DMMessage = { 
+    const tempMsg: DMMessage = {
       _id: `temp-${Date.now()}`,
-      from: { 
-        _id: meUid, 
+      from: {
+        _id: meUid,
         username: user?.username || '',
         email: user?.email || '',
         avatar: undefined
       },
-      to: { 
-        _id: peerUid, 
+      to: {
+        _id: peerUid,
         username: openPeer?.name || '',
         email: '',
         avatar: openPeer?.avatar
       },
-      text: t, 
+      text: t,
       isRead: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    
-    // Add to local store immediately (optimistic update)
+
     const key = dmKeyFor(meUid, peerUid);
     setMessageStore((prev) => {
       const newStore = new Map(prev);
@@ -205,30 +199,16 @@ export const DMProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
       peerUid = peer;
       setOpenPeerUid(peer);
     } else {
-      // store peer metadata and open
       peersRef.current.set(peer.uid, peer);
       peerUid = peer.uid;
       setOpenPeerUid(peer.uid);
     }
-    
-    console.log(`🔓 Opening DM with ${peerUid}, meUid=${meUid}`);
-    
-    // Load conversation when opening DM
     await loadConversation(peerUid);
   };
-  
+
   const closeDM = () => setOpenPeerUid(null);
 
-  const value: DMContextValue = {
-    meUid,
-    isOpen: !!openPeerUid,
-    openPeer,
-    openDM,
-    closeDM,
-    getMsgs,
-    sendTo,
-    loadConversation,
-  };
+  const value: DMContextValue = { meUid, isOpen: !!openPeerUid, openPeer, openDM, closeDM, getMsgs, sendTo, loadConversation, };
 
   return <DMContext.Provider value={value}>{children}</DMContext.Provider>;
 };

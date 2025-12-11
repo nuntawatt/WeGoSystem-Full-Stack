@@ -47,7 +47,7 @@ export default function App() {
         <Route
           path="/*"
           element={
-            <div className="min-h-screen bg-primary-900">
+            <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
               <Navbar />
               <main className="mx-auto max-w-7xl p-4 sm:p-6 space-y-6">
                 <Routes>

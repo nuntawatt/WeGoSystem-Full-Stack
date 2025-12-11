@@ -40,32 +40,26 @@ export default function ReportModal({
   const [alreadyReported, setAlreadyReported] = useState(false);
   const { user } = useAuth();
   const [isComposing, setIsComposing] = useState(false);
-  
-  // DEV MODE: Set to true to disable "already reported" check for testing
   const DEV_ALLOW_DUPLICATE = false;
 
   useEffect(() => {
-    // When modal opens, if target is an activity or group (chat), fetch activity and check embedded reports
     if (!isOpen) return;
 
     let active = true;
     (async () => {
       try {
-        if (!user) return; // no user to check against
+        if (!user) return;
 
         let activity: any = null;
 
-        // 1) try direct activity id
         try {
           const res = await api.get(`/activities/${targetId}`);
           activity = res.data?.activity || res.data;
           console.debug('[ReportModal] found activity by direct id', activity?._id);
         } catch (err: any) {
-          // continue to next resolver
           console.debug('[ReportModal] direct activity fetch failed:', (err?.message || err));
         }
 
-        // 2) try helper /by-chat
         if (!activity) {
           try {
             const res2 = await api.get(`/activities/by-chat/${targetId}`);
@@ -76,7 +70,6 @@ export default function ReportModal({
           }
         }
 
-        // 3) try chat.groupInfo.relatedActivity
         if (!activity) {
           try {
             const chatRes = await api.get(`/chats/${targetId}`);
@@ -93,7 +86,6 @@ export default function ReportModal({
           }
         }
 
-        // 4) final fallback: scan activities for chat._id match
         if (!activity) {
           try {
             const acts = await api.get('/activities');
@@ -111,7 +103,6 @@ export default function ReportModal({
         if (!active) return;
         if (!activity) return;
 
-        // Query server-side helper to ensure reports stored in reports collection are included
         try {
           const checkRes = await api.get(`/activities/${activity._id || activity}/has-reported`);
           if (checkRes.data && typeof checkRes.data.reported === 'boolean') {
@@ -139,7 +130,6 @@ export default function ReportModal({
   const submitReportTo = async (path: string, payload: any) => api.post(path, payload);
 
   const resolveAndPostActivity = async (id: string, payload: any) => {
-    // Try direct activity id first
     try {
       console.debug('[Report] trying direct activity id:', id);
       const path = `/activities/${id}/report`;
@@ -149,7 +139,6 @@ export default function ReportModal({
       console.debug('[Report] direct activity POST failed:', id, err?.response?.status, err?.message || err);
       const is404 = err?.response?.status === 404 || String(err?.message || '').includes('ไม่พบข้อมูล') || String(err).includes('Not Found');
       if (is404) {
-        // try chat -> relatedActivity
         try {
           const chatRes = await api.get(`/chats/${id}`);
           const chat = chatRes.data?.chat || chatRes.data;
@@ -184,7 +173,6 @@ export default function ReportModal({
           console.debug('[Report] /by-chat helper failed:', (e as any)?.message || e);
         }
 
-        // final fallback: scan activities
         try {
           console.debug('[Report] falling back to scanning /activities for chat._id ==', id);
           const acts = await api.get('/activities');
@@ -241,8 +229,7 @@ export default function ReportModal({
       console.error('Error submitting report:', error);
       const status = error?.response?.status;
       const serverError = error?.response?.data?.error || error?.message;
-      
-      // Handle specific HTTP status codes
+
       if (status === 404) {
         toast('Activity not found. It may have been deleted.');
       } else if (status === 409) {
@@ -261,29 +248,31 @@ export default function ReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/40"
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-  <div className="bg-slate-800 rounded-xl shadow-2xl max-w-md sm:max-w-lg md:max-w-xl w-full border border-slate-700 overflow-hidden max-h-[70vh] flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-white">Report {targetType}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-white p-1 rounded">✕</button>
+      <div className="bg-white dark:bg-slate-800 rounded-sm shadow-xl max-w-md sm:max-w-lg md:max-w-xl w-full border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[70vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
+          <h3 className="text-lg font-semibold text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Report {targetType}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-  {/* Scrollable content area */}
-  <form onSubmit={handleSubmit} className="p-5 overflow-auto pb-24">
+        <form onSubmit={handleSubmit} className="p-5 overflow-auto pb-24">
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-slate-300">Reason</label>
+            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Reason</label>
             <select
-              className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white"
+              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
               value={reason}
               onChange={(e) => setReason(e.target.value as ReportReason)}
             >
               {Object.entries(REASON_LABELS).map(([value, label]) => (
-                <option key={value} value={value} className="bg-slate-900 text-white">
+                <option key={value} value={value} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
                   {label}
                 </option>
               ))}
@@ -291,7 +280,7 @@ export default function ReportModal({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-slate-300">Details <span className="text-red-400">*</span></label>
+            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Details <span className="text-red-500">*</span></label>
             <textarea
               value={details}
               onChange={(e) => { if (!isComposing) setDetails(e.target.value); else setDetails(e.target.value); }}
@@ -299,25 +288,25 @@ export default function ReportModal({
               onCompositionEnd={(e) => { setIsComposing(false); setDetails((e.target as HTMLTextAreaElement).value); }}
               placeholder="Describe the issue..."
               rows={5}
-              className="w-full min-h-[140px] px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-white resize-none"
+              className="w-full min-h-[140px] px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 resize-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
             />
-            <div className="flex justify-end text-xs text-slate-400 mt-1">
-              <span className="text-slate-400">{chars}/{MAX_CHARS} characters</span>
+            <div className="flex justify-end text-xs text-slate-500 dark:text-slate-400 mt-1">
+              <span>{chars}/{MAX_CHARS} characters</span>
             </div>
             {chars > 0 && chars < 10 && (
-              <div className="text-rose-400 text-xs mt-1">Please type at least 10 characters.</div>
+              <div className="text-red-500 text-xs mt-1">Please type at least 10 characters.</div>
             )}
             {chars > MAX_CHARS && (
-              <div className="text-rose-400 text-xs mt-1">Please limit your report to {MAX_CHARS} characters or fewer.</div>
+              <div className="text-red-500 text-xs mt-1">Please limit your report to {MAX_CHARS} characters or fewer.</div>
             )}
           </div>
 
-          <div className="sticky bottom-0 bg-slate-800/80 py-4">
+          <div className="sticky bottom-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm py-4">
             <div className="flex justify-center px-4">
               <button
                 type="submit"
                 disabled={submitting || details.trim().length < 10 || details.trim().length > MAX_CHARS || (alreadyReported && !DEV_ALLOW_DUPLICATE)}
-                className="w-full max-w-sm px-6 py-3 bg-red-500 hover:bg-red-600 disabled:bg-red-500/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow"
+                className="w-full max-w-sm px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-sm transition-colors"
               >
                 {submitting ? 'Submitting...' : (alreadyReported && !DEV_ALLOW_DUPLICATE) ? 'Already Reported' : 'Submit Report'}
               </button>

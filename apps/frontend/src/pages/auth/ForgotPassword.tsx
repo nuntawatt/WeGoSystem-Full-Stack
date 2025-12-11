@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from '../../components/Toasts';
 import { api } from '../../lib/apiClient';
+import { Lock, Mail, ArrowLeft, Check, Eye, EyeOff, KeyRound, Send } from 'lucide-react';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ export default function ForgotPassword() {
         otp,
         newPassword
       });
-      toast('รีเซ็ตรหัสผ่านสำเร็จ 🎉', 'success');
+      toast('รีเซ็ตรหัสผ่านสำเร็จ', 'success');
       navigate('/auth/signin');
     } catch (error: any) {
       const errorMsg = error?.response?.data?.error || 'เกิดข้อผิดพลาด';
@@ -80,25 +81,23 @@ export default function ForgotPassword() {
   const handleCopyOTP = () => {
     if (devOTP) {
       setOtp(devOTP);
-      toast('คัดลอก OTP แล้ว! ✨', 'success');
+      toast('คัดลอก OTP แล้ว!', 'success');
     }
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4">
+    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4 bg-slate-50 dark:bg-slate-900">
       <div className="w-full max-w-md">
-        <div className="card p-8 border border-amber-500/20 shadow-2xl shadow-amber-500/10">
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 shadow-sm">
           {/* Header */}
           <header className="text-center mb-8">
-            <div className="inline-block p-3 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl mb-4 shadow-lg shadow-orange-500/30">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
+            <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-sm mb-4">
+              <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
             </div>
-            <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-orange-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+            <h2 className="text-2xl font-serif font-medium text-slate-800 dark:text-white mb-2">
               {step === 'email' ? 'Forgot Password' : 'Reset Password'}
             </h2>
-            <p className="text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400">
               {step === 'email' 
                 ? 'Enter your email to receive OTP' 
                 : 'Enter OTP and new password'}
@@ -109,13 +108,13 @@ export default function ForgotPassword() {
           {step === 'email' && (
             <form onSubmit={handleSendOTP} className="space-y-5">
               <div className="space-y-2">
-                <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="email">
-                  <p></p> Email :
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="email">
+                  <Mail className="w-4 h-4" /> Email
                 </label>
                 <input
                   id="email"
                   type="email"
-                  className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -126,31 +125,26 @@ export default function ForgotPassword() {
 
               <button 
                 type="submit" 
-                className="w-full mt-6 px-8 py-3.5 font-bold text-white rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:transform-none disabled:shadow-none" 
+                className="w-full mt-6 px-8 py-3.5 font-medium text-white rounded-sm bg-slate-800 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-100 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60" 
                 disabled={loading}
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                  <>
+                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     Sending OTP...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center justify-center gap-2">
+                  <>
                     Send OTP
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                    </svg>
-                  </span>
+                    <Send className="w-4 h-4" />
+                  </>
                 )}
               </button>
 
-              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-700/50">
-                <p className="text-slate-300">
+              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <p className="text-slate-600 dark:text-slate-300">
                   Remember your password?{' '}
-                  <Link to="/auth/signin" className="text-amber-400 font-bold hover:text-amber-300 transition-colors duration-300">
+                  <Link to="/auth/signin" className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors">
                     Sign in
                   </Link>
                 </p>
@@ -162,23 +156,23 @@ export default function ForgotPassword() {
           {step === 'otp' && (
             <form onSubmit={handleResetPassword} className="space-y-5">
               {/* Email Display */}
-              <div className="bg-gradient-to-r from-slate-700/30 to-slate-600/30 border border-slate-600/50 rounded-xl p-4">
-                <p className="text-xs text-slate-400 mb-1">Sent to:</p>
-                <p className="text-white font-semibold flex items-center gap-2">
-                  <span className="text-amber-400">📧</span>
+              <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-sm p-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sent to:</p>
+                <p className="text-slate-800 dark:text-white font-medium flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   {email}
                 </p>
               </div>
 
               {/* OTP Input */}
               <div className="space-y-2">
-                <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="otp">
-                  <span className="text-amber-400">🔐</span> OTP Code
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="otp">
+                  <KeyRound className="w-4 h-4" /> OTP Code
                 </label>
                 <input
                   id="otp"
                   type="text"
-                  className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 transition-all duration-300 text-center text-2xl tracking-[0.5em] font-bold"
+                  className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all text-center text-2xl tracking-[0.5em] font-semibold"
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
@@ -189,29 +183,24 @@ export default function ForgotPassword() {
                 {/* Show OTP if in development mode */}
                 {devOTP ? (
                   <div 
-                    className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/50 rounded-xl p-4 animate-pulse cursor-pointer hover:from-green-500/30 hover:to-emerald-500/30 transition-all duration-300"
+                    className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-sm p-4 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all"
                     onClick={handleCopyOTP}
                   >
-                    <p className="text-xs text-green-300 text-center font-semibold mb-2 flex items-center justify-center gap-2">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400 text-center font-medium mb-2 flex items-center justify-center gap-2">
+                      <Check className="w-4 h-4" />
                       Development Mode - Click to Copy OTP
                     </p>
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-green-400 tracking-[0.3em] font-mono select-all">
+                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-[0.3em] font-mono select-all">
                         {devOTP}
                       </div>
-                      <p className="text-xs text-green-300/70 mt-2 flex items-center justify-center gap-1">
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                        </svg>
+                      <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-2">
                         Click to auto-fill
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 text-center">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
                     Check your email for the 6-digit code
                   </p>
                 )}
@@ -219,14 +208,14 @@ export default function ForgotPassword() {
 
               {/* New Password Input */}
               <div className="space-y-2">
-                <label className="label font-semibold text-slate-200 flex items-center gap-2" htmlFor="newPassword">
-                  <p></p> New Password :
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="newPassword">
+                  <Lock className="w-4 h-4" /> New Password
                 </label>
                 <div className="relative">
                   <input
                     id="newPassword"
                     type={showPassword ? 'text' : 'password'}
-                    className="input bg-slate-700/50 border-slate-600/50 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/30 pr-12 transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all pr-12"
                     placeholder="At least 6 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -235,58 +224,41 @@ export default function ForgotPassword() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-amber-400 transition-all duration-300"
+                    className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    {showPassword ? (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20C5.477 20 1 12 1 12a20.76 20.76 0 0 1 5.06-5.94" />
-                        <path d="M10.73 5.08A11 11 0 0 1 12 4c6.523 0 11 8 11 8a20.76 20.76 0 0 1-4.17 4.92" />
-                        <path d="M14.12 14.12A3 3 0 1 1 9.88 9.88" />
-                        <line x1="1" y1="1" x2="23" y2="23" />
-                      </svg>
-                    ) : (
-                      <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M1 12s4.5-8 11-8 11 8 11 8-4.5 8-11 8-11-8-11-8Z" />
-                        <circle cx="12" cy="12" r="3" />
-                      </svg>
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
 
               <button 
                 type="submit" 
-                className="w-full mt-6 px-8 py-3.5 font-bold text-white rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-60 disabled:transform-none disabled:shadow-none" 
+                className="w-full mt-6 px-8 py-3.5 font-medium text-white rounded-sm bg-teal-700 hover:bg-teal-600 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60" 
                 disabled={loading}
               >
                 {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                  <>
+                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                     Resetting...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center justify-center gap-2">
+                  <>
                     Reset Password
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </span>
+                    <Check className="w-4 h-4" />
+                  </>
                 )}
               </button>
 
-              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-700/50">
+              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={() => setStep('email')}
-                  className="text-amber-400 font-bold hover:text-amber-300 transition-colors duration-300"
+                  className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors flex items-center gap-1 mx-auto"
                 >
-                  ← Back to email
+                  <ArrowLeft className="w-4 h-4" /> Back to email
                 </button>
-                <p className="text-slate-300">
+                <p className="text-slate-600 dark:text-slate-300">
                   Didn't receive OTP?{' '}
                   <button
                     type="button"
@@ -294,7 +266,7 @@ export default function ForgotPassword() {
                       setStep('email');
                       setOtp('');
                     }}
-                    className="text-amber-400 font-bold hover:text-amber-300 transition-colors duration-300"
+                    className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors"
                   >
                     Resend
                   </button>

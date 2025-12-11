@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { ALL_TAGS } from '../lib/demoData';
 import TagFilterBar from '../components/TagFilterBar';
 import EventCard from '../components/EventCard';
+import { Compass, X } from 'lucide-react';
 
 export default function Explore() {
   const { events, isLoading, fetchEvents } = useEvents();
@@ -32,94 +33,88 @@ export default function Explore() {
   }, [q, tags, events]);
 
   return (
-    <section className="min-h-screen py-8">
+    <section className="min-h-screen py-10 bg-slate-50 dark:bg-slate-900">
       <div className="container-app space-y-8">
-        {/* Enhanced Header with Icon and Animations */}
-        <header className="mb-6 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl mb-4 shadow-lg shadow-purple-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-          <h2 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-purple-200 to-pink-300 bg-clip-text text-transparent font-['Poppins']">
-            🌟 Explore Activities
-          </h2>
-          <p className="text-slate-400">ค้นหากิจกรรมและกลุ่มที่ตรงกับความสนใจของคุณ เริ่มต้นการผลผลิตใหม่วันนี้!</p>
+        {/* Professional Header */}
+        <header className="text-center py-6">
+          <h1 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+            Activity <span className="italic">Rooms</span>
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400 max-w-xl mx-auto">
+            ค้นหากิจกรรมและกลุ่มที่ตรงกับความสนใจของคุณ เริ่มต้นการเรียนรู้ใหม่วันนี้
+          </p>
         </header>
 
-      {/* Search and Filter Bar with Animation */}
-      <div>
-        <TagFilterBar allTags={ALL_TAGS} active={tags} onToggle={toggleTag} query={q} onQuery={setQ} />
-      </div>
-
-      {/* Results Counter */}
-      {!isLoading && filtered.length > 0 && (
-        <div className="flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="px-4 py-2 bg-gradient-to-r from-amber-500/20 to-amber-600/20 rounded-full border border-amber-500/30">
-              <span className="text-amber-400 font-bold text-lg">{filtered.length}</span>
-              <span className="text-slate-300 ml-2">กิจกรรม</span>
-            </div>
-          </div>
-          <div className="text-sm text-slate-500">
-            {tags.length > 0 && `กรองด้วย ${tags.length} แท็ก`}
-          </div>
+        {/* Search and Filter Bar */}
+        <div>
+          <TagFilterBar allTags={ALL_TAGS} active={tags} onToggle={toggleTag} query={q} onQuery={setQ} />
         </div>
-      )}
 
-      {/* Results */}
-      {isLoading ? (
-        <div className="card p-16 text-center border-2 border-amber-500/20 shadow-2xl shadow-amber-500/10">
+        {/* Results Counter */}
+        {!isLoading && filtered.length > 0 && (
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-3">
+              <div className="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm">
+                <span className="text-lg font-semibold text-teal-700 dark:text-teal-400">{filtered.length}</span>
+                <span className="text-slate-500 dark:text-slate-400 ml-2 text-sm">Activity Rooms</span>
+              </div>
+            </div>
+            {tags.length > 0 && (
+              <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                กรองด้วย {tags.length} แท็ก
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Results */}
+        {isLoading ? (
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-16 text-center">
             <div className="inline-block space-y-4">
               <div className="relative w-16 h-16 mx-auto">
-                <div className="absolute inset-0 border-4 border-amber-400/30 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-700"></div>
+                <div className="absolute inset-0 rounded-full border-2 border-teal-600 border-t-transparent animate-spin"></div>
+                <Compass className="absolute inset-0 m-auto w-6 h-6 text-teal-600 dark:text-teal-400" />
               </div>
-              <div className="text-xl font-bold text-white">กำลังโหลดกิจกรรม...</div>
-              <div className="text-sm text-slate-400">รอสักครู่...</div>
+              <div className="text-lg font-medium text-slate-700 dark:text-slate-300">กำลังโหลด...</div>
+              <div className="text-sm text-slate-400">รอสักครู่</div>
             </div>
-        </div>
-      ) : filtered.length ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-          {filtered.map((ev) => {
-            // Check if current user is a participant
-            const isParticipant = !!(user && ev.participants?.some((p: any) => {
-              if (!p) return false;
-              const pid = typeof p === 'string' ? p : (p.user?._id || p.user);
-              return pid === user._id;
-            }));
-
-            // Check if current user is the creator
-            const isCreator = !!(user && ev.createdBy?._id === user._id);
-
-            // Compute participants and popularity safely
-            const participantsCount = ev.participants?.length || 0;
-            const createdById = ev.createdBy ? (typeof ev.createdBy === 'string' ? ev.createdBy : ev.createdBy._id) : null;
-            let creatorIncluded = false;
-            if (createdById && ev.participants && Array.isArray(ev.participants)) {
-              creatorIncluded = ev.participants.some((p: any) => {
+          </div>
+        ) : filtered.length ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+            {filtered.map((ev) => {
+              const isParticipant = !!(user && ev.participants?.some((p: any) => {
                 if (!p) return false;
                 const pid = typeof p === 'string' ? p : (p.user?._id || p.user);
-                return pid === createdById;
-              });
-            }
-            const popularity = participantsCount + (createdById && !creatorIncluded ? 1 : 0);
+                return pid === user._id;
+              }));
 
-            return (
-              <EventCard
-                key={ev._id}
-                event={{
-                  id: ev._id,
-                  title: ev.title,
-                  about: ev.description,
-                    // If no valid cover (or it's a transient blob/file URL), pass undefined so EventCard will render its own placeholder
+              const isCreator = !!(user && ev.createdBy?._id === user._id);
+
+              const participantsCount = ev.participants?.length || 0;
+              const createdById = ev.createdBy ? (typeof ev.createdBy === 'string' ? ev.createdBy : ev.createdBy._id) : null;
+              let creatorIncluded = false;
+              if (createdById && ev.participants && Array.isArray(ev.participants)) {
+                creatorIncluded = ev.participants.some((p: any) => {
+                  if (!p) return false;
+                  const pid = typeof p === 'string' ? p : (p.user?._id || p.user);
+                  return pid === createdById;
+                });
+              }
+              const popularity = participantsCount + (createdById && !creatorIncluded ? 1 : 0);
+
+              return (
+                <EventCard
+                  key={ev._id}
+                  event={{
+                    id: ev._id,
+                    title: ev.title,
+                    about: ev.description,
                     cover: (!ev.cover || (typeof ev.cover === 'string' && (ev.cover.startsWith('blob:') || ev.cover.startsWith('file:')))) ? undefined : ev.cover,
                     tags: ev.tags,
                     location: ev.location,
                     date: ev.date,
-                    // participantsCount: number of participants stored (may or may not include creator)
                     participantsCount: participantsCount,
-                    // popularity: computed display total including creator if not counted
                     popularity: popularity
                   }}
                   maxParticipants={ev.maxParticipants}
@@ -128,17 +123,17 @@ export default function Explore() {
                   chatId={ev.chat}
                   onUpdate={fetchEvents}
                 />
-            );
-          })}
-        </div>
-      ) : (
-        <div className="card p-16 text-center border-2 border-slate-700/50 shadow-xl space-y-4">
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-16 text-center space-y-6">
             <div className="relative inline-block">
-              <div className="text-8xl">🔍</div>
+              <Compass className="w-16 h-16 text-slate-300 dark:text-slate-600" />
             </div>
-            <div className="space-y-2">
-              <div className="text-2xl font-bold text-white">ไม่พบกิจกรรม</div>
-              <div className="text-slate-400">ลองเปลี่ยนคำค้นหาหรือลบตัวกรองบางส่วนดูนะ</div>
+            <div className="space-y-3">
+              <div className="text-xl font-medium text-slate-700 dark:text-slate-300">ไม่พบกิจกรรม</div>
+              <div className="text-slate-500 dark:text-slate-400">ลองเปลี่ยนคำค้นหาหรือลบตัวกรองบางส่วน</div>
             </div>
             {(q || tags.length > 0) && (
               <button
@@ -146,8 +141,9 @@ export default function Explore() {
                   setQ('');
                   setTags([]);
                 }}
-                className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-amber-500/50 transition-all duration-300"
+                className="mt-4 px-5 py-2.5 bg-slate-800 dark:bg-white text-white dark:text-slate-900 text-sm font-medium rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 inline-flex items-center gap-2"
               >
+                <X className="w-4 h-4" />
                 ล้างตัวกรองทั้งหมด
               </button>
             )}

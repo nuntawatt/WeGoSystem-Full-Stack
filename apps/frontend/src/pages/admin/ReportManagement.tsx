@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api } from '../../lib/api';
 import { toast } from '../../components/Toasts';
+import { Flag, Search, RefreshCw, Eye, Check, X, Clock, AlertTriangle, User, Calendar, FileText } from 'lucide-react';
 
 type Report = {
   _id: string;
@@ -39,10 +40,10 @@ const REASON_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
-  reviewing: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-  resolved: 'bg-green-500/20 text-green-300 border-green-500/30',
-  dismissed: 'bg-gray-500/20 text-gray-300 border-gray-500/30'
+  pending: 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+  reviewing: 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+  resolved: 'bg-teal-100 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800',
+  dismissed: 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-600'
 };
 
 export default function ReportManagement() {

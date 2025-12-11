@@ -14,7 +14,7 @@ async function resetDirectMessages() {
     const collections = await db.listCollections({ name: 'directmessages' }).toArray();
     
     if (collections.length > 0) {
-      console.log('📦 Found directmessages collection');
+      console.log('Found directmessages collection');
       const collection = db.collection('directmessages');
       
       // List all indexes
@@ -23,15 +23,15 @@ async function resetDirectMessages() {
       
       // Drop the collection entirely
       await collection.drop();
-      console.log('✅ Dropped directmessages collection');
+      console.log('Dropped directmessages collection');
     } else {
-      console.log('ℹ️  Collection does not exist yet - will be created fresh');
+      console.log('ℹCollection does not exist yet - will be created fresh');
     }
     
-    console.log('✅ Reset complete! Restart your server.');
+    console.log('Reset complete! Restart your server.');
     
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
   } finally {
     await mongoose.disconnect();
   }

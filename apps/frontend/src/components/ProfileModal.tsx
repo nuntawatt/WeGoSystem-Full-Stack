@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
+import { X, User, Mail, Calendar, Tag } from 'lucide-react';
 
 type Profile = {
   userId: string;
@@ -65,27 +66,25 @@ export default function ProfileModal({
       onClick={onClose}
     >
       <div 
-        className="bg-slate-800 rounded-xl shadow-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
+        className="relative bg-white dark:bg-slate-800 rounded-sm shadow-xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
+          className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <X className="w-5 h-5" />
         </button>
 
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+            <div className="animate-spin rounded-full h-10 w-10 border-2 border-teal-600 border-t-transparent"></div>
           </div>
         )}
 
         {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-300">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-sm text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
@@ -94,7 +93,7 @@ export default function ProfileModal({
           <div>
             {/* Avatar */}
             <div className="flex flex-col items-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center mb-4 overflow-hidden">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center mb-4 overflow-hidden shadow-md">
                 {profile.avatar ? (
                   <img 
                     src={profile.avatar} 
@@ -102,21 +101,24 @@ export default function ProfileModal({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl font-bold text-white">
+                  <span className="text-3xl font-semibold text-white">
                     {profile.name.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               
               {/* Name */}
-              <h3 className="text-2xl font-bold mb-1">{profile.name}</h3>
+              <h3 className="text-2xl font-serif font-medium text-slate-800 dark:text-slate-100 mb-1">{profile.name}</h3>
               
               {/* Email */}
-              <p className="text-slate-400 text-sm mb-2">{user.email}</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-1.5 mb-2">
+                <Mail className="w-3.5 h-3.5" />
+                {user.email}
+              </p>
               
               {/* Role Badge */}
               {user.role === 'admin' && (
-                <span className="px-3 py-1 bg-purple-500/20 border border-purple-500/30 rounded-full text-xs text-purple-300">
+                <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-sm text-xs font-medium text-amber-700 dark:text-amber-400">
                   Admin
                 </span>
               )}
@@ -125,20 +127,26 @@ export default function ProfileModal({
             {/* Bio */}
             {profile.bio && (
               <div className="mb-6">
-                <h4 className="text-sm font-semibold text-slate-400 mb-2">Bio</h4>
-                <p className="text-slate-300">{profile.bio}</p>
+                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5" />
+                  Bio
+                </h4>
+                <p className="text-slate-700 dark:text-slate-300">{profile.bio}</p>
               </div>
             )}
 
             {/* Tags */}
             {profile.tags && profile.tags.length > 0 && (
               <div className="mb-6">
-                <h4 className="text-sm font-semibold text-slate-400 mb-2">Interests</h4>
+                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5" />
+                  Interests
+                </h4>
                 <div className="flex flex-wrap gap-2">
                   {profile.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-cyan-500/10 border border-cyan-500/20 rounded-full text-xs text-cyan-300"
+                      className="px-3 py-1 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 rounded-sm text-xs font-medium text-teal-700 dark:text-teal-400"
                     >
                       {tag}
                     </span>
@@ -148,21 +156,21 @@ export default function ProfileModal({
             )}
 
             {/* Member Since */}
-            <div className="pt-4 border-t border-slate-700">
-              <p className="text-xs text-slate-400">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
                 Member since {new Date(profile.createdAt).toLocaleDateString()}
               </p>
             </div>
 
             {/* Actions */}
-            <div className="mt-6 flex gap-3">
+            <div className="mt-6">
               <button
                 onClick={onClose}
-                className="btn-secondary flex-1"
+                className="w-full btn-secondary"
               >
                 Close
               </button>
-              {/* You can add more actions here like "Send Message" */}
             </div>
           </div>
         )}

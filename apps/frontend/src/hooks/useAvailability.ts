@@ -1,4 +1,3 @@
-// Purpose: helper for availability stored locally
 import { useEffect, useState } from 'react';
 import { AvailabilityMap } from '../components/AvailabilityPicker';
 

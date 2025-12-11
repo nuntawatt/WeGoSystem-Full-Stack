@@ -2,6 +2,7 @@
 import { useMemo, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { DEMO_EVENTS, DEMO_GROUPS, GroupItem, joinGroup } from '../../lib/demoData';
+import { Users, MapPin, MessageCircle, Search } from 'lucide-react';
 
 export default function GroupsList() {
   const [sp] = useSearchParams();
@@ -20,65 +21,73 @@ export default function GroupsList() {
   );
 
   return (
-    <section className="min-h-screen py-8">
-      <div className="container-app space-y-6">
-        {/* Header Section with Icon */}
+    <section className="min-h-screen py-12 bg-slate-50 dark:bg-slate-900">
+      <div className="container-app space-y-8">
+        {/* Header Section */}
         <header className="space-y-4 text-center">
-          <div className="inline-block p-3 bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl mb-4 shadow-lg shadow-rose-500/30">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
+          <div className="inline-block p-3 bg-teal-700 rounded-sm mb-4">
+            <Users className="w-7 h-7 text-white" />
           </div>
-          <h3 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white via-pink-300 to-amber-400 bg-clip-text text-transparent font-['Poppins']">
+          <h3 className="text-3xl font-semibold text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
             Activity Groups
           </h3>
           {event ? (
-            <div className="card p-4 border border-white/10 max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 rounded-sm max-w-2xl mx-auto shadow-sm">
               <div className="flex items-center gap-4">
-              <img src={event.cover} className="h-16 w-24 object-cover rounded-lg ring-2 ring-amber-400/30 contrast-110 brightness-105" />
-              <div className="flex-1">
-                <div className="font-bold text-lg text-amber-400">{event.title}</div>
-                <div className="text-sm text-slate-300">📍 {event.location}</div>
-              </div>
+                <img src={event.cover} className="h-16 w-24 object-cover rounded-sm" alt={event.title} />
+                <div className="flex-1 text-left">
+                  <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">{event.title}</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5" />
+                    {event.location}
+                  </div>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="text-center text-slate-300 text-lg">🔍 Select an activity from Explore to see groups</div>
+            <div className="text-center text-slate-500 dark:text-slate-400 text-lg flex items-center justify-center gap-2">
+              <Search className="w-5 h-5" />
+              Select an activity from Explore to see groups
+            </div>
           )}
         </header>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {groups.map((g) => (
-          <div key={g.id} className="card p-5 space-y-3 border border-white/10 hover:border-white/20 transition-all duration-300 h-full flex flex-col">
-            <div className="flex items-start justify-between">
-              <div className="font-bold text-lg text-amber-400">{g.name}</div>
-              <div className="text-xs bg-white/10 px-2 py-1 rounded-full font-medium">
-                👥 {g.members}{g.max ? ` / ${g.max}` : ''}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groups.map((g) => (
+            <div key={g.id} className="bg-white dark:bg-slate-800 p-5 space-y-3 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+              <div className="flex items-start justify-between">
+                <div className="font-semibold text-lg text-slate-800 dark:text-slate-100">{g.name}</div>
+                <div className="text-xs bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-sm font-medium flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {g.members}{g.max ? ` / ${g.max}` : ''}
+                </div>
+              </div>
+              <div className="text-sm text-slate-500 dark:text-slate-400 flex-1">{g.description ?? 'Welcome new members!'}</div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    joinGroup(g.id);
+                    navigate(`/groups/${g.id}`);
+                  }}
+                  className="flex-1 px-5 py-2.5 font-medium text-white rounded-sm bg-teal-700 hover:bg-teal-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Join & Chat
+                </button>
               </div>
             </div>
-            <div className="text-sm text-slate-300 flex-1">{g.description ?? '🎉 Welcome new members!'}</div>
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => {
-                  joinGroup(g.id);
-                  navigate(`/groups/${g.id}`);
-                }}
-                className="flex-1 px-5 py-2.5 font-semibold text-white rounded-lg bg-amber-500 hover:bg-amber-400 transition-all duration-300"
-              >
-                💬 Join & Chat
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {!groups.length && (
-        <div className="card p-8 text-center border border-white/10">
-            <div className="text-6xl mb-4">😔</div>
-            <div className="text-lg text-slate-200">No groups available for this activity</div>
-            <div className="text-sm text-slate-400 mt-2">Be the first to create one!</div>
+          ))}
         </div>
-      )}
+
+        {!groups.length && (
+          <div className="bg-white dark:bg-slate-800 p-8 text-center border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
+              <Users className="w-8 h-8 text-slate-400" />
+            </div>
+            <div className="text-lg text-slate-700 dark:text-slate-200">No groups available for this activity</div>
+            <div className="text-sm text-slate-500 dark:text-slate-400 mt-2">Be the first to create one!</div>
+          </div>
+        )}
       </div>
     </section>
   );

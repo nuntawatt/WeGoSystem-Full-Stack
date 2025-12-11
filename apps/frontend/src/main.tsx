@@ -9,8 +9,10 @@ import { AuthProvider } from './hooks/useAuth';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { startDevToolsProtection } from './lib/devtools-protection';
 
-// Enable DevTools protection in production
-if (import.meta.env.PROD) {
+// DevTools protection: make opt-in via `VITE_ENABLE_DEVTOOLS_PROTECTION`
+// This prevents accidental blocking for most production builds.
+const enableDevtoolsProtection = import.meta.env.VITE_ENABLE_DEVTOOLS_PROTECTION === 'true';
+if (import.meta.env.PROD && enableDevtoolsProtection) {
   startDevToolsProtection();
 }
 

@@ -162,7 +162,7 @@ export default function ReportManagement() {
       <div className="container-app">
         {/* Header */}
         <header className="mb-6">
-          <h2 className="text-3xl font-bold mb-2">Report Management</h2>
+          <h2 className="text-3xl font-light mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Report Management</h2>
           <p className="text-slate-400">Review and moderate reported content</p>
         </header>
 
@@ -198,11 +198,7 @@ export default function ReportManagement() {
               </select>
             </div>
 
-            <div className="ml-auto flex items-end">
-              <button onClick={fetchReports} className="btn-primary">
-                Refresh
-              </button>
-            </div>
+            
           </div>
         </div>
 
@@ -227,7 +223,7 @@ export default function ReportManagement() {
                       <span className={`px-3 py-1 rounded-full text-xs border ${STATUS_COLORS[report.status]}`}>
                         {report.status}
                       </span>
-                      <span className="px-3 py-1 bg-slate-700 rounded-full text-xs">
+                      <span className={`px-3 py-1 bg-slate-700 rounded-full text-xs ${report.targetType === 'activity' ? 'text-white dark:text-white' : 'text-slate-100 dark:text-slate-100'}`}>
                         {report.targetType}
                       </span>
                       <span className="text-xs text-slate-400">
@@ -235,9 +231,9 @@ export default function ReportManagement() {
                       </span>
                     </div>
                     
-                    <p className="text-sm text-slate-300 mb-2">{report.details}</p>
-                    
-                    <div className="text-xs text-slate-400">
+                    <p className="text-sm text-slate-800 dark:text-slate-200 mb-2 font-medium">{report.details}</p>
+
+                    <div className="text-xs text-slate-700 dark:text-slate-400 font-medium">
                       Reported by: {report.reportedBy?.username || report.reportedBy?.email || 'Unknown'} • 
                       {new Date(report.createdAt).toLocaleDateString()}
                     </div>

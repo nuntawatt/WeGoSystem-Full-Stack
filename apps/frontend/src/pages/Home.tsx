@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
-      <section className="relative h-[85vh] min-h-[600px] overflow-hidden">
+      <section className="relative h-[70vh] md:h-[85vh] min-h-[500px] md:min-h-[600px] overflow-hidden">
         {/* Background Slides */}
         {heroSlides.map((slide, index) => (
           <div
@@ -69,14 +69,14 @@ export default function Home() {
         {/* Slide Navigation */}
         <button
           onClick={prevSlide}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
+          className="hidden md:block absolute left-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
           aria-label="Previous slide"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
+          className="hidden md:block absolute right-6 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white/80 hover:bg-white/20 hover:text-white transition-all duration-300"
           aria-label="Next slide"
         >
           <ChevronRight className="w-6 h-6" />
@@ -101,35 +101,33 @@ export default function Home() {
         {/* Hero Content */}
         <div className="relative z-10 h-full flex items-center">
           <div className="container mx-auto px-6 lg:px-12">
-            <div className="max-w-3xl">
+            <div className="max-w-3xl mx-auto md:mx-0 text-center md:text-left">
               {/* Main Heading - Elegant Serif */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight text-white mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight text-white mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
                 Discover Your
                 <span className="block font-semibold italic">Find Friends</span>
               </h1>
 
               {/* Subheading */}
-              <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-10 max-w-xl font-light">
+              <p className="text-base md:text-lg lg:text-xl text-white/70 leading-relaxed mb-10 max-w-xl font-light text-center md:text-left mx-auto md:mx-0">
                 Connect with like-minded individuals. Schedule sessions. 
                 Collaborate in real-time. All in one elegant platform.
               </p>
 
               {/* CTA Buttons - Refined Style */}
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-center md:items-start">
                 <Link
                   to="/auth/signup"
-                  className="group inline-flex items-center gap-3 px-8 py-4 bg-white text-slate-900 font-medium
-                           rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-lg"
+                  className="group inline-flex items-center justify-center w-full sm:w-auto gap-3 px-6 py-3 sm:px-8 sm:py-4 bg-white text-slate-900 font-medium rounded-sm transition-all duration-300 hover:bg-slate-100 hover:shadow-lg"
                 >
                   Get Started
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
                 <Link
                   to="/explore"
-                  className="group inline-flex items-center gap-3 px-8 py-4 bg-transparent text-white font-medium
-                           border border-white/30 rounded-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50"
+                  className="group inline-flex items-center justify-center w-full sm:w-auto gap-3 px-6 py-3 sm:px-8 sm:py-4 bg-transparent text-white font-medium border border-white/30 rounded-sm transition-all duration-300 hover:bg-white/10 hover:border-white/50 hover:text-white dark:hover:text-white"
                 >
-                  <Compass className="w-5 h-5" />
+                  <Compass className="w-4 h-4 sm:w-5 sm:h-5 transform transition-transform duration-300 group-hover:rotate-12" />
                   Explore Sessions
                 </Link>
               </div>

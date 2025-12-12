@@ -1,5 +1,6 @@
 /* Purpose: Tailwind + reusable component classes + Professional sophisticated theme */
 @import "@fortawesome/fontawesome-free/css/all.min.css";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -324,6 +325,13 @@ input[type="password"]::-ms-clear {
 }
 
 @layer utilities {
+  /* Hide scrollbar buttons (arrows) */
+  ::-webkit-scrollbar-button {
+    display: none;
+    height: 0;
+    width: 0;
+  }
+  
   .thin-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(100, 116, 139, 0.3) transparent;

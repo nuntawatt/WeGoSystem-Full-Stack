@@ -7,7 +7,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './hooks/useAuth';
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { startDevToolsProtection } from './lib/devtools-protection';
+import { silenceConsoleInProd } from './lib/silenceConsole';
 import favicon from '../image/logo-wego.png';
+
+// Hide console output in production (reduces info exposure via F12 console)
+silenceConsoleInProd();
 
 const enableDevtoolsProtection = import.meta.env.VITE_ENABLE_DEVTOOLS_PROTECTION === 'true';
 if (import.meta.env.PROD && enableDevtoolsProtection) {

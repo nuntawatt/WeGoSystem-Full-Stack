@@ -370,33 +370,46 @@ export default function DirectChat() {
 
   if (authLoading || isLoading) {
     return (
-      <section className="min-h-[60vh]">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 border border-teal-600/20">
-                <MessageSquare className="h-5 w-5 text-teal-500 animate-pulse" />
-              </div>
-              <div>
-                <div className="text-base font-semibold text-slate-900 dark:text-white">Loading conversation…</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">Please wait a moment</div>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr),20rem]">
-              <div className="space-y-3">
-                <div className="h-10 w-1/2 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
-                <div className="space-y-2">
-                  <div className="h-12 w-2/3 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                  <div className="h-12 w-1/2 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                  <div className="h-12 w-3/5 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+      <section className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="container-app py-10 md:py-14">
+          <div className="mx-auto w-full max-w-4xl">
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+              <div className="px-5 py-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 border border-teal-600/20">
+                    <MessageSquare className="h-5 w-5 text-teal-600 dark:text-teal-400 animate-pulse" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-base font-semibold text-slate-900 dark:text-white">Loading conversation…</div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400">Preparing chat room</div>
+                  </div>
                 </div>
-                <div className="h-12 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
               </div>
-              <div className="space-y-3">
-                <div className="h-10 w-2/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
-                <div className="h-24 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                <div className="h-24 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+
+              <div className="p-5 md:p-6 animate-pulse">
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr),20rem]">
+                  {/* Messages skeleton */}
+                  <div className="space-y-4">
+                    <div className="h-9 w-1/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
+                    <div className="space-y-3">
+                      <div className="h-12 w-2/3 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                      <div className="h-12 w-1/2 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                      <div className="h-12 w-3/5 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                      <div className="h-12 w-1/2 ml-auto rounded-2xl bg-teal-600/10 dark:bg-teal-500/10" />
+                    </div>
+                    <div className="h-12 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                  </div>
+
+                  {/* Sidebar skeleton */}
+                  <div className="space-y-4">
+                    <div className="h-9 w-2/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
+                    <div className="space-y-3">
+                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -509,7 +522,6 @@ export default function DirectChat() {
             {/* Messages */}
             <div className="flex-1 p-4 md:p-6 flex flex-col">
               <div className="flex-1 overflow-y-auto space-y-4 pr-2 md:pr-3 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
-                {(() => { console.log('🎨 Rendering messages, count:', messages.length); return null; })()}
                 {messages.map((msg, idx) => {
                   const isMine = user && msg.sender._id === user._id;
                   const sender = msg.sender as any;

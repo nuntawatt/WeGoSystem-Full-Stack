@@ -86,7 +86,7 @@ const sendOTPEmail = async (email, otp) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'WeGo <noreply@wego.app>',
+          from: 'onboarding@resend.dev',
           to: email,
           subject: 'WeGo - รหัส OTP สำหรับรีเซ็ตรหัสผ่าน',
           html: emailHtml
@@ -104,9 +104,9 @@ const sendOTPEmail = async (email, otp) => {
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
     if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send via SMTP (Force Port 587)');
+      console.log('[email] attempting to send via SMTP (Gmail IPv4 Fix)');
 
-      // 🔥 Hardcode 587 and simplified TLS options
+      // 🔥 Hardcode 587, force IPv4, and set a 20s connection timeout
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',  
         port: 587,               // บังคับ 587
@@ -118,10 +118,8 @@ const sendOTPEmail = async (email, otp) => {
         tls: {
           rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        // เพิ่มเวลาเป็น 60 วินาที (เผื่อ Network ช้ามาก)
-        connectionTimeout: 60000,
-        greetingTimeout: 60000,
-        socketTimeout: 60000
+        family: 4, // force IPv4 to avoid IPv6 timeouts on some cloud providers
+        connectionTimeout: 20000 // 20 seconds
       });
 
       // Verify connection
@@ -200,7 +198,7 @@ const sendResetEmail = async (email, token) => {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'WeGo <noreply@wego.app>',
+          from: 'onboarding@resend.dev',
           to: email,
           subject: 'WeGo - Password reset',
           html: emailHtml
@@ -218,9 +216,9 @@ const sendResetEmail = async (email, token) => {
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
     if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send via SMTP (Force Port 587)');
+      console.log('[email] attempting to send via SMTP (Gmail IPv4 Fix)');
 
-      // 🔥 Hardcode 587 and simplified TLS options
+      // 🔥 Hardcode 587, force IPv4, and set a 20s connection timeout
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',  
         port: 587,               // บังคับ 587
@@ -232,10 +230,8 @@ const sendResetEmail = async (email, token) => {
         tls: {
           rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        // เพิ่มเวลาเป็น 60 วินาที (เผื่อ Network ช้ามาก)
-        connectionTimeout: 60000,
-        greetingTimeout: 60000,
-        socketTimeout: 60000
+        family: 4, // force IPv4 to avoid IPv6 timeouts on some cloud providers
+        connectionTimeout: 20000 // 20 seconds
       });
 
       // Verify connection

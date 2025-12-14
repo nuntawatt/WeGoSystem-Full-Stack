@@ -210,16 +210,21 @@ export default function DirectChat() {
       // Normalize participants for MemberListDM
       const members = payload.participants
         .filter((p) => p && p.id)
-        .map((p) => ({
-          id: String(p.id),
-          name: p.email || p.username || p.id,
-          role: p.role || 'member',
-          avatar: p.avatar || '',
-          username: p.username || p.email?.split('@')[0] || p.id,
-          isOnline: !!p.isOnline,
-          bio: p.bio || '',
-          createdAt: p.createdAt || new Date().toISOString()
-        }));
+        .map((p) => {
+          const id = String(p.id);
+          const email = (p.email ?? '').toString();
+          const username = (p.username ?? (email ? email.split('@')[0] : '') ?? '').toString();
+          return {
+            id,
+            name: email || username || id,
+            role: p.role || 'member',
+            avatar: p.avatar || '',
+            username: username || 'User',
+            isOnline: !!p.isOnline,
+            bio: p.bio || '',
+            createdAt: p.createdAt || new Date().toISOString()
+          };
+        });
 
       setMembersWithProfiles(members);
 

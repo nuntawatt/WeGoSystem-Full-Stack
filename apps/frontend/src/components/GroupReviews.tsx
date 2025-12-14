@@ -447,7 +447,7 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                    {review.userId.username || review.userId.email.split('@')[0]}
+                    {review.userId.username || review.userId.email?.split('@')[0] || review.userId.email || 'User'}
                   </div>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex gap-0.5">

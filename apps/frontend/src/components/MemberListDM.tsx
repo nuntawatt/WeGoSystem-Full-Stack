@@ -29,9 +29,11 @@ export default function MemberListDM({ members }: MemberListDMProps) {
   const { openDM } = useDM();
 
   const handleDM = async (member: Member) => {
+    const rawName = (member.name || '').toString();
+    const emailPrefix = rawName ? (rawName.split('@')[0] || rawName) : '';
     const peer: any = {
       uid: member.id,
-      name: member.username || member.name.split('@')[0] || member.name,
+      name: (member.username || '').toString().trim() || emailPrefix || rawName || 'User',
       avatar: member.avatar,
       isOnline: member.isOnline
     };
@@ -144,8 +146,10 @@ export default function MemberListDM({ members }: MemberListDMProps) {
           user={{
             id: infoModalMember.id,
             name: infoModalMember.username || infoModalMember.name,
-            username: infoModalMember.username || infoModalMember.name.split('@')[0],
-            email: infoModalMember.name,
+            username:
+              (infoModalMember.username || '').toString().trim() ||
+              ((infoModalMember.name || '').toString().split('@')[0] || 'user'),
+            email: (infoModalMember.name || '').toString(),
             role: infoModalMember.role,
             avatar: infoModalMember.avatar,
             isOnline: infoModalMember.isOnline,

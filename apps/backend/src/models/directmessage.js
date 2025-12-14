@@ -32,7 +32,7 @@ const directMessageSchema = new mongoose.Schema({
   }
 }, {
   timestamps: true,
-  collection: 'directmessages'  // Explicitly set collection name
+  collection: 'directmessages'  
 });
 
 // Indexes for performance

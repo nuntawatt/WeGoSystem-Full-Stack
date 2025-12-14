@@ -49,12 +49,12 @@ export default function MemberListDM({ members }: MemberListDMProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 px-3 py-2 bg-slate-700/30 rounded-xl border border-slate-600/30">
-        <Users className="w-4 h-4 text-teal-400" />
-        <span className="text-sm font-semibold text-white">{members.length}</span>
-        <span className="text-xs text-slate-400">{members.length === 1 ? 'Member' : 'Members'}</span>
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-xl border border-slate-200 dark:bg-slate-700/30 dark:border-slate-600/30">
+        <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+        <span className="text-sm font-semibold text-slate-900 dark:text-white">{members.length}</span>
+        <span className="text-xs text-slate-500 dark:text-slate-400">{members.length === 1 ? 'Member' : 'Members'}</span>
       </div>
-      <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+      <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
         {members.map((member) => {
           const isMe = user && member.id === user._id;
           const isAdmin = member.role === 'admin';
@@ -64,7 +64,7 @@ export default function MemberListDM({ members }: MemberListDMProps) {
           return (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-slate-700/30 hover:bg-slate-600/40 transition-all group border border-slate-600/20 hover:border-teal-500/30 cursor-pointer"
+              className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-slate-50 transition-colors group border border-slate-200 hover:border-teal-500/30 cursor-pointer dark:bg-slate-700/30 dark:hover:bg-slate-600/40 dark:border-slate-600/20"
 
               onClick={async () => {
                 try {
@@ -94,14 +94,14 @@ export default function MemberListDM({ members }: MemberListDMProps) {
                     </div>
                   )}
                   {member.isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-800 rounded-full animate-pulse"></span>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full animate-pulse dark:border-slate-800"></span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-white truncate flex items-center gap-1.5 text-sm">
+                  <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-1.5 text-sm">
                     <span>{displayName}</span>
                     {isMe && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-600/50 text-slate-300 rounded-md font-medium">You</span>
+                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded-md font-medium dark:bg-slate-600/50 dark:text-slate-300">You</span>
                     )}
                     {isAdmin && (
                       <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-md font-medium flex items-center gap-1 border border-amber-500/30">
@@ -117,7 +117,7 @@ export default function MemberListDM({ members }: MemberListDMProps) {
               </div>
               {!isMe && (
                 <button
-                  className="p-2 rounded-lg bg-slate-600/30 hover:bg-teal-500/20 opacity-0 group-hover:opacity-100 transition-all text-slate-400 hover:text-teal-400 border border-transparent hover:border-teal-500/30"
+                  className="p-2 rounded-lg bg-slate-100 hover:bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-all text-slate-500 hover:text-teal-700 border border-transparent hover:border-teal-500/20 dark:bg-slate-600/30 dark:hover:bg-teal-500/20 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:border-teal-500/30"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDM(member);

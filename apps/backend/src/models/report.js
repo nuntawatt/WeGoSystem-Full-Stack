@@ -18,14 +18,7 @@ const reportSchema = new mongoose.Schema({
   },
   reason: {
     type: String,
-    enum: [
-      'spam',
-      'inappropriate_content',
-      'harassment',
-      'false_information',
-      'scam',
-      'other'
-    ],
+    enum: ['spam','inappropriate_content','harassment','false_information','scam','other'],
     required: true
   },
   details: {
@@ -62,7 +55,6 @@ reportSchema.index({ targetType: 1, targetId: 1 });
 reportSchema.index({ reportedBy: 1 });
 reportSchema.index({ status: 1, createdAt: -1 });
 
-// Unique compound index to prevent duplicate reports from same user for same target
 reportSchema.index({ targetId: 1, reportedBy: 1 }, { unique: true });
 
 const Report = mongoose.model('Report', reportSchema);

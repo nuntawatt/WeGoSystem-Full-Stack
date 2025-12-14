@@ -189,14 +189,12 @@ chatSchema.methods.removeParticipant = async function(userId) {
 // Mark messages as read by a user
 chatSchema.methods.markAsRead = async function(userId, messageIds = []) {
   if (messageIds.length === 0) {
-    // Mark all messages as read
     this.messages.forEach(msg => {
       if (!msg.readBy.some(r => r.user.equals(userId))) {
         msg.readBy.push({ user: userId, readAt: new Date() });
       }
     });
   } else {
-    // Mark specific messages as read
     messageIds.forEach(msgId => {
       const message = this.messages.id(msgId);
       if (message && !message.readBy.some(r => r.user.equals(userId))) {
@@ -230,7 +228,6 @@ chatSchema.methods.getUnreadCount = function(userId) {
 
 // Create a direct chat between two users
 chatSchema.statics.createDirectChat = async function(user1Id, user2Id) {
-  // Check if chat already exists
   const existingChat = await this.findOne({
     type: 'direct',
     'participants.user': { $all: [user1Id, user2Id] }

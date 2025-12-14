@@ -59,10 +59,10 @@ export default function ChatPanel({ groupId }: { groupId: string }) {
   };
 
   return (
-    <div className="p-5 h-[480px] flex flex-col rounded-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="p-5 h-[60vh] min-h-[420px] max-h-[680px] flex flex-col rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
-        <div className="w-9 h-9 rounded-sm bg-teal-700 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center">
           <MessageSquare className="w-4 h-4 text-white" />
         </div>
         <span className="font-semibold text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Group Chat</span>
@@ -111,7 +111,7 @@ export default function ChatPanel({ groupId }: { groupId: string }) {
       {/* Input */}
       <div className="mt-3 flex gap-3">
         <input
-          className="flex-1 px-4 py-3 rounded-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none transition-all"
+          className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none transition-all"
           value={input}
           onChange={(e) => {
             setInput(e.target.value);
@@ -122,7 +122,7 @@ export default function ChatPanel({ groupId }: { groupId: string }) {
         />
         <button 
           onClick={send} 
-          className="px-5 py-3 rounded-sm bg-teal-700 hover:bg-teal-600 text-white font-medium transition-colors flex items-center justify-center"
+          className="px-5 py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-medium transition-colors flex items-center justify-center"
         >
           <Send className="w-4 h-4" />
         </button>

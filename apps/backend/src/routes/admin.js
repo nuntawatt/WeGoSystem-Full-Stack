@@ -205,7 +205,6 @@ router.get('/activities', async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    // If some creators don't have username set, try to fill from Profile.name
     try {
       const missingCreatorIds = activities
         .filter(a => a.createdBy && !a.createdBy.username)
@@ -639,7 +638,7 @@ router.put('/reports/:id', async (req, res) => {
 // Take action on reported content
 router.post('/reports/:id/action', async (req, res) => {
   try {
-    const { action, reason } = req.body; // action: 'delete', 'block_user', 'warn'
+    const { action, reason } = req.body;
     const report = await Report.findById(req.params.id);
 
     if (!report) {
@@ -687,7 +686,6 @@ router.post('/reports/:id/action', async (req, res) => {
         break;
 
       case 'warn':
-        // Just update report with warning note
         report.status = 'resolved';
         report.adminNotes = `Warning issued. Reason: ${reason || 'First-time offense'}`;
         result.message = 'Warning issued';

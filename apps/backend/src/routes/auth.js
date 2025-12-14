@@ -106,28 +106,27 @@ const sendOTPEmail = async (email, otp) => {
     if (smtpUser && smtpPass) {
       console.log('[email] attempting to send via SMTP (Gmail IPv4 Fix)');
 
-      // 🔥 Hardcode 587, force IPv4, and set a 20s connection timeout
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',  
-        port: 587,               // บังคับ 587
-        secure: false,           // บังคับ false (สำคัญมาก)
+        port: 587,              
+        secure: false,          
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
+          rejectUnauthorized: false 
         },
-        family: 4, // force IPv4 to avoid IPv6 timeouts on some cloud providers
+        family: 4, 
         connectionTimeout: 20000 // 20 seconds
       });
 
       // Verify connection
       try {
         await transporter.verify();
-        console.log('[email] ✅ SMTP transporter verified (Port 587)');
+        console.log('[email] SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
-        console.error('❌ SMTP Verify Failed:', verifyErr.message);
+        console.error('SMTP Verify Failed:', verifyErr.message);
         throw verifyErr;
       }
 
@@ -138,19 +137,19 @@ const sendOTPEmail = async (email, otp) => {
         html: emailHtml
       });
 
-      console.log(`✅ OTP sent via SMTP to ${email}`);
+      console.log(`OTP sent via SMTP to ${email}`);
       return { success: true, mode: 'smtp' };
     }
 
     // No email service configured - fallback to console log
-    console.warn('⚠️ No email service configured, logging OTP to console');
-    console.log(`🔐 OTP for ${email}: ${otp}`);
+    console.warn('No email service configured, logging OTP to console');
+    console.log(`OTP for ${email}: ${otp}`);
     return { success: true, mode: 'console' };
 
   } catch (error) {
-    console.error('❌ Email send error:', error && error.message, error);
+    console.error('Email send error:', error && error.message, error);
     // Even if email fails, log OTP so user can still reset password
-    console.log(`🔐 FALLBACK OTP for ${email}: ${otp}`);
+    console.log(`FALLBACK OTP for ${email}: ${otp}`);
     return { success: false, mode: 'fallback', error: error && error.message };
   }
 };
@@ -218,28 +217,27 @@ const sendResetEmail = async (email, token) => {
     if (smtpUser && smtpPass) {
       console.log('[email] attempting to send via SMTP (Gmail IPv4 Fix)');
 
-      // 🔥 Hardcode 587, force IPv4, and set a 20s connection timeout
       const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',  
-        port: 587,               // บังคับ 587
-        secure: false,           // บังคับ false (สำคัญมาก)
+        port: 587,              
+        secure: false,           
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
+          rejectUnauthorized: false 
         },
-        family: 4, // force IPv4 to avoid IPv6 timeouts on some cloud providers
+        family: 4, 
         connectionTimeout: 20000 // 20 seconds
       });
 
       // Verify connection
       try {
         await transporter.verify();
-        console.log('[email] ✅ SMTP transporter verified (Port 587)');
+        console.log('[email] SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
-        console.error('❌ SMTP Verify Failed:', verifyErr.message);
+        console.error('SMTP Verify Failed:', verifyErr.message);
         throw verifyErr;
       }
 
@@ -250,15 +248,15 @@ const sendResetEmail = async (email, token) => {
         html: emailHtml
       });
 
-      console.log(`✅ Reset link sent via SMTP to ${email}`);
+      console.log(`Reset link sent via SMTP to ${email}`);
       return { success: true, mode: 'smtp' };
     }
 
-    console.warn('⚠️ No email service configured, logging reset link to console');
+    console.warn('No email service configured, logging reset link to console');
     console.log(`Reset link for ${email}: ${resetLink}`);
     return { success: true, mode: 'console' };
   } catch (error) {
-    console.error('❌ Reset email send error:', error?.message || error);
+    console.error('Reset email send error:', error?.message || error);
     return { success: false, mode: 'fallback', error: error?.message };
   }
 };
@@ -266,7 +264,6 @@ const sendResetEmail = async (email, token) => {
 // Register
 router.post('/register', async (req, res) => {
   try {
-    // Ensure username is set if provided
     const userData = { ...req.body };
     if (userData.username) {
       userData.username = userData.username.trim();
@@ -277,7 +274,6 @@ router.post('/register', async (req, res) => {
     // Auto-create profile for new user
     const profile = new Profile({
       userId: user._id,
-      // Prefer provided username, otherwise fall back to email prefix
       name: user.username ? user.username : user.email.split('@')[0],
       bio: '',
       avatar: ''
@@ -296,7 +292,6 @@ router.post('/login', async (req, res) => {
   try {
     const { email, username, password } = req.body;
     
-    // Find user by email or username
     let user;
     if (email) {
       user = await User.findOne({ email: email.toLowerCase() });
@@ -355,7 +350,6 @@ router.post('/forgot-password', async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      // Don't reveal if email exists or not for security
       return res.json({ message: 'If the email exists, an OTP has been sent' });
     }
 
@@ -376,7 +370,6 @@ router.post('/forgot-password', async (req, res) => {
     const hasProvider = !!(process.env.RESEND_API_KEY || (process.env.EMAIL_USER && process.env.EMAIL_PASSWORD));
     res.json({ 
       message: 'If the email exists, an OTP has been sent',
-      // Send OTP back in development mode only when no email provider is configured
       ...((process.env.NODE_ENV === 'development' && !hasProvider) ? { devOTP: otp } : {})
     });
   } catch (error) {
@@ -395,7 +388,6 @@ router.post('/forgot-password-link', async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      // don't reveal
       return res.json({ message: 'If the email exists, a reset link has been sent' });
     }
 
@@ -560,7 +552,6 @@ router.post('/google-login', async (req, res) => {
     res.json({ user, token });
   } catch (error) {
     console.error('google-login error:', error);
-    // In production we usually hide details; enable SHOW_ERROR_DETAILS=true to return error info for debugging
     if (process.env.SHOW_ERROR_DETAILS === 'true') {
       res.status(500).json({ error: 'Failed to login with Google', detail: error && error.message, stack: error && error.stack });
     } else {
@@ -572,7 +563,6 @@ router.post('/google-login', async (req, res) => {
 export default router;
 
 // Temporary diagnostic endpoint to verify SMTP connectivity.
-// Protect with EMAIL_TEST_SECRET env var if set (call with ?secret=VALUE).
 router.get('/_email_test', async (req, res) => {
   try {
     const secret = req.query.secret;

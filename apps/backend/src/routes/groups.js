@@ -340,7 +340,6 @@ router.post('/:id/report', auth, async (req, res) => {
 export default router;
 
 // Dev-only helper: create group from activity id (useful for testing)
-// Accessible only when NODE_ENV !== 'production'
 if (process.env.NODE_ENV !== 'production') {
   router.post('/__dev/create-from-activity/:activityId', async (req, res) => {
     try {

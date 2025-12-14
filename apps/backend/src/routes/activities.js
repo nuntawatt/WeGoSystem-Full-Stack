@@ -675,7 +675,6 @@ router.post('/:id/report', auth, async (req, res) => {
     if (!activity) {
       console.log('[REPORT] Activity not found by id, attempting to resolve as chat id or activity.chat...');
       try {
-        // Try treat activityId as a chat id
         const chat = await Chat.findById(activityId);
         if (chat) {
           const related = chat.groupInfo && chat.groupInfo.relatedActivity;
@@ -715,7 +714,7 @@ router.post('/:id/report', auth, async (req, res) => {
       return res.status(400).json({ error: 'Please provide detailed description (at least 10 characters)' });
     }
 
-    // Create report (use resolved activity._id so we don't store chat id)
+    // Create report 
     const resolvedTargetId = activity._id || activity;
     console.log('[REPORT] creating Report for resolved activity id:', resolvedTargetId);
 
@@ -732,7 +731,6 @@ router.post('/:id/report', auth, async (req, res) => {
       await report.populate('reportedBy', 'email');
       console.log('[REPORT] Report document saved successfully');
     } catch (saveErr) {
-      // Check for MongoDB duplicate key error (E11000)
       if (saveErr.code === 11000 || saveErr.message.includes('duplicate key')) {
         console.log('[REPORT] Duplicate report detected (unique index)', reportedBy.toString());
         return res.status(409).json({ error: 'You have already reported this activity' });
@@ -766,7 +764,7 @@ router.post('/:id/report', auth, async (req, res) => {
   }
 });
 
-// Get reviews for an activity (embedded in Activity.ratings)
+// Get reviews for an activity
 router.get('/:id/reviews', async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.id).populate('ratings.user', 'email username');
@@ -790,7 +788,6 @@ router.get('/:id/reviews', async (req, res) => {
 // Create or update embedded review for an activity
 router.post('/:id/reviews', auth, async (req, res) => {
   try {
-    // Accept either 'comment' (client) or 'review' (schema) for compatibility
     const { rating, comment, review } = req.body;
     const reviewText = (comment !== undefined ? comment : review) || '';
     const activityId = req.params.id;

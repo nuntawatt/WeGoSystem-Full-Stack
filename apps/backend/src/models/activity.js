@@ -25,7 +25,7 @@ const activitySchema = new mongoose.Schema({
         default: 'Point'
       },
       coordinates: {
-        type: [Number], // [longitude, latitude]
+        type: [Number], 
         default: [0, 0]
       }
     }
@@ -50,7 +50,7 @@ const activitySchema = new mongoose.Schema({
     required: true,
     min: 2
   },
-  // category removed: use tags instead
+
   difficulty: {
     type: String,
     enum: ['easy', 'moderate', 'hard'],
@@ -179,7 +179,7 @@ const activitySchema = new mongoose.Schema({
     required: true
   }
 }, {
-  timestamps: true // Auto-create createdAt and updatedAt
+  timestamps: true
 });
 
 // Geospatial index for location-based queries
@@ -188,6 +188,7 @@ activitySchema.index({ 'location.coordinates': '2dsphere' });
 // Compound indexes for common queries
 activitySchema.index({ createdBy: 1, createdAt: -1 });
 activitySchema.index({ date: 1, status: 1 });
+
 // category index removed (category field deleted)
 activitySchema.index({ tags: 1 });
 activitySchema.index({ status: 1, visibility: 1 });
@@ -196,9 +197,7 @@ activitySchema.index({ status: 1, visibility: 1 });
 
 // Check if user can join the activity
 activitySchema.methods.canUserJoin = function(userId) {
-  // Check if activity is open (drafts are not joinable)
   if (this.status !== 'published') {
-    // do not allow joining when not published
     return false;
   }
   
@@ -214,7 +213,7 @@ activitySchema.methods.canUserJoin = function(userId) {
   if (this.createdBy) {
     const creatorId = this.createdBy.toString();
     const creatorInParticipants = this.participants.some(p => p.user && p.user.toString() === creatorId);
-    creatorOccupiesSlot = !creatorInParticipants; // if creator not in participants, they count as occupying one slot
+    creatorOccupiesSlot = !creatorInParticipants; 
   }
 
   const effectiveCount = this.participants.length + (creatorOccupiesSlot ? 1 : 0);
@@ -228,7 +227,6 @@ activitySchema.methods.canUserJoin = function(userId) {
 // Add participant
 activitySchema.methods.addParticipant = async function(userId, status = 'joined', note = '') {
   if (!this.canUserJoin(userId)) {
-    // canUserJoin will throw a specific error if not allowed
     throw new Error('Cannot join this activity');
   }
   
@@ -256,15 +254,12 @@ activitySchema.methods.removeParticipant = async function(userId) {
 
 // Add rating
 activitySchema.methods.addRating = async function(userId, rating, review = '') {
-  // Check if user already rated
   const existingRatingIndex = this.ratings.findIndex(r => r.user.equals(userId));
   
   if (existingRatingIndex !== -1) {
-    // Update existing rating
     this.ratings[existingRatingIndex].rating = rating;
     this.ratings[existingRatingIndex].review = review;
   } else {
-    // Add new rating
     this.ratings.push({
       user: userId,
       rating: rating,
@@ -273,9 +268,7 @@ activitySchema.methods.addRating = async function(userId, rating, review = '') {
     });
   }
   
-  // Recalculate average rating
   this.calculateAverageRating();
-  
   return await this.save();
 };
 
@@ -287,7 +280,7 @@ activitySchema.methods.calculateAverageRating = function() {
   }
   
   const sum = this.ratings.reduce((acc, r) => acc + r.rating, 0);
-  this.averageRating = Math.round((sum / this.ratings.length) * 10) / 10; // Round to 1 decimal
+  this.averageRating = Math.round((sum / this.ratings.length) * 10) / 10; 
 };
 
 // Static Methods
@@ -301,7 +294,7 @@ activitySchema.statics.findNearby = function(latitude, longitude, maxDistance = 
           type: 'Point',
           coordinates: [longitude, latitude]
         },
-        $maxDistance: maxDistance // in meters
+        $maxDistance: maxDistance 
       }
     },
     status: 'published',

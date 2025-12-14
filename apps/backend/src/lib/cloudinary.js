@@ -2,16 +2,13 @@ import dotenv from 'dotenv';
 import { v2 as cloudinary } from 'cloudinary';
 import streamifier from 'streamifier';
 
-// Ensure env vars are loaded when this module is imported (important for ESM import order)
 dotenv.config();
 
 // Initialize cloudinary
 if (process.env.CLOUDINARY_URL) {
-  // Parse CLOUDINARY_URL (format: cloudinary://<api_key>:<api_secret>@<cloud_name>) using URL for robustness
   try {
     const raw = process.env.CLOUDINARY_URL;
     const parsed = new URL(raw);
-    // URL.username and URL.password contain credentials for non-http schemes as well
     const api_key = parsed.username || undefined;
     const api_secret = parsed.password || undefined;
     const cloud_name = parsed.hostname || undefined;
@@ -19,11 +16,9 @@ if (process.env.CLOUDINARY_URL) {
     if (api_key && api_secret && cloud_name) {
       cloudinary.config({ cloud_name, api_key, api_secret, secure: true });
     } else {
-      // Let the library pick up CLOUDINARY_URL if it can; set secure to true as a safe default
       cloudinary.config({ secure: true });
     }
   } catch (e) {
-    // Non-fatal: if parsing fails, let cloudinary library try to handle the env var
     console.debug('Cloudinary: failed to parse CLOUDINARY_URL with URL parser, falling back to library parsing:', e && e.message);
     cloudinary.config({ secure: true });
   }
@@ -38,12 +33,10 @@ if (process.env.CLOUDINARY_URL) {
   console.warn('Cloudinary not configured: set CLOUDINARY_URL or CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET');
 }
 
-// Debug: report whether Cloudinary is configured and where (no secrets)
 try {
   let configuredFrom = 'none';
   let configuredCloudName = null;
 
-  // If CLOUDINARY_URL is present and contains a hostname, assume it configured Cloudinary
   if (process.env.CLOUDINARY_URL) {
     try {
       const p = new URL(process.env.CLOUDINARY_URL);
@@ -56,7 +49,6 @@ try {
     }
   }
 
-  // If separate env vars provided, prefer that for reporting
   if (configuredFrom === 'none' && process.env.CLOUDINARY_CLOUD_NAME) {
     configuredFrom = 'separate_env_vars';
     configuredCloudName = process.env.CLOUDINARY_CLOUD_NAME;

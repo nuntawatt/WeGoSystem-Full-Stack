@@ -32,10 +32,8 @@ const reviewSchema = new mongoose.Schema({
   }
 });
 
-// Index to prevent duplicate reviews from same user for same group
 reviewSchema.index({ groupId: 1, userId: 1 }, { unique: true });
 
-// Update the updatedAt timestamp before saving
 reviewSchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();

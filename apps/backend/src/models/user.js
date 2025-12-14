@@ -13,8 +13,7 @@ const userSchema = new mongoose.Schema({
     maxlength: 30,
     validate: {
       validator: function(value) {
-        // Username can only contain letters, numbers, underscore, and hyphen
-        if (!value) return true; // Allow empty/null
+        if (!value) return true; 
         return /^[a-zA-Z0-9_-]+$/.test(value);
       },
       message: 'Username can only contain letters, numbers, underscore, and hyphen'

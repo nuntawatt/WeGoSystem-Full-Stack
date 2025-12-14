@@ -132,6 +132,24 @@ chatSchema.index({
 
 // Instance Methods
 
+// Normalize a Mongoose ref (ObjectId | populated document | string) to string id
+const toIdString = (value) => {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') {
+    if (value._id) return value._id.toString();
+  }
+  if (typeof value.toString === 'function') return value.toString();
+  return null;
+};
+
+const idsEqual = (a, b) => {
+  const aa = toIdString(a);
+  const bb = toIdString(b);
+  if (!aa || !bb) return false;
+  return aa === bb;
+};
+
 // Add a message to the chat
 chatSchema.methods.addMessage = async function(senderId, content, type = 'text', fileUrl = null) {
   const message = {
@@ -152,7 +170,7 @@ chatSchema.methods.addMessage = async function(senderId, content, type = 'text',
 // Add a participant to the chat
 chatSchema.methods.addParticipant = async function(userId, role = 'member') {
   // Check if user is already a participant
-  const existingParticipant = this.participants.find(p => p.user && p.user.equals(userId));
+  const existingParticipant = this.participants.find(p => p.user && idsEqual(p.user, userId));
   
   if (existingParticipant) {
     throw new Error('User is already a participant');
@@ -170,7 +188,7 @@ chatSchema.methods.addParticipant = async function(userId, role = 'member') {
 
 // Remove a participant from the chat
 chatSchema.methods.removeParticipant = async function(userId) {
-  const index = this.participants.findIndex(p => p.user && p.user.equals(userId));
+  const index = this.participants.findIndex(p => p.user && idsEqual(p.user, userId));
   
   if (index === -1) {
     throw new Error('User is not a participant');
@@ -190,21 +208,21 @@ chatSchema.methods.removeParticipant = async function(userId) {
 chatSchema.methods.markAsRead = async function(userId, messageIds = []) {
   if (messageIds.length === 0) {
     this.messages.forEach(msg => {
-      if (!msg.readBy.some(r => r.user.equals(userId))) {
+      if (!msg.readBy.some(r => idsEqual(r.user, userId))) {
         msg.readBy.push({ user: userId, readAt: new Date() });
       }
     });
   } else {
     messageIds.forEach(msgId => {
       const message = this.messages.id(msgId);
-      if (message && !message.readBy.some(r => r.user.equals(userId))) {
+      if (message && !message.readBy.some(r => idsEqual(r.user, userId))) {
         message.readBy.push({ user: userId, readAt: new Date() });
       }
     });
   }
   
   // Update participant's lastRead
-  const participant = this.participants.find(p => p.user && p.user.equals(userId));
+  const participant = this.participants.find(p => p.user && idsEqual(p.user, userId));
   if (participant) {
     participant.lastRead = new Date();
   }
@@ -214,14 +232,17 @@ chatSchema.methods.markAsRead = async function(userId, messageIds = []) {
 
 // Get unread message count for a user
 chatSchema.methods.getUnreadCount = function(userId) {
-  const participant = this.participants.find(p => p.user && p.user.equals(userId));
+  const participant = this.participants.find(p => p.user && idsEqual(p.user, userId));
   if (!participant) return 0;
   
-  return this.messages.filter(msg => 
-    msg.createdAt > participant.lastRead && 
-    !msg.sender.equals(userId) &&
-    !msg.isDeleted
-  ).length;
+  const userIdStr = toIdString(userId);
+  return this.messages.filter(msg => {
+    if (msg.isDeleted) return false;
+    if (participant.lastRead && msg.createdAt <= participant.lastRead) return false;
+    const senderIdStr = toIdString(msg.sender);
+    if (userIdStr && senderIdStr && senderIdStr === userIdStr) return false;
+    return true;
+  }).length;
 };
 
 // Static Methods

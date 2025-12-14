@@ -122,6 +122,14 @@ const sendOTPEmail = async (email, otp) => {
         socketTimeout: 30 * 1000
       });
 
+      // Verify transporter early to surface auth/TLS errors before attempting to send
+      try {
+        await transporter.verify();
+        console.log('[email] SMTP transporter verified');
+      } catch (verifyErr) {
+        console.error('[email] transporter verify failed:', verifyErr && verifyErr.message, verifyErr);
+      }
+
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || smtpUser,
         to: email,
@@ -223,6 +231,14 @@ const sendResetEmail = async (email, token) => {
         greetingTimeout: 30 * 1000,
         socketTimeout: 30 * 1000
       });
+
+      // Verify transporter early to surface auth/TLS errors before attempting to send
+      try {
+        await transporter.verify();
+        console.log('[email] SMTP transporter verified');
+      } catch (verifyErr) {
+        console.error('[email] transporter verify failed:', verifyErr && verifyErr.message, verifyErr);
+      }
 
       await transporter.sendMail({
         from: process.env.EMAIL_FROM || smtpUser,

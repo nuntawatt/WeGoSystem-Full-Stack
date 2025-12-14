@@ -104,25 +104,31 @@ const sendOTPEmail = async (email, otp) => {
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
     if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send via SMTP (Gmail Service)');
+      console.log('[email] attempting to send via SMTP (Force Port 587)');
       
-      // ✅ ใช้ชุดนี้ครับ: สั้น กระชับ และ Nodemailer จะตั้งค่าให้ Gmail อัตโนมัติ
-      // ไม่ต้องสนใจ EMAIL_PORT หรือ EMAIL_HOST ใน Env แล้วครับ
       const transporter = nodemailer.createTransport({
-        service: 'gmail', 
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
         auth: {
           user: smtpUser,
           pass: smtpPass
-        }
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000
       });
 
       // Verify connection
       try {
         await transporter.verify();
-        console.log('[email] SMTP transporter verified');
+        console.log('[email] ✅ SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
         console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
-        throw verifyErr; // ให้มันแจ้ง Error ชัดๆ ถ้าเชื่อมต่อไม่ได้
+        throw verifyErr;
       }
 
       await transporter.sendMail({
@@ -210,20 +216,28 @@ const sendResetEmail = async (email, token) => {
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 
     if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send via SMTP (Gmail Service)');
+      console.log('[email] attempting to send via SMTP (Force Port 587)');
 
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
         auth: {
           user: smtpUser,
           pass: smtpPass
-        }
+        },
+        tls: {
+          ciphers: 'SSLv3',
+          rejectUnauthorized: false
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000
       });
 
       // Verify connection
       try {
         await transporter.verify();
-        console.log('[email] SMTP transporter verified');
+        console.log('[email] ✅ SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
         console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
         throw verifyErr;

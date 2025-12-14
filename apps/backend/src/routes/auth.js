@@ -99,23 +99,21 @@ const sendOTPEmail = async (email, otp) => {
       }
     }
 
-    // SMTP Fallback using Gmail service (handles host/port/secure automatically)
+    // Fallback to SMTP (if configured). 
     const smtpUser = process.env.EMAIL_USER;
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
-    if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send via SMTP (Gmail Service) to', smtpUser);
 
+    if (smtpUser && smtpPass) {
+      console.log('[email] attempting to send via SMTP (Gmail Service)');
+      
+      // ✅ ใช้ชุดนี้ครับ: สั้น กระชับ และ Nodemailer จะตั้งค่าให้ Gmail อัตโนมัติ
+      // ไม่ต้องสนใจ EMAIL_PORT หรือ EMAIL_HOST ใน Env แล้วครับ
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        service: 'gmail', 
         auth: {
           user: smtpUser,
           pass: smtpPass
-        },
-        logger: process.env.EMAIL_DEBUG === 'true',
-        debug: process.env.EMAIL_DEBUG === 'true',
-        connectionTimeout: 30 * 1000,
-        greetingTimeout: 30 * 1000,
-        socketTimeout: 30 * 1000
+        }
       });
 
       // Verify connection
@@ -123,12 +121,12 @@ const sendOTPEmail = async (email, otp) => {
         await transporter.verify();
         console.log('[email] SMTP transporter verified');
       } catch (verifyErr) {
-        console.error('[email] verify failed:', verifyErr && verifyErr.message, verifyErr);
-        throw new Error(`SMTP Verify Failed: ${verifyErr && verifyErr.message}`);
+        console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
+        throw verifyErr; // ให้มันแจ้ง Error ชัดๆ ถ้าเชื่อมต่อไม่ได้
       }
 
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM || smtpUser,
+        from: process.env.EMAIL_FROM || `WeGo <${smtpUser}>`,
         to: email,
         subject: 'WeGo - รหัส OTP สำหรับรีเซ็ตรหัสผ่าน',
         html: emailHtml
@@ -207,22 +205,19 @@ const sendResetEmail = async (email, token) => {
       }
     }
 
+    // Fallback to SMTP (if configured). 
     const smtpUser = process.env.EMAIL_USER;
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
+
     if (smtpUser && smtpPass) {
-      console.log('[email] attempting to send reset link via SMTP (Gmail Service) to', smtpUser);
+      console.log('[email] attempting to send via SMTP (Gmail Service)');
 
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: smtpUser,
           pass: smtpPass
-        },
-        logger: process.env.EMAIL_DEBUG === 'true',
-        debug: process.env.EMAIL_DEBUG === 'true',
-        connectionTimeout: 30 * 1000,
-        greetingTimeout: 30 * 1000,
-        socketTimeout: 30 * 1000
+        }
       });
 
       // Verify connection
@@ -230,12 +225,12 @@ const sendResetEmail = async (email, token) => {
         await transporter.verify();
         console.log('[email] SMTP transporter verified');
       } catch (verifyErr) {
-        console.error('[email] verify failed:', verifyErr && verifyErr.message, verifyErr);
-        throw new Error(`SMTP Verify Failed: ${verifyErr && verifyErr.message}`);
+        console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
+        throw verifyErr;
       }
 
       await transporter.sendMail({
-        from: process.env.EMAIL_FROM || smtpUser,
+        from: process.env.EMAIL_FROM || `WeGo <${smtpUser}>`,
         to: email,
         subject: 'WeGo - Password reset',
         html: emailHtml
@@ -556,3 +551,36 @@ router.post('/google-login', async (req, res) => {
 });
 
 export default router;
+
+// Temporary diagnostic endpoint to verify SMTP connectivity.
+// Protect with EMAIL_TEST_SECRET env var if set (call with ?secret=VALUE).
+router.get('/_email_test', async (req, res) => {
+  try {
+    const secret = req.query.secret;
+    if (process.env.EMAIL_TEST_SECRET && String(secret) !== String(process.env.EMAIL_TEST_SECRET)) {
+      return res.status(403).json({ ok: false, error: 'Forbidden' });
+    }
+
+    const smtpUser = process.env.EMAIL_USER;
+    const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
+    if (!smtpUser || !smtpPass) {
+      return res.status(400).json({ ok: false, error: 'EMAIL_USER or EMAIL_PASSWORD not configured' });
+    }
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: smtpUser, pass: smtpPass },
+      logger: true,
+      debug: true
+    });
+
+    try {
+      await transporter.verify();
+      return res.json({ ok: true, verified: true });
+    } catch (err) {
+      return res.status(500).json({ ok: false, verified: false, error: err && err.message });
+    }
+  } catch (err) {
+    return res.status(500).json({ ok: false, error: err && err.message });
+  }
+});

@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import authRoutes from './routes/auth.js';
 import profileRoutes from './routes/profiles.js';
@@ -26,6 +27,17 @@ dotenv.config();
 // Get __dirname equivalent in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Ensure uploads directory exists (store uploads locally; ignored by git)
+try {
+  const uploadsPath = path.join(__dirname, '../uploads');
+  if (!fs.existsSync(uploadsPath)) {
+    fs.mkdirSync(uploadsPath, { recursive: true });
+    console.log('Created uploads directory at', uploadsPath);
+  }
+} catch (err) {
+  console.warn('Failed to ensure uploads directory exists:', err && err.message);
+}
 
 const app = express();
 const httpServer = createServer(app);

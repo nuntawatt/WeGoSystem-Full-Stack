@@ -94,7 +94,7 @@ export default function App() {
                       </ProtectedRoute>
                     }
                   />
-
+ 
                   {/* Auth Routes with Navbar */}
                   <Route path="/auth/signin" element={<SignIn />} />
                   <Route path="/auth/signup" element={<SignUp />} />

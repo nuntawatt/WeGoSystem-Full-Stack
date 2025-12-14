@@ -1,4 +1,5 @@
 import React from 'react';
+import { showError } from '../lib/swal';
 
 export default function GoogleSignIn() {
   const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string) || '';
@@ -6,7 +7,7 @@ export default function GoogleSignIn() {
 
   const handleRedirect = () => {
     if (!clientId) {
-      console.warn('VITE_GOOGLE_CLIENT_ID is not set');
+      showError('ตั้งค่า Google Sign-in ไม่ครบ', 'กรุณาตั้งค่า VITE_GOOGLE_CLIENT_ID ก่อนใช้งาน');
       return;
     }
 
@@ -14,7 +15,7 @@ export default function GoogleSignIn() {
     const nonce = String(Math.random()).slice(2);
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
       clientId
-    )}&response_type=id_token&scope=${scope}&redirect_uri=${encodeURIComponent(redirect)}&nonce=${nonce}&prompt=select_account`;
+    )}&response_type=id_token&scope=${scope}&redirect_uri=${encodeURIComponent(redirect)}&nonce=${nonce}&prompt=select_account&response_mode=fragment`;
 
     // redirect user to Google to pick account every time
     window.location.href = url;

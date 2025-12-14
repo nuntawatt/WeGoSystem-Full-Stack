@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900">
-      <section className="relative h-[70vh] md:h-[85vh] min-h-[500px] md:min-h-[600px] overflow-hidden">
+      <section className="relative h-[70vh] md:h-[85vh] min-h-[500px] md:min-h-[600px] max-h-[720px] md:max-h-[860px] overflow-hidden">
         {/* Background Slides */}
         {heroSlides.map((slide, index) => (
           <div
@@ -60,7 +60,7 @@ export default function Home() {
             <img
               src={slide.url}
               alt={slide.alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center select-none pointer-events-none"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/50 to-slate-900/80" />
           </div>
@@ -100,7 +100,7 @@ export default function Home() {
 
         {/* Hero Content */}
         <div className="relative z-10 h-full flex items-center">
-          <div className="container mx-auto px-6 lg:px-12">
+          <div className="container-app px-6 lg:px-12">
             <div className="max-w-3xl mx-auto md:mx-0 text-center md:text-left">
               {/* Main Heading - Elegant Serif */}
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light leading-tight tracking-tight text-white mb-6" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>

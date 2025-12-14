@@ -1,12 +1,19 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../lib/apiClient';
-import { toastSuccess } from '../../lib/swal';
+import { showError, showSuccess } from '../../lib/swal';
 
-function parseIdTokenFromHash(hash: string) {
-  const h = hash.startsWith('#') ? hash.slice(1) : hash;
-  const params = new URLSearchParams(h);
-  return params.get('id_token');
+function parseOAuthParams() {
+  const searchParams = new URLSearchParams(window.location.search || '');
+
+  const hash = window.location.hash || '';
+  const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+
+  const idToken = hashParams.get('id_token') || searchParams.get('id_token');
+  const error = hashParams.get('error') || searchParams.get('error');
+  const errorDescription = hashParams.get('error_description') || searchParams.get('error_description');
+
+  return { idToken, error, errorDescription };
 }
 
 export default function GoogleCallback() {
@@ -15,10 +22,11 @@ export default function GoogleCallback() {
   useEffect(() => {
     (async () => {
       try {
-        const idToken = parseIdTokenFromHash(window.location.hash || '');
+        const { idToken, error, errorDescription } = parseOAuthParams();
         if (!idToken) {
-          console.warn('No id_token in callback');
-          navigate('/auth/signin');
+          const msg = errorDescription || error || 'ไม่พบ token จาก Google (id_token)';
+          await showError('Google Sign-in ไม่สำเร็จ', msg);
+          navigate('/auth/signin', { replace: true });
           return;
         }
 
@@ -26,14 +34,18 @@ export default function GoogleCallback() {
         const token = result.data?.token;
         if (token) {
           localStorage.setItem('token', token);
-          toastSuccess('Google Sign-in successful', 'Welcome to WeGo');
-          setTimeout(() => navigate('/explore', { replace: true }), 200);
+          // NOTE: AuthProvider reads token only on initial mount.
+          // Use a full reload after success so the app rehydrates auth state reliably.
+          await showSuccess('Google Sign-in สำเร็จ', 'ยินดีต้อนรับเข้าสู่ WeGo');
+          window.location.assign('/explore');
         } else {
-          navigate('/auth/signin');
+          await showError('Google Sign-in ไม่สำเร็จ', 'ไม่พบ token จากระบบ');
+          navigate('/auth/signin', { replace: true });
         }
       } catch (err) {
-        // silent in prod; still navigates to signin
-        navigate('/auth/signin');
+        const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google';
+        await showError('Google Sign-in ไม่สำเร็จ', message);
+        navigate('/auth/signin', { replace: true });
       }
     })();
   }, [navigate]);

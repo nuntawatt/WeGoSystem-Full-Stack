@@ -99,29 +99,17 @@ const sendOTPEmail = async (email, otp) => {
       }
     }
 
-    // Fallback to SMTP (if configured). Support EMAIL_PASSWORD or EMAIL_PASS and configurable host/port.
+    // SMTP Fallback using Gmail service (handles host/port/secure automatically)
     const smtpUser = process.env.EMAIL_USER;
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
     if (smtpUser && smtpPass) {
-      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-      const port = Number(process.env.EMAIL_PORT) || 465;
-      const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
-      console.log('[email] attempting to send via SMTP to', smtpUser, host, port);
-      const hostCfg = process.env.EMAIL_HOST || host || 'smtp.gmail.com';
-      const portCfg = Number(process.env.EMAIL_PORT) || 587;
-      const secureCfg = Number(process.env.EMAIL_PORT) === 465;
+      console.log('[email] attempting to send via SMTP (Gmail Service) to', smtpUser);
+
       const transporter = nodemailer.createTransport({
-        host: hostCfg,
-        port: portCfg,
-        secure: secureCfg,
+        service: 'gmail',
         auth: {
           user: smtpUser,
           pass: smtpPass
-        },
-        tls: {
-          // Some cloud providers have stricter TLS stacks; allow self-signed in case
-          // Render or intermediate networks modify cert chains. Keep as last resort.
-          rejectUnauthorized: false
         },
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',
@@ -130,12 +118,13 @@ const sendOTPEmail = async (email, otp) => {
         socketTimeout: 30 * 1000
       });
 
-      // Verify transporter early to surface auth/TLS errors before attempting to send
+      // Verify connection
       try {
         await transporter.verify();
         console.log('[email] SMTP transporter verified');
       } catch (verifyErr) {
-        console.error('[email] transporter verify failed:', verifyErr && verifyErr.message, verifyErr);
+        console.error('[email] verify failed:', verifyErr && verifyErr.message, verifyErr);
+        throw new Error(`SMTP Verify Failed: ${verifyErr && verifyErr.message}`);
       }
 
       await transporter.sendMail({
@@ -155,10 +144,10 @@ const sendOTPEmail = async (email, otp) => {
     return { success: true, mode: 'console' };
 
   } catch (error) {
-    console.error('❌ Email send error:', error.message, error);
+    console.error('❌ Email send error:', error && error.message, error);
     // Even if email fails, log OTP so user can still reset password
     console.log(`🔐 FALLBACK OTP for ${email}: ${otp}`);
-    return { success: false, mode: 'fallback', error: error.message };
+    return { success: false, mode: 'fallback', error: error && error.message };
   }
 };
 
@@ -221,23 +210,13 @@ const sendResetEmail = async (email, token) => {
     const smtpUser = process.env.EMAIL_USER;
     const smtpPass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
     if (smtpUser && smtpPass) {
-      const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-      const port = Number(process.env.EMAIL_PORT) || 465;
-      const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
-      console.log('[email] attempting to send reset link via SMTP to', smtpUser, host, port);
-      const hostCfg2 = process.env.EMAIL_HOST || host || 'smtp.gmail.com';
-      const portCfg2 = Number(process.env.EMAIL_PORT) || 587;
-      const secureCfg2 = Number(process.env.EMAIL_PORT) === 465;
+      console.log('[email] attempting to send reset link via SMTP (Gmail Service) to', smtpUser);
+
       const transporter = nodemailer.createTransport({
-        host: hostCfg2,
-        port: portCfg2,
-        secure: secureCfg2,
+        service: 'gmail',
         auth: {
           user: smtpUser,
           pass: smtpPass
-        },
-        tls: {
-          rejectUnauthorized: false
         },
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',
@@ -246,12 +225,13 @@ const sendResetEmail = async (email, token) => {
         socketTimeout: 30 * 1000
       });
 
-      // Verify transporter early to surface auth/TLS errors before attempting to send
+      // Verify connection
       try {
         await transporter.verify();
         console.log('[email] SMTP transporter verified');
       } catch (verifyErr) {
-        console.error('[email] transporter verify failed:', verifyErr && verifyErr.message, verifyErr);
+        console.error('[email] verify failed:', verifyErr && verifyErr.message, verifyErr);
+        throw new Error(`SMTP Verify Failed: ${verifyErr && verifyErr.message}`);
       }
 
       await transporter.sendMail({

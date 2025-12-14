@@ -118,7 +118,10 @@ const sendOTPEmail = async (email, otp) => {
         tls: {
           rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        connectionTimeout: 10000 // 10 วินาทีตัด
+        // เพิ่มเวลาเป็น 60 วินาที (เผื่อ Network ช้ามาก)
+        connectionTimeout: 60000,
+        greetingTimeout: 60000,
+        socketTimeout: 60000
       });
 
       // Verify connection
@@ -229,7 +232,10 @@ const sendResetEmail = async (email, token) => {
         tls: {
           rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        connectionTimeout: 10000 // 10 วินาทีตัด
+        // เพิ่มเวลาเป็น 60 วินาที (เผื่อ Network ช้ามาก)
+        connectionTimeout: 60000,
+        greetingTimeout: 60000,
+        socketTimeout: 60000
       });
 
       // Verify connection

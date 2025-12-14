@@ -163,6 +163,22 @@ export const showSuccess = (title = 'สำเร็จ!', text = '') => {
 };
 
 /**
+ * Success toast notification (non-blocking)
+ */
+export const toastSuccess = (title = 'Success', text = '') => {
+  return swal.fire({
+    toast: true,
+    position: 'top-end',
+    icon: 'success',
+    title,
+    text,
+    showConfirmButton: false,
+    timer: 2500,
+    timerProgressBar: true,
+  });
+};
+
+/**
  * Error notification
  */
 export const showError = (title = 'เกิดข้อผิดพลาด', text = '') => {

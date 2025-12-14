@@ -47,7 +47,7 @@ export default function Home() {
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6">
+    <div className="relative min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900">
       <section className="relative h-[70vh] md:h-[85vh] min-h-[500px] md:min-h-[600px] overflow-hidden">
         {/* Background Slides */}
         {heroSlides.map((slide, index) => (

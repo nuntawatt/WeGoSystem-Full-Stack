@@ -488,3 +488,42 @@ input[type="password"]::-ms-clear {
     animation: bounce-subtle 2s ease-in-out infinite;
   }
 }
+
+/* Make native date/time picker indicators visible and provide SVG fallback */
+/* WebKit-based browsers (Chrome, Edge, Safari) */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: block !important;
+  opacity: 1 !important;
+  -webkit-appearance: auto !important;
+  cursor: pointer;
+  filter: none !important;
+}
+
+/* Improve visibility in dark mode by inverting the indicator color slightly */
+.dark input[type="date"]::-webkit-calendar-picker-indicator,
+.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.6) !important;
+}
+
+/* Fallback: add inline SVG background icons for inputs when native indicators are hidden
+   Apply the `input-with-icon calendar` / `input-with-icon clock` classes to inputs. */
+.input-with-icon {
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.5rem; /* reserve space for icon */
+  background-size: 1.25rem;
+}
+
+.input-with-icon.calendar {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23434E54' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4' width='18' height='18' rx='2'/><line x1='16' y1='2' x2='16' y2='6'/><line x1='8' y1='2' x2='8' y2='6'/></svg>");
+}
+
+.input-with-icon.clock {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23434E54' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><polyline points='12 6 12 12 16 14'/></svg>");
+}
+
+/* Make fallback icon lighter in dark mode */
+.dark .input-with-icon {
+  filter: invert(1) brightness(1.6);
+}

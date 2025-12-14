@@ -23,6 +23,8 @@ export default function Create() {
   const { data } = useProfile();
   const { createEvent, isLoading } = useEvents();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement | null>(null);
+  const timeInputRef = useRef<HTMLInputElement | null>(null);
 
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -32,7 +34,7 @@ export default function Create() {
     time: '',
     tags: [],
     maxParticipants: 2,
-    
+
   });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -112,10 +114,10 @@ export default function Create() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form data (category is optional)
-    if (!formData.title || !formData.description || !formData.location || 
-        !formData.date || !formData.time) {
+    if (!formData.title || !formData.description || !formData.location ||
+      !formData.date || !formData.time) {
       showError('กรุณากรอกข้อมูล', 'Please fill in all required fields');
       return;
     }
@@ -152,7 +154,6 @@ export default function Create() {
           const uploadData = await uploadResponse.json();
           coverUrl = uploadData.url;
           setProgress(100);
-          // Cleanup local preview blob after a short delay to avoid ERR_FILE_NOT_FOUND
           if (previewImage) {
             setTimeout(() => {
               try {
@@ -183,10 +184,10 @@ export default function Create() {
         cover: coverUrl
       };
 
-      const newEvent = await createEvent(eventData);
-      showSuccess('สร้างกิจกรรมสำเร็จ! 🎉', 'กิจกรรมถูกสร้างเรียบร้อยแล้ว');
-      navigate('/explore');
-    } catch (error: any) {
+      await createEvent(eventData);
+      showSuccess('สร้างกิจกรรมสำเร็จ', 'Your activity has been created');
+      navigate('/events');
+    } catch (error) {
       console.error('Create event error:', error);
       showError('ไม่สามารถสร้างกิจกรรมได้', 'กรุณาลองใหม่อีกครั้ง');
     }
@@ -204,214 +205,263 @@ export default function Create() {
         </header>
 
         <div className="w-full max-w-3xl mx-auto">
-        {/* Professional Form Card */}
-        <form
-          onSubmit={onSubmit}
-          className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 space-y-6 shadow-sm"
-        >
-          {/* Form Header */}
-          <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Activity Details
-            </h3>
-            <span className="text-sm text-slate-500 dark:text-slate-400 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-sm">
-              Creator: <span className="font-medium text-teal-700 dark:text-teal-400">{userName}</span>
-            </span>
-          </div>
+          {/* Professional Form Card */}
+          <form
+            onSubmit={onSubmit}
+            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 space-y-6 shadow-sm"
+          >
+            {/* Form Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+              <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                Activity Details
+              </h3>
+              <span className="text-sm text-slate-500 dark:text-slate-400 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-sm">
+                Creator: <span className="font-medium text-teal-700 dark:text-teal-400">{userName}</span>
+              </span>
+            </div>
 
-          {/* Cover Image Section */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3" htmlFor="coverImage">
-              Cover Image
-            </label>
-            <div className="flex gap-4 items-start">
-              <div className="relative w-44 h-44 rounded-sm overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600">
-                {previewImage ? (
-                  <img
-                    src={previewImage}
-                    alt="Activity cover"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                    <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-xs">No image</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200"
-                  disabled={isLoading}
-                >
-                  Choose Image
-                </button>
-                {previewImage && (
+            {/* Cover Image Section */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3" htmlFor="coverImage">
+                Cover Image
+              </label>
+              <div className="flex gap-4 items-start">
+                <div className="relative w-44 h-44 rounded-sm overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600">
+                  {previewImage ? (
+                    <img
+                      src={previewImage}
+                      alt="Activity cover"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
+                      <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="text-xs">No image</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-3">
                   <button
                     type="button"
-                    onClick={removeImage}
-                    className="px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200"
+                    disabled={isLoading}
                   >
-                    Remove
+                    Choose Image
                   </button>
-                )}
-                <p className="text-xs text-slate-400 dark:text-slate-500">
-                  Recommended: 1200×800px<br />Max 5MB
-                </p>
+                  {previewImage && (
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      className="px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <p className="text-xs text-slate-400 dark:text-slate-500">
+                    Recommended: 1200×800px<br />Max 5MB
+                  </p>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  hidden
+                  onChange={(e) => handleImageSelect(e.target.files?.[0])}
+                />
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                hidden
-                onChange={(e) => handleImageSelect(e.target.files?.[0])}
-              />
             </div>
-          </div>
 
-          {/* Activity Name */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="title">
-              Activity Name
-            </label>
-            <input
-              id="title"
-              name="title"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="Enter a catchy activity name..."
-              value={formData.title}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="description">
-              Description
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-28"
-              placeholder="Briefly describe your activity..."
-              value={formData.description}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Location */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="location">
-              Location
-            </label>
-            <input
-              id="location"
-              name="location"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="Where will this happen?"
-              value={formData.location}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Date & Time Grid */}
-          <div className="grid grid-cols-2 gap-4">
+            {/* Activity Name */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="date">
-                Date
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="title">
+                Activity Name
               </label>
               <input
-                type="date"
-                id="date"
-                name="date"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                style={{ colorScheme: 'light dark' }}
-                value={formData.date}
+                id="title"
+                name="title"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                placeholder="Enter a catchy activity name..."
+                value={formData.title}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
               />
             </div>
+
+            {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="time">
-                Time
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="description">
+                Description
               </label>
-              <input
-                type="time"
-                id="time"
-                name="time"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                style={{ colorScheme: 'light dark' }}
-                value={formData.time}
+              <textarea
+                id="description"
+                name="description"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-28"
+                placeholder="Briefly describe your activity..."
+                value={formData.description}
                 onChange={handleChange}
                 required
                 disabled={isLoading}
               />
             </div>
-          </div>
 
-          {/* Tags */}
-          <div>
-            <div className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Tags
+            {/* Location */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="location">
+                Location
+              </label>
+              <input
+                id="location"
+                name="location"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                placeholder="Where will this happen?"
+                value={formData.location}
+                onChange={handleChange}
+                required
+                disabled={isLoading}
+              />
             </div>
-            <TagSelector 
-              value={formData.tags} 
-              onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
-              disabled={isLoading}
-            />
-          </div>
 
-          {/* Max Participants */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maxParticipants">
-              Max Participants
-            </label>
-            <input
-              type="number"
-              id="maxParticipants"
-              name="maxParticipants"
-              className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-              placeholder="ระบุจำนวนคนที่รับได้ (ขั้นต่ำ 2 คน)"
-              min={2}
-              max={100}
-              value={formData.maxParticipants}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-            />
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-              ระบุจำนวนคนที่ต้องการรับเข้ากิจกรรม (ไม่นับรวมผู้สร้าง)
-            </p>
-          </div>
+            {/* Date & Time Grid */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="date">
+                  Date
+                </label>
+                <div className="relative">
+                  <input
+                    ref={dateInputRef}
+                    type="date"
+                    id="date"
+                    name="date"
+                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none input-with-icon calendar"
+                    style={{ colorScheme: 'light dark' }}
+                    value={formData.date}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Open date picker"
+                    onClick={() => {
+                      const el = dateInputRef.current as HTMLInputElement | null;
+                      if (!el) return;
+                      try {
+                        if (typeof el.showPicker === 'function') {
+                          el.showPicker();
+                          return;
+                        }
+                      } catch (e) {
+                        // ignore
+                      }
+                      el.focus();
+                      try { el.click(); } catch (e) { /* ignore */ }
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" />
+                      <line x1="16" y1="2" x2="16" y2="6" />
+                      <line x1="8" y1="2" x2="8" y2="6" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="time">
+                  Time
+                </label>
+                <div className="relative">
+                  <input
+                    ref={timeInputRef}
+                    type="time"
+                    id="time"
+                    name="time"
+                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none input-with-icon clock"
+                    style={{ colorScheme: 'light dark' }}
+                    value={formData.time}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Open time picker"
+                    onClick={() => {
+                      const el = timeInputRef.current as HTMLInputElement | null;
+                      if (!el) return;
+                      try {
+                        // @ts-ignore
+                        if (typeof el.showPicker === 'function') {
+                          // @ts-ignore
+                          el.showPicker();
+                          return;
+                        }
+                      } catch (e) {
+                        // ignore
+                      }
+                      el.focus();
+                      try { el.click(); } catch (e) { /* ignore */ }
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-          {/* Submit Button */}
-          <button 
-            className="w-full py-3.5 text-base font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
-            type="submit"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                Creating activity...
-              </>
-            ) : (
-              <>Create Activity</>
-            )}
-          </button>
-        </form>
-       
+            {/* Tags */}
+            <div>
+              <div className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Tags
+              </div>
+              <TagSelector
+                value={formData.tags}
+                onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Max Participants */}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maxParticipants">
+                Max Participants
+              </label>
+              <input type="number" id="maxParticipants" name="maxParticipants"
+                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                placeholder="ระบุจำนวนคนที่รับได้ (ขั้นต่ำ 2 คน)" min={2} max={100} value={formData.maxParticipants}
+                onChange={handleChange} required disabled={isLoading}
+              />
+              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
+                ระบุจำนวนคนที่ต้องการรับเข้ากิจกรรม (ไม่นับรวมผู้สร้าง)
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              className="w-full py-3.5 text-base font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  Creating activity...
+                </>
+              ) : (
+                <>Create Activity</>
+              )}
+            </button>
+          </form>
+
         </div>
       </div>
     </section>

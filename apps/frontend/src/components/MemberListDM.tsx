@@ -43,8 +43,12 @@ export default function MemberListDM({ members }: MemberListDMProps) {
   };
 
   const getDisplayName = (member: Member) => {
-    if (member.username) return member.username;
-    return member.name.split('@')[0] || member.name;
+    const username = (member.username || '').toString().trim();
+    if (username) return username;
+    const rawName = (member.name || '').toString().trim();
+    if (!rawName) return 'User';
+    const part = rawName.split('@')[0];
+    return (part || rawName || 'User').toString();
   };
 
   return (
@@ -59,7 +63,7 @@ export default function MemberListDM({ members }: MemberListDMProps) {
           const isMe = user && member.id === user._id;
           const isAdmin = member.role === 'admin';
           const displayName = getDisplayName(member);
-          const initial = displayName.charAt(0).toUpperCase();
+          const initial = (displayName.trim().charAt(0) || '?').toUpperCase();
 
           return (
             <div

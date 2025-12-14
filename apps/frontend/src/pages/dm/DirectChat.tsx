@@ -12,7 +12,7 @@ type Message = {
   _id: string;
   sender: {
     _id: string;
-    email: string;
+    email?: string;
     username?: string;
     avatar?: string;
     isOnline?: boolean;
@@ -22,25 +22,27 @@ type Message = {
 };
 
 type Participant = {
-  user: {
-    _id: string;
-    email: string;
+  user?: {
+    _id?: string;
+    email?: string;
     username?: string;
     avatar?: string;
     isOnline?: boolean;
-  };
+  } | null;
   role: string;
 };
 
 export default function DirectChat() {
   const { uid = '' } = useParams<{ uid: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState('');
   const [chatInfo, setChatInfo] = useState<any>(null);
   const [membersWithProfiles, setMembersWithProfiles] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [refreshNonce, setRefreshNonce] = useState(0);
   const [showReportModal, setShowReportModal] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
 
@@ -54,6 +56,7 @@ export default function DirectChat() {
     const fetchChat = async () => {
       try {
         setIsLoading(true);
+        setLoadError(null);
         const response = await api.get(`/chats/${uid}`);
         const chatData = response.data.chat || response.data;
         console.log('📥 Chat data received:', chatData);
@@ -62,9 +65,10 @@ export default function DirectChat() {
 
         // Fetch profiles for participants
         try {
-          const participantIds = chatData.participants
-            .map((p: Participant) => p.user._id)
-            .filter((v: string, i: number, a: string[]) => a.indexOf(v) === i);
+          const participantIds = (chatData.participants || [])
+            .map((p: Participant) => p?.user?._id)
+            .filter(Boolean)
+            .filter((v: any, i: number, a: any[]) => a.indexOf(v) === i) as string[];
 
           const profileReqs = participantIds.map((id: string) => api.get(`/profiles/${id}`).catch(() => null));
           const profiles = await Promise.all(profileReqs);
@@ -77,21 +81,24 @@ export default function DirectChat() {
             profilesById[key] = p;
           });
 
-          const members = chatData.participants
-            .filter((p: Participant) => p.user) // Add null check
+          const members = (chatData.participants || [])
+            .filter((p: Participant) => p && p.user && p.user._id) // Add null check
             .filter((p: Participant, index: number, self: Participant[]) => 
-              index === self.findIndex((t) => t.user && t.user._id === p.user._id)
+              index === self.findIndex((t) => t.user && t.user._id && t.user._id === p.user!._id)
             )
             .map((p: Participant) => {
-              const pid = p.user._id;
+              const pid = p.user!._id as string;
               const prof = profilesById[pid] || {};
+              const email = (p.user?.email || '').toString();
+              const usernameFromEmail = email ? email.split('@')[0] : '';
+              const safeName = email || p.user?.username || prof.name || String(pid);
               return {
                 id: pid,
-                name: p.user.email,
+                name: safeName,
                 role: p.role,
                 avatar: prof.avatar || '',
-                username: p.user.username || prof.name || p.user.email.split('@')[0],
-                isOnline: p.user.isOnline || false,
+                username: p.user?.username || prof.name || usernameFromEmail || safeName,
+                isOnline: !!(p.user?.isOnline),
                 bio: prof.bio || ''
               };
             });
@@ -103,15 +110,34 @@ export default function DirectChat() {
         }
       } catch (error: any) {
         console.error('❌ Failed to fetch chat:', error);
+        setLoadError(error?.message || 'Failed to load conversation');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (uid && user) {
-      fetchChat();
+    // If route is missing chat id, stop loading and show error.
+    if (!uid) {
+      setIsLoading(false);
+      setLoadError('Missing chat id');
+      return;
     }
-  }, [uid, user]);
+
+    // Wait for auth bootstrap; otherwise we can get stuck on loading.
+    if (authLoading) {
+      setIsLoading(true);
+      return;
+    }
+
+    // If user is not logged in after auth finishes, stop loading.
+    if (!user) {
+      setIsLoading(false);
+      setLoadError('Please sign in to view this conversation');
+      return;
+    }
+
+    fetchChat();
+  }, [uid, user, authLoading, refreshNonce]);
 
   // Socket.io connection
   useEffect(() => {
@@ -299,9 +325,9 @@ export default function DirectChat() {
   const participantCount = (() => {
     if (membersWithProfiles) return membersWithProfiles.length;
     if (!chatInfo?.participants) return 0;
-    const ids = chatInfo.participants
-      .filter((p: Participant) => p.user)
-      .map((p: Participant) => p.user._id);
+    const ids = (chatInfo.participants as Participant[])
+      .map((p) => p?.user?._id)
+      .filter(Boolean) as string[];
     return Array.from(new Set(ids)).length;
   })();
 
@@ -315,11 +341,11 @@ export default function DirectChat() {
     console.log('Sending message: ', { chatId: uid, userId: user._id, content });
     
     // Optimistic update - แสดงข้อความทันทีก่อนส่งไป backend
-    const tempMessage = {
+    const tempMessage: Message = {
       _id: `temp-${Date.now()}`,
       sender: {
         _id: user._id,
-        email: user.email,
+        email: (user as any).email,
         username: (user as any).username,
         avatar: (user as any).avatar
       },
@@ -337,14 +363,81 @@ export default function DirectChat() {
     });
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="bg-slate-800/80 backdrop-blur-sm p-8 border border-slate-700/50 rounded-2xl text-center shadow-2xl">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-600/20 border border-teal-500/30 flex items-center justify-center">
-            <MessageSquare className="w-8 h-8 text-teal-400 animate-pulse" />
+      <section className="min-h-[60vh]">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 border border-teal-600/20">
+                <MessageSquare className="h-5 w-5 text-teal-500 animate-pulse" />
+              </div>
+              <div>
+                <div className="text-base font-semibold text-slate-900 dark:text-white">Loading conversation…</div>
+                <div className="text-sm text-slate-500 dark:text-slate-400">Please wait a moment</div>
+              </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr),20rem]">
+              <div className="space-y-3">
+                <div className="h-10 w-1/2 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
+                <div className="space-y-2">
+                  <div className="h-12 w-2/3 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                  <div className="h-12 w-1/2 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                  <div className="h-12 w-3/5 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                </div>
+                <div className="h-12 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-10 w-2/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
+                <div className="h-24 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+                <div className="h-24 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
+              </div>
+            </div>
           </div>
-          <div className="text-lg text-slate-200">Loading conversation...</div>
+        </div>
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className="min-h-[60vh]">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 dark:bg-slate-700/40 dark:border-slate-600/50">
+                <MessageSquare className="h-5 w-5 text-slate-500" />
+              </div>
+              <div className="flex-1">
+                <div className="text-base font-semibold text-slate-900 dark:text-white">Can’t load this conversation</div>
+                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{loadError}</div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setRefreshNonce((v) => v + 1)}
+                    className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-500 transition-colors"
+                  >
+                    Retry
+                  </button>
+                  {!user ? (
+                    <Link
+                      to="/auth/signin"
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600/50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/40"
+                    >
+                      Sign in
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/explore"
+                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600/50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/40"
+                    >
+                      Back to Explore
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     );
@@ -352,15 +445,27 @@ export default function DirectChat() {
 
   if (!chatInfo) {
     return (
-      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-        <div className="bg-slate-800/80 backdrop-blur-sm p-8 space-y-4 border border-slate-700/50 rounded-2xl text-center max-w-md shadow-2xl">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-slate-700/50 to-slate-600/50 border border-slate-600/50 flex items-center justify-center">
-            <MessageSquare className="w-8 h-8 text-slate-500" />
+      <section className="min-h-[60vh]">
+        <div className="mx-auto max-w-7xl">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 dark:bg-slate-700/40 dark:border-slate-600/50">
+                <MessageSquare className="h-5 w-5 text-slate-500" />
+              </div>
+              <div className="flex-1">
+                <div className="text-base font-semibold text-slate-900 dark:text-white">Chat room not found</div>
+                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">This conversation might be deleted or you don’t have access.</div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    to="/explore"
+                    className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-500 transition-colors"
+                  >
+                    Back to Explore
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="text-lg font-medium text-white">Chat room not found</div>
-          <Link to="/explore" className="inline-flex px-6 py-3 font-medium text-white rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 transition-all shadow-lg shadow-teal-500/20">
-            Back to Explore
-          </Link>
         </div>
       </section>
     );
@@ -403,7 +508,7 @@ export default function DirectChat() {
                 {messages.map((msg, idx) => {
                   const isMine = user && msg.sender._id === user._id;
                   const sender = msg.sender as any;
-                  const displayName = sender.username || sender.email?.split('@')[0] || sender.email;
+                  const displayName = sender?.username || sender?.email?.split('@')[0] || sender?.email || 'User';
                   const avatarUrl = sender.avatar || '';
                   const isOnline = !!sender.isOnline;
                   

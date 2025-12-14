@@ -22,8 +22,9 @@ export default function GroupDetail() {
   }, []);
 
   return (
-    <section className="min-h-screen py-12 bg-slate-50 dark:bg-slate-900">
+    <section className="min-h-screen py-12 bg-white dark:bg-white">
       <div className="container-app">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 dark:border-slate-200/0 p-6">
         {/* Header */}
         <header className="mb-8 text-center">
           <div className="inline-block p-3 bg-teal-700 rounded-sm mb-4">
@@ -50,13 +51,23 @@ export default function GroupDetail() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <ChatPanel groupId={gid} />
-            <GroupReviews groupId={gid} currentUserId={user?._id} />
+            <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+              <ChatPanel groupId={gid} />
+            </div>
+
+            <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+              <GroupReviews groupId={gid} currentUserId={user?._id} />
+            </div>
+
             <RatingDialog />
           </div>
-          <div className="space-y-6">
-            <AvailabilityPicker />
-          </div>
+
+          <aside className="space-y-6">
+            <div className="bg-white rounded-lg border border-slate-100 shadow-sm p-4">
+              <AvailabilityPicker />
+            </div>
+          </aside>
+        </div>
         </div>
       </div>
 

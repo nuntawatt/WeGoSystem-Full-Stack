@@ -107,18 +107,19 @@ const sendOTPEmail = async (email, otp) => {
       console.log('[email] attempting to send via SMTP (Force Port 587)');
       
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
+        host: 'smtp.gmail.com',  // 1. บังคับ Host
+        port: 587,               // 2. บังคับ Port 587
+        secure: false,           // 3. Port 587 ต้องเป็น false เท่านั้น (ห้าม true)
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          ciphers: 'SSLv3',
-          rejectUnauthorized: false
+          // 4. ช่วยแก้ปัญหาเวลา Render คุยกับ Google ไม่รู้เรื่อง
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3' 
         },
-        connectionTimeout: 10000,
+        connectionTimeout: 10000, // 10 วิ ถ้าไม่ได้ให้ตัดเลย จะได้ไม่รอนาน
         greetingTimeout: 10000
       });
 
@@ -127,7 +128,7 @@ const sendOTPEmail = async (email, otp) => {
         await transporter.verify();
         console.log('[email] ✅ SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
-        console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
+        console.error('❌ SMTP Verify Failed:', verifyErr.message);
         throw verifyErr;
       }
 
@@ -219,18 +220,19 @@ const sendResetEmail = async (email, token) => {
       console.log('[email] attempting to send via SMTP (Force Port 587)');
 
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
+        host: 'smtp.gmail.com',  // 1. บังคับ Host
+        port: 587,               // 2. บังคับ Port 587
+        secure: false,           // 3. Port 587 ต้องเป็น false เท่านั้น (ห้าม true)
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          ciphers: 'SSLv3',
-          rejectUnauthorized: false
+          // 4. ช่วยแก้ปัญหาเวลา Render คุยกับ Google ไม่รู้เรื่อง
+          rejectUnauthorized: false,
+          ciphers: 'SSLv3' 
         },
-        connectionTimeout: 10000,
+        connectionTimeout: 10000, // 10 วิ ถ้าไม่ได้ให้ตัดเลย จะได้ไม่รอนาน
         greetingTimeout: 10000
       });
 
@@ -239,7 +241,7 @@ const sendResetEmail = async (email, token) => {
         await transporter.verify();
         console.log('[email] ✅ SMTP transporter verified (Port 587)');
       } catch (verifyErr) {
-        console.error('❌ SMTP Verify Failed:', verifyErr && verifyErr.message);
+        console.error('❌ SMTP Verify Failed:', verifyErr.message);
         throw verifyErr;
       }
 

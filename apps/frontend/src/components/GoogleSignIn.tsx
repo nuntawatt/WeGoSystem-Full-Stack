@@ -20,6 +20,8 @@ export default function GoogleSignIn() {
       // @ts-ignore
       window.google.accounts.id.initialize({
         client_id: clientId,
+        // disable auto selection so Google won't show the "Sign in as ..." account chooser
+        auto_select: false,
         callback: async (resp: any) => {
           try {
             const idToken = resp?.credential;
@@ -39,6 +41,9 @@ export default function GoogleSignIn() {
 
       // render the button into our div
       try {
+        // prevent auto-select behavior if available
+        // @ts-ignore
+        if (window.google.accounts.id.disableAutoSelect) window.google.accounts.id.disableAutoSelect();
         // @ts-ignore
         window.google.accounts.id.renderButton(btnRef.current, {
           theme: 'outline',

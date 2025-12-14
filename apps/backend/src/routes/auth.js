@@ -105,7 +105,7 @@ const sendOTPEmail = async (email, otp) => {
     if (smtpUser && smtpPass) {
       const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
       const port = Number(process.env.EMAIL_PORT) || 465;
-      const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
+      const secure = true; // forced to true to use direct TLS (port 465)
       console.log('[email] attempting to send via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
         host,
@@ -215,7 +215,7 @@ const sendResetEmail = async (email, token) => {
     if (smtpUser && smtpPass) {
       const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
       const port = Number(process.env.EMAIL_PORT) || 465;
-      const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
+      const secure = true; // forced to true to use direct TLS (port 465)
       console.log('[email] attempting to send reset link via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
         host,

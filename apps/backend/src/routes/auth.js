@@ -105,22 +105,20 @@ const sendOTPEmail = async (email, otp) => {
 
     if (smtpUser && smtpPass) {
       console.log('[email] attempting to send via SMTP (Force Port 587)');
-      
+
+      // 🔥 Hardcode 587 and simplified TLS options
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',  // 1. บังคับ Host
-        port: 587,               // 2. บังคับ Port 587
-        secure: false,           // 3. Port 587 ต้องเป็น false เท่านั้น (ห้าม true)
+        host: 'smtp.gmail.com',  
+        port: 587,               // บังคับ 587
+        secure: false,           // บังคับ false (สำคัญมาก)
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          // 4. ช่วยแก้ปัญหาเวลา Render คุยกับ Google ไม่รู้เรื่อง
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3' 
+          rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        connectionTimeout: 10000, // 10 วิ ถ้าไม่ได้ให้ตัดเลย จะได้ไม่รอนาน
-        greetingTimeout: 10000
+        connectionTimeout: 10000 // 10 วินาทีตัด
       });
 
       // Verify connection
@@ -219,21 +217,19 @@ const sendResetEmail = async (email, token) => {
     if (smtpUser && smtpPass) {
       console.log('[email] attempting to send via SMTP (Force Port 587)');
 
+      // 🔥 Hardcode 587 and simplified TLS options
       const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',  // 1. บังคับ Host
-        port: 587,               // 2. บังคับ Port 587
-        secure: false,           // 3. Port 587 ต้องเป็น false เท่านั้น (ห้าม true)
+        host: 'smtp.gmail.com',  
+        port: 587,               // บังคับ 587
+        secure: false,           // บังคับ false (สำคัญมาก)
         auth: {
           user: smtpUser,
           pass: smtpPass
         },
         tls: {
-          // 4. ช่วยแก้ปัญหาเวลา Render คุยกับ Google ไม่รู้เรื่อง
-          rejectUnauthorized: false,
-          ciphers: 'SSLv3' 
+          rejectUnauthorized: false // แก้ปัญหา Certificate บน Render
         },
-        connectionTimeout: 10000, // 10 วิ ถ้าไม่ได้ให้ตัดเลย จะได้ไม่รอนาน
-        greetingTimeout: 10000
+        connectionTimeout: 10000 // 10 วินาทีตัด
       });
 
       // Verify connection

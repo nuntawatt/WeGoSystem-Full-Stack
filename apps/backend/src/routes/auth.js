@@ -560,7 +560,12 @@ router.post('/google-login', async (req, res) => {
     res.json({ user, token });
   } catch (error) {
     console.error('google-login error:', error);
-    res.status(500).json({ error: 'Failed to login with Google' });
+    // In production we usually hide details; enable SHOW_ERROR_DETAILS=true to return error info for debugging
+    if (process.env.SHOW_ERROR_DETAILS === 'true') {
+      res.status(500).json({ error: 'Failed to login with Google', detail: error && error.message, stack: error && error.stack });
+    } else {
+      res.status(500).json({ error: 'Failed to login with Google' });
+    }
   }
 });
 

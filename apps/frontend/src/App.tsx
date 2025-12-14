@@ -8,6 +8,7 @@ import SignIn from './pages/auth/SignIn';
 import SignUp from './pages/auth/SignUp';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPasswordConfirm from './pages/auth/ResetPasswordConfirm';
+import GoogleCallback from './pages/auth/GoogleCallback';
 import ProtectedRoute from './routes/ProtectedRoute';
 import Toasts from './components/Toasts';
 import './lib/i18n';
@@ -99,6 +100,7 @@ export default function App() {
                   <Route path="/auth/signin" element={<SignIn />} />
                   <Route path="/auth/signup" element={<SignUp />} />
                   <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/auth/google/callback" element={<GoogleCallback />} />
                   <Route path="/auth/reset" element={<ResetPasswordConfirm />} />
 
                   <Route path="*" element={<Navigate to="/" />} />

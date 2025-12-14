@@ -640,18 +640,24 @@ export default function DirectChat() {
                   <div className="flex-1 overflow-y-auto pb-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
                     <MemberListDM 
                       members={membersWithProfiles || chatInfo.participants
-                        .filter((p: Participant) => p.user) // Add null check
-                        .filter((p: Participant, index: number, self: Participant[]) => 
-                          index === self.findIndex((t) => t.user && t.user._id === p.user._id)
-                        )
-                        .map((p: Participant) => ({
-                          id: p.user._id,
-                          name: p.user.email,
-                          role: p.role,
-                          avatar: '',
-                          username: p.user.username || p.user.email.split('@')[0],
-                          isOnline: p.user.isOnline || false
-                        }))} 
+                        .filter((p: Participant) => !!p?.user?._id)
+                        .filter((p: Participant, index: number, self: Participant[]) => {
+                          const id = p.user!._id as string;
+                          return index === self.findIndex((t) => (t.user?._id as string | undefined) === id);
+                        })
+                        .map((p: Participant) => {
+                          const id = p.user!._id as string;
+                          const email = (p.user?.email || '').toString();
+                          const username = (p.user?.username || (email ? email.split('@')[0] : '') || '').toString();
+                          return {
+                            id,
+                            name: email || username || id,
+                            role: p.role,
+                            avatar: p.user?.avatar || '',
+                            username: username || 'User',
+                            isOnline: !!(p.user?.isOnline)
+                          };
+                        })} 
                     />
                   </div>
                   

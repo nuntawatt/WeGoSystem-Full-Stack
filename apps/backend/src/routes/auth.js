@@ -108,9 +108,7 @@ const sendOTPEmail = async (email, otp) => {
       const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
       console.log('[email] attempting to send via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || host,
-        port: Number(process.env.EMAIL_PORT),
-        secure: Number(process.env.EMAIL_PORT) === 465,
+        service: 'gmail',
         auth: {
           user: smtpUser,
           pass: smtpPass
@@ -218,9 +216,7 @@ const sendResetEmail = async (email, token) => {
       const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
       console.log('[email] attempting to send reset link via SMTP to', smtpUser, host, port);
       const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST || host,
-        port: Number(process.env.EMAIL_PORT),
-        secure: Number(process.env.EMAIL_PORT) === 465,
+        service: 'gmail',
         auth: {
           user: smtpUser,
           pass: smtpPass

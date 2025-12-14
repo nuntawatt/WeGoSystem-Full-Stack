@@ -107,11 +107,21 @@ const sendOTPEmail = async (email, otp) => {
       const port = Number(process.env.EMAIL_PORT) || 465;
       const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
       console.log('[email] attempting to send via SMTP to', smtpUser, host, port);
+      const hostCfg = process.env.EMAIL_HOST || host || 'smtp.gmail.com';
+      const portCfg = Number(process.env.EMAIL_PORT) || 587;
+      const secureCfg = Number(process.env.EMAIL_PORT) === 465;
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: hostCfg,
+        port: portCfg,
+        secure: secureCfg,
         auth: {
           user: smtpUser,
           pass: smtpPass
+        },
+        tls: {
+          // Some cloud providers have stricter TLS stacks; allow self-signed in case
+          // Render or intermediate networks modify cert chains. Keep as last resort.
+          rejectUnauthorized: false
         },
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',
@@ -215,11 +225,19 @@ const sendResetEmail = async (email, token) => {
       const port = Number(process.env.EMAIL_PORT) || 465;
       const secure = Number(process.env.EMAIL_PORT) === 465 || process.env.EMAIL_SECURE === 'true';
       console.log('[email] attempting to send reset link via SMTP to', smtpUser, host, port);
+      const hostCfg2 = process.env.EMAIL_HOST || host || 'smtp.gmail.com';
+      const portCfg2 = Number(process.env.EMAIL_PORT) || 587;
+      const secureCfg2 = Number(process.env.EMAIL_PORT) === 465;
       const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: hostCfg2,
+        port: portCfg2,
+        secure: secureCfg2,
         auth: {
           user: smtpUser,
           pass: smtpPass
+        },
+        tls: {
+          rejectUnauthorized: false
         },
         logger: process.env.EMAIL_DEBUG === 'true',
         debug: process.env.EMAIL_DEBUG === 'true',

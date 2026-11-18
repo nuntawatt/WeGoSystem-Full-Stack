@@ -34,9 +34,7 @@ export default function GoogleCallback() {
         const token = result.data?.token;
         if (token) {
           localStorage.setItem('token', token);
-          // NOTE: AuthProvider reads token only on initial mount.
-          // Use a full reload after success so the app rehydrates auth state reliably.
-          await showSuccess('Google Sign-in สำเร็จ', 'ยินดีต้อนรับเข้าสู่ WeGo');
+          await showSuccess('Google Sign-in สำเร็จ', 'ยินดีต้อนรับเข้าสู่ WegoSystem');
           window.location.assign('/explore');
         } else {
           await showError('Google Sign-in ไม่สำเร็จ', 'ไม่พบ token จากระบบ');
@@ -51,21 +49,12 @@ export default function GoogleCallback() {
   }, [navigate]);
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-900">
-      <div className="container-app py-10 md:py-14">
-        <div className="mx-auto max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 border border-teal-600/20">
-              <svg className="h-5 w-5 animate-spin text-teal-600 dark:text-teal-400" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-            </div>
-            <div>
-              <div className="text-base font-semibold text-slate-900 dark:text-white">Signing you in…</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">Connecting to Google</div>
-            </div>
-          </div>
+    <section className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-[#F3F5F4]">
+      <div className="card p-8 max-w-md w-full text-center space-y-3">
+        <div className="w-10 h-10 border-3 border-[#147D70] border-t-transparent rounded-full animate-spin mx-auto" />
+        <div>
+          <div className="text-base font-bold text-[#202124]">Authenticating via Google…</div>
+          <div className="text-xs text-[#858B89] mt-0.5">Finalizing your secure session</div>
         </div>
       </div>
     </section>

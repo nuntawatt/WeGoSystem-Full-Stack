@@ -1,17 +1,17 @@
-// Sign up page
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError, showWarning } from '../../lib/swal';
 import { useAuth } from '../../hooks/useAuth';
 import FloatingInput from '../../components/FloatingInput';
 import FloatingPasswordInput from '../../components/FloatingPasswordInput';
+import GoogleSignIn from '../../components/GoogleSignIn';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 export default function SignUp() {
   const nav = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
-  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { signUp } = useAuth();
@@ -22,14 +22,14 @@ export default function SignUp() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return showError('กรุณากรอกข้อมูล', 'โปรดกรอกชื่อ');
+    if (!name.trim()) return showError('กรุณากรอกข้อมูล', 'โปรดกรอกชื่อของคุณ');
     if (!email.trim()) return showError('กรุณากรอกข้อมูล', 'โปรดกรอกอีเมล');
     if (pw.length < 6) return showError('รหัสผ่านไม่ถูกต้อง', 'รหัสผ่านอย่างน้อย 6 ตัวอักษร');
 
     try {
-  setLoading(true);
-  await signUp(email, pw, name.trim());
-      showSuccess('ยินดีต้อนรับสู่ WeGo 🎉', 'สมัครสมาชิกสำเร็จ!');
+      setLoading(true);
+      await signUp(email, pw, name.trim());
+      showSuccess('ยินดีต้อนรับสู่ WegoSystem 🎉', 'สมัครสมาชิกสำเร็จ! โปรดตั้งค่าโปรไฟล์ของคุณ');
       nav('/profile');
     } catch (err: any) {
       const message = err?.message || '';
@@ -48,33 +48,45 @@ export default function SignUp() {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-12 px-4 bg-slate-50 dark:bg-slate-900">
-      <div className="w-full max-w-md">
-        {/* Professional Card */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
-          <header className="text-center mb-8">
-            <h2 className="text-2xl font-light text-slate-800 dark:text-white mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Create <span className="italic">Account</span>
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Join the WeGo community</p>
-          </header>
+    <section className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-[#F3F5F4]">
+      <div className="w-full max-w-md space-y-4">
+        {/* Brand Mark */}
+        <div className="text-center space-y-1">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#147D70] shadow-sm mb-2">
+            <div className="relative w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-[#D9F36A]" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-extrabold text-[#202124] tracking-tight">
+            Create your WegoSystem account
+          </h2>
+          <p className="text-xs text-[#858B89]">
+            Join like-minded peers for collaborative sessions and community activities.
+          </p>
+        </div>
 
-          <form onSubmit={onSubmit} className="space-y-6">
+        {/* Card Form */}
+        <div className="card p-7 sm:p-8 bg-white shadow-sm space-y-5">
+          <form onSubmit={onSubmit} className="space-y-4">
             <FloatingInput
-              id="username"
-              label="Username"
+              id="name"
+              label="Full Name or Username"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
+              disabled={loading}
+              required
             />
 
             <FloatingInput
               id="email"
-              label="Email"
+              label="Email Address"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              autoComplete="username"
+              disabled={loading}
+              required
             />
 
             <FloatingPasswordInput
@@ -83,36 +95,45 @@ export default function SignUp() {
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               autoComplete="new-password"
+              disabled={loading}
+              required
             />
 
-          {/* Submit Button */}
-          <button 
-            type="submit" 
-            className="w-full mt-2 py-3.5 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-lg shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Creating account...
-              </span>
-            ) : (
-              <>Create Account</>
-            )}
-          </button>
-
-          <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-slate-500 dark:text-slate-400">
-              Already have an account?{' '}
-              <Link to="/auth/signin" className="font-medium text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 transition-colors duration-200">
-                Sign in
-              </Link>
-            </p>
-          </div>
+            <button 
+              className="btn-primary w-full py-3 text-xs font-semibold flex items-center justify-center gap-2 mt-2" 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? (
+                <span>Creating Account...</span>
+              ) : (
+                <>
+                  <span>Create Account</span>
+                  <ArrowRight className="w-4 h-4 text-[#D9F36A]" />
+                </>
+              )}
+            </button>
           </form>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E8EBE9]" />
+            </div>
+            <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-wider text-[#858B89]">
+              <span className="bg-white px-2">or join with</span>
+            </div>
+          </div>
+
+          <GoogleSignIn />
+
+          {/* Sign in prompt */}
+          <div className="pt-4 border-t border-[#E8EBE9] text-center text-xs text-[#5F6664]">
+            Already have an account?{' '}
+            <Link to="/auth/signin" className="font-bold text-[#147D70] hover:underline">
+              Sign in
+            </Link>
+          </div>
         </div>
       </div>
     </section>

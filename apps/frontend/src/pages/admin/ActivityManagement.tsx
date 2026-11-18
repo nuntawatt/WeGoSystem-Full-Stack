@@ -1,9 +1,22 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
-import { Activity as ActivityIcon, Search, RefreshCw, Eye, Trash2, X, MapPin, Users, Calendar, Image as ImageIcon } from 'lucide-react';
-import { confirmDelete, showError } from '../../lib/swal';
+import { 
+  Activity as ActivityIcon, 
+  Search, 
+  RefreshCw, 
+  Eye, 
+  Trash2, 
+  X, 
+  MapPin, 
+  Users, 
+  Calendar, 
+  Image as ImageIcon,
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
+import { confirmDelete, showError, showSuccess } from '../../lib/swal';
 
-interface Activity {
+interface ActivityItem {
   _id: string;
   title: string;
   description: string;
@@ -15,61 +28,40 @@ interface Activity {
   status: string;
   createdAt: string;
   coverImage?: string;
-  cover?: string; // Field ชื่อ cover ใน database
+  cover?: string;
   images?: string[];
 }
 
 export default function ActivityManagement() {
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<ActivityItem | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [usingPublicApi, setUsingPublicApi] = useState(false);
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  const [usingPublicApi, setUsingPublicApi] = useState(false);
 
   useEffect(() => {
     fetchActivities();
   }, []);
 
-  const fetchActivities = async () => {
+  const fetchActivities = async (isManual = false) => {
     try {
-      setLoading(true);
-      // Log token for debugging
-      const token = localStorage.getItem('token');
-      console.log('Token exists:', !!token);
-      console.log('Token preview:', token?.substring(0, 20) + '...');
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
 
-      // Try admin endpoint first, fallback to public endpoint if unauthorized
       try {
-        console.log('Attempting to fetch from admin endpoint...');
         const response = await api.get('/admin/activities');
-        console.log('Admin API success! Activities:', response.data.activities?.length);
-        // Debug: log sample payload to inspect createdBy shape
-        try {
-          console.log('Admin activities payload (sample):', response.data.activities && response.data.activities.length ? response.data.activities[0] : null);
-        } catch (e) {
-          console.log('Could not stringify activities payload', e);
-        }
         setActivities(response.data.activities || []);
         setUsingPublicApi(false);
       } catch (adminError: any) {
-        console.error('Admin API error:', {
-          status: adminError.response?.status,
-          message: adminError.response?.data?.message || adminError.response?.data?.error,
-          error: adminError.message
-        });
-
-        // If admin endpoint fails (401/403), try public endpoint
         if (adminError.response?.status === 401 || adminError.response?.status === 403) {
-          console.log('Admin endpoint failed, using public endpoint');
           const response = await api.get('/activities');
-          console.log('Public API success! Activities:', response.data.activities?.length);
           setActivities(response.data.activities || []);
           setUsingPublicApi(true);
         } else {
@@ -78,17 +70,9 @@ export default function ActivityManagement() {
       }
     } catch (error) {
       console.error('Error fetching activities:', error);
-      // Try public endpoint as last resort
-      try {
-        console.log('Final fallback to public endpoint...');
-        const response = await api.get('/activities');
-        setActivities(response.data.activities || []);
-        setUsingPublicApi(true);
-      } catch (fallbackError) {
-        console.error('All endpoints failed:', fallbackError);
-      }
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -98,7 +82,8 @@ export default function ActivityManagement() {
 
     try {
       await api.delete(`/admin/activities/${activityId}`);
-      fetchActivities();
+      showSuccess('ลบกิจกรรมสำเร็จ', 'กิจกรรมถูกลบออกจากระบบแล้ว');
+      fetchActivities(true);
       if (selectedActivity?._id === activityId) {
         setShowModal(false);
         setSelectedActivity(null);
@@ -109,7 +94,7 @@ export default function ActivityManagement() {
     }
   };
 
-  const handleViewActivity = (activity: Activity) => {
+  const handleViewActivity = (activity: ActivityItem) => {
     setSelectedActivity(activity);
     setShowModal(true);
   };
@@ -126,284 +111,285 @@ export default function ActivityManagement() {
     return matchesSearch && matchesCategory;
   });
 
-  // Helper function to get location string
   const getLocationString = (location?: string | { address?: string; coordinates?: { lat: number; lng: number } }): string => {
     if (!location) return 'Not specified';
     if (typeof location === 'string') return location;
     return location.address || 'Not specified';
   };
 
-  // Helper function to check if location has valid coordinates
-  const hasValidCoordinates = (location?: string | { address?: string; coordinates?: { lat: number; lng: number } }): boolean => {
-    if (!location || typeof location === 'string') return false;
-    const coords = location.coordinates;
-    return !!(coords && typeof coords.lat === 'number' && typeof coords.lng === 'number' && !isNaN(coords.lat) && !isNaN(coords.lng));
-  };
-
-  // Helper function to get activity image
-  const getActivityImage = (activity: Activity): string | null => {
-    // Try coverImage first
+  const getActivityImage = (activity: ActivityItem): string | null => {
     if (activity.coverImage && !activity.coverImage.startsWith('blob:')) {
       return activity.coverImage;
     }
-    // Try cover field
     if (activity.cover && !activity.cover.startsWith('blob:')) {
       return activity.cover;
     }
-    // Try first image from images array
     if (activity.images && activity.images.length > 0) {
-      const validImage = activity.images.find(img => !img.startsWith('blob:'));
+      const validImage = activity.images.find((img) => !img.startsWith('blob:'));
       if (validImage) return validImage;
     }
     return null;
   };
 
-  // Helper to get creator display name robustly
-  const getCreatorDisplay = (activity: Activity): string => {
+  const getCreatorDisplay = (activity: ActivityItem): string => {
     const cb: any = (activity as any).createdBy;
     if (!cb) return 'Unknown';
     if (typeof cb === 'string') return cb;
     return cb.username || (cb.email ? cb.email.split('@')[0] : 'Unknown');
   };
 
-  const getCreatorInitial = (activity: Activity): string => {
-    const cb: any = (activity as any).createdBy;
-    if (!cb) return '?';
-    if (typeof cb === 'string') return cb.charAt(0).toUpperCase();
-    const name = cb.username || cb.email || '';
-    return name ? name.charAt(0).toUpperCase() : '?';
-  };
+  const totalActivitiesCount = activities.length;
+  const publishedCount = activities.filter((a) => a.status === 'published').length;
+  const totalParticipantsSum = activities.reduce((sum, a) => sum + (a.participants?.length || 0), 0);
+  const categoriesCount = new Set(activities.map((a) => a.category)).size;
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <div className="w-10 h-10 rounded-full border-3 border-[#147D70] border-t-transparent animate-spin" />
+        <span className="text-sm font-medium text-[#858B89]">Loading activity records...</span>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-full space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-[#E8EBE9] p-6 rounded-2xl shadow-xs">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Activity Management</h1>
-          <p className="text-slate-700 dark:text-slate-200 text-sm sm:text-base">Manage all activities in the system</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#202124] tracking-tight">
+            Activity Management Directory
+          </h1>
+          <p className="text-xs sm:text-sm text-[#858B89] mt-1">
+            Audit and moderate community activities, member limits, and room publication statuses.
+          </p>
           {usingPublicApi && (
-            <div className="mt-2 px-3 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-xs inline-flex items-center gap-2">
-              <span>Using public API - Please login as admin for full access</span>
+            <div className="mt-2 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-800 text-[11px] inline-flex items-center gap-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Operating with public fallback access</span>
             </div>
           )}
         </div>
-        <div className="flex gap-2">
-          <button onClick={fetchActivities} className="flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition-colors">
-            <RefreshCw className="w-4 h-4" />
-            Refresh
-          </button>
+        <button 
+          onClick={() => fetchActivities(true)}
+          disabled={refreshing}
+          className="btn-secondary text-xs px-3.5 py-2"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-[#147D70] ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? 'Syncing...' : 'Refresh Activities'}</span>
+        </button>
+      </div>
+
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Total Rooms</span>
+            <div className="w-9 h-9 rounded-xl bg-[#E0F3F1] flex items-center justify-center text-[#147D70]">
+              <ActivityIcon className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{totalActivitiesCount}</div>
+          <span className="text-[11px] text-[#858B89] mt-1 block">Activity listings created</span>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Published</span>
+            <div className="w-9 h-9 rounded-xl bg-[#EAF5D5] flex items-center justify-center text-[#11665C]">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{publishedCount}</div>
+          <span className="text-[11px] text-[#147D70] font-semibold mt-1 block">Visible in Explore</span>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Participants</span>
+            <div className="w-9 h-9 rounded-xl bg-[#F3F5F4] flex items-center justify-center text-[#202124]">
+              <Users className="w-4 h-4 text-[#147D70]" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{totalParticipantsSum}</div>
+          <span className="text-[11px] text-[#858B89] mt-1 block">Total member registrations</span>
+        </div>
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Categories</span>
+            <div className="w-9 h-9 rounded-xl bg-[#F3F5F4] flex items-center justify-center text-[#858B89]">
+              <ImageIcon className="w-4 h-4 text-[#202124]" />
+            </div>
+          </div>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{categoriesCount}</div>
+          <span className="text-[11px] text-[#858B89] mt-1 block">Active topic classifications</span>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                <ActivityIcon className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Activities</p>
-              </div>
-            </div>
-            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredActivities.length}</p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Published</p>
-              </div>
-            </div>
-            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
-              {filteredActivities.filter((a) => a.status === 'published').length}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <Users className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Participants</p>
-              </div>
-            </div>
-            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
-              {filteredActivities.reduce((sum, a) => sum + a.participants.length, 0)}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <ImageIcon className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Categories</p>
-              </div>
-            </div>
-            <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">
-              {new Set(filteredActivities.map((a) => a.category)).size}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Search & Filter */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 sm:p-6 shadow-sm">
+      {/* Filter and Category Pills */}
+      <div className="card p-4 space-y-3">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858B89]" />
           <input
             type="text"
-            placeholder="Search activities..."
+            placeholder="Search activities by title, location, or description..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
+            className="input pl-10 text-xs py-2.5"
           />
+        </div>
+
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 thin-scrollbar">
+          <span className="text-xs font-semibold text-[#858B89] flex-shrink-0">Category:</span>
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilterCategory(cat)}
+              className={`px-3 py-1 rounded-full text-xs font-semibold capitalize whitespace-nowrap transition-all ${
+                filterCategory === cat
+                  ? 'bg-[#147D70] text-white shadow-xs'
+                  : 'bg-[#F3F5F4] text-[#5F6664] hover:bg-[#E8EBE9]'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Activities Table */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm">
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-slate-700">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#F3F5F4] text-[#858B89] font-semibold uppercase tracking-wider border-b border-[#E8EBE9]">
               <tr>
-                <th className="text-left py-4 px-4 lg:px-6 text-teal-700 dark:text-teal-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
-                  <i className="fas fa-layer-group mr-1 sm:mr-2"></i>
-                  <span className="hidden sm:inline">Activity</span>
-                </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-amber-700 dark:text-amber-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
-                  <i className="fas fa-map-marker-alt mr-1 sm:mr-2"></i>
-                  <span className="hidden lg:inline">Location</span>
-                </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-blue-700 dark:text-blue-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
-                  <i className="fas fa-users mr-1 sm:mr-2"></i>
-                  <span className="hidden sm:inline">Participants</span>
-                </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-pink-700 dark:text-pink-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
-                  <i className="fas fa-user-circle mr-1 sm:mr-2"></i>
-                  <span className="hidden xl:inline">Creator</span>
-                </th>
-                <th className="text-left py-4 px-4 lg:px-6 text-cyan-700 dark:text-cyan-400 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">
-                  <i className="fas fa-calendar mr-1 sm:mr-2"></i>
-                  <span>Created</span>
-                </th>
-                <th className="text-right py-4 px-4 lg:px-6 text-slate-700 dark:text-slate-300 font-bold text-xs sm:text-sm uppercase tracking-wider whitespace-nowrap">
-                  <i className="fas fa-cog mr-1 sm:mr-2"></i>
-                  <span className="hidden sm:inline">Actions</span>
-                </th>
+                <th className="py-3.5 px-6">Activity Room</th>
+                <th className="py-3.5 px-4 hidden md:table-cell">Location</th>
+                <th className="py-3.5 px-4">Attendance</th>
+                <th className="py-3.5 px-4 hidden lg:table-cell">Organizer</th>
+                <th className="py-3.5 px-4 hidden xl:table-cell">Date Created</th>
+                <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#E8EBE9]">
               {filteredActivities.length > 0 ? (
-                filteredActivities.map((activity) => (
-                  <tr key={activity._id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors group">
-                    <td className="py-3 px-4 lg:px-6">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        {getActivityImage(activity) ? (
-                          <img
-                            src={getActivityImage(activity)!.startsWith('http') ? getActivityImage(activity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(activity)}`}
-                            alt={activity.title}
-                            className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover flex-shrink-0 ring-2 ring-teal-500/30 group-hover:ring-teal-400/50 transition-all"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        ) : (
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-teal-500/20 to-blue-500/20 dark:from-teal-500/30 dark:to-blue-500/30 flex items-center justify-center flex-shrink-0 ring-2 ring-teal-500/20 group-hover:ring-teal-400/40 transition-all">
-                            <i className="fas fa-image text-xl sm:text-2xl text-teal-600 dark:text-teal-400"></i>
+                filteredActivities.map((activity) => {
+                  const imgUrl = getActivityImage(activity);
+                  const fullImg = imgUrl && imgUrl.startsWith('http')
+                    ? imgUrl
+                    : imgUrl
+                      ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${imgUrl}`
+                      : null;
+
+                  const participantPct = Math.min(
+                    Math.round(((activity.participants?.length || 0) / (activity.maxParticipants || 1)) * 100),
+                    100
+                  );
+
+                  return (
+                    <tr key={activity._id} className="hover:bg-[#F3F5F4]/70 transition-colors group">
+                      {/* Title & Cover */}
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center gap-3">
+                          {fullImg ? (
+                            <img
+                              src={fullImg}
+                              alt={activity.title}
+                              className="w-11 h-11 rounded-xl object-cover ring-1 ring-[#E8EBE9] flex-shrink-0"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-11 h-11 rounded-xl bg-[#E0F3F1] text-[#147D70] flex items-center justify-center flex-shrink-0">
+                              <ActivityIcon className="w-5 h-5" />
+                            </div>
+                          )}
+                          <div className="min-w-0 max-w-[240px]">
+                            <p className="font-bold text-xs text-[#202124] truncate group-hover:text-[#147D70] transition-colors">
+                              {activity.title}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#11665C] bg-[#E0F3F1] px-1.5 py-0.2 rounded">
+                                {activity.category || 'General'}
+                              </span>
+                              <span className={`text-[10px] font-medium ${
+                                activity.status === 'published' ? 'text-[#147D70]' : 'text-[#858B89]'
+                              }`}>
+                                • {activity.status}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <p className="text-slate-900 dark:text-white font-bold text-xs sm:text-sm group-hover:text-teal-700 dark:group-hover:text-teal-300 transition-colors truncate">{activity.title}</p>
-                          <p className="text-slate-500 dark:text-slate-400 text-xs truncate hidden sm:block">{activity.description}</p>
-                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-lg text-xs font-bold ${activity.status === 'published'
-                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30'
-                              : 'bg-slate-100 dark:bg-gray-500/20 text-slate-600 dark:text-gray-400 border border-slate-200 dark:border-gray-500/30'
-                            }`}>
-                            {activity.status === 'published' ? '✓' : '○'}
-                            <span className="hidden sm:inline ml-1">{activity.status === 'published' ? 'Published' : 'Draft'}</span>
-                          </span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 lg:px-6 hidden md:table-cell">
-                      <div className="flex items-center gap-2 text-amber-700 dark:text-amber-400 text-xs sm:text-sm">
-                        <i className="fas fa-map-marker-alt"></i>
-                        <span className="font-medium truncate max-w-[120px] lg:max-w-[150px]">
-                          {getLocationString(activity.location)}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 lg:px-6">
-                      <div className="text-blue-700 dark:text-blue-400 text-xs sm:text-sm font-medium whitespace-nowrap">
-                        <i className="fas fa-users mr-1 sm:mr-2"></i>
-                        {activity.participants?.length || 0} / {activity.maxParticipants}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 lg:px-6 hidden lg:table-cell">
-                      <div className="flex items-center gap-2 text-pink-700 dark:text-pink-400 text-xs sm:text-sm">
-                        <i className="fas fa-user-circle"></i>
-                        <span className="font-medium truncate max-w-[100px] xl:max-w-[120px]">
+                      </td>
+
+                      {/* Location */}
+                      <td className="py-3.5 px-4 hidden md:table-cell">
+                        <div className="flex items-center gap-1.5 text-[#5F6664] max-w-[140px] truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#147D70] flex-shrink-0" />
+                          <span className="truncate">{getLocationString(activity.location)}</span>
+                        </div>
+                      </td>
+
+                      {/* Attendance Bar */}
+                      <td className="py-3.5 px-4">
+                        <div className="w-32">
+                          <div className="flex justify-between text-[11px] font-semibold text-[#202124] mb-1">
+                            <span>{activity.participants?.length || 0} / {activity.maxParticipants}</span>
+                            <span className="text-[#858B89]">{participantPct}%</span>
+                          </div>
+                          <div className="w-full bg-[#E8EBE9] rounded-full h-1.5 overflow-hidden">
+                            <div 
+                              className="bg-[#147D70] h-full rounded-full transition-all duration-300"
+                              style={{ width: `${participantPct}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Organizer */}
+                      <td className="py-3.5 px-4 hidden lg:table-cell text-[#5F6664]">
+                        <span className="truncate max-w-[120px] block">
                           {getCreatorDisplay(activity)}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 lg:px-6 text-cyan-700 dark:text-cyan-400 text-xs sm:text-sm font-medium hidden xl:table-cell">
-                      <div className="flex flex-col">
-                        <span className="flex items-center gap-1 sm:gap-2">
-                          <i className="fas fa-calendar-alt"></i>
-                          {new Date(activity.createdAt).toLocaleDateString()}
-                        </span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          {new Date(activity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 lg:px-6">
-                      <div className="flex items-center justify-end gap-1 sm:gap-2">
-                        <button
-                          onClick={() => handleViewActivity(activity)}
-                          title="View activity"
-                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-blue-100 dark:bg-blue-500/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-500/40 transition-all border border-blue-200 dark:border-blue-500/40 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 group/btn"
-                        >
-                          <i className="fas fa-eye group-hover/btn:scale-110 inline-block transition-transform"></i>
-                          <span className="hidden sm:inline ml-2">View</span>
-                        </button>
-                        <button
-                          onClick={() => handleDeleteActivity(activity._id)}
-                          title="Delete activity"
-                          className="px-2 sm:px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-red-100 dark:bg-red-500/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-500/40 transition-all border border-red-200 dark:border-red-500/40 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 group/btn"
-                        >
-                          <i className="fas fa-trash group-hover/btn:scale-110 inline-block transition-transform"></i>
-                          <span className="hidden sm:inline ml-2">Delete</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      {/* Created Date */}
+                      <td className="py-3.5 px-4 hidden xl:table-cell text-[#858B89]">
+                        {new Date(activity.createdAt).toLocaleDateString()}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-3.5 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleViewActivity(activity)}
+                            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+                            title="Inspect Activity"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            View
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteActivity(activity._id)}
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                            title="Delete Activity"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-500 dark:text-slate-400">
-                    <i className="fas fa-clipboard-list text-4xl mb-3 opacity-50"></i>
-                    <p>No activities found</p>
+                  <td colSpan={6} className="py-12 text-center text-[#858B89]">
+                    <ActivityIcon className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p className="font-semibold text-sm">No activities found</p>
+                    <p className="text-xs text-[#BAC2BF] mt-0.5">Try adjusting your category filter or search query.</p>
                   </td>
                 </tr>
               )}
@@ -412,160 +398,130 @@ export default function ActivityManagement() {
         </div>
       </div>
 
-      {/* View Modal */}
+      {/* View Activity Detail Modal */}
       {showModal && selectedActivity && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-          <div className="bg-white dark:bg-slate-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="sticky top-0 bg-slate-50 dark:bg-slate-700 backdrop-blur-xl border-b border-slate-200 dark:border-slate-600 px-6 py-4 flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500/30 to-blue-500/30 flex items-center justify-center">
-                  <i className="fas fa-layer-group text-teal-600 dark:text-teal-400"></i>
-                </div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider">Activity Details</h2>
+        <div 
+          className="fixed inset-0 bg-[#202124]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-[#E8EBE9] shadow-2xl animate-fade-in" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#202124] text-white px-6 py-5 flex justify-between items-center sticky top-0 z-10">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <ActivityIcon className="w-4 h-4 text-[#D9F36A]" />
+                  Activity Details Inspection
+                </h3>
+                <p className="text-xs text-[#858B89]">ID: {selectedActivity._id}</p>
               </div>
-              <button
+              <button 
                 onClick={() => setShowModal(false)}
-                className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-600 hover:bg-red-100 dark:hover:bg-red-500/30 text-slate-600 dark:text-slate-300 hover:text-red-600 dark:hover:text-red-300 transition-all hover:scale-110 hover:rotate-90"
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
               >
-                <i className="fas fa-times text-xl"></i>
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
+            {/* Modal Content */}
+            <div className="p-6 space-y-5">
               {/* Cover Image */}
               {getActivityImage(selectedActivity) && (
-                <div className="rounded-2xl overflow-hidden ring-2 ring-teal-500/30 shadow-2xl">
+                <div className="rounded-xl overflow-hidden border border-[#E8EBE9] h-56 bg-[#F3F5F4]">
                   <img
                     src={getActivityImage(selectedActivity)!.startsWith('http') ? getActivityImage(selectedActivity)! : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${getActivityImage(selectedActivity)}`}
                     alt={selectedActivity.title}
-                    className="w-full h-80 object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                    className="w-full h-full object-cover"
                   />
                 </div>
               )}
 
-              {/* All Images Gallery (if multiple) */}
-              {selectedActivity.images && selectedActivity.images.length > 1 && (
-                <div className="grid grid-cols-3 gap-3">
-                  {selectedActivity.images.map((img, idx) => (
-                    <div key={idx} className="rounded-xl overflow-hidden ring-2 ring-slate-200 dark:ring-slate-600 hover:ring-teal-400/50 transition-all cursor-pointer">
-                      <img
-                        src={img.startsWith('http') ? img : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${img}`}
-                        alt={`${selectedActivity.title} - Image ${idx + 1}`}
-                        className="w-full h-32 object-cover hover:scale-110 transition-transform"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                  ))}
+              {/* Title & Category */}
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EAF5D5] text-[#11665C] border border-[#D9F36A]">
+                    {selectedActivity.category}
+                  </span>
+                  <span className="text-xs text-[#858B89]">
+                    Status: <strong className="text-[#202124] capitalize">{selectedActivity.status}</strong>
+                  </span>
                 </div>
-              )}
-
-              {/* Title & Description */}
-              <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl p-6 border border-slate-200 dark:border-slate-600">
-                <label className="text-teal-700 dark:text-teal-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <i className="fas fa-heading"></i> Title
-                </label>
-                <p className="text-slate-900 dark:text-white font-bold text-2xl mb-4">{selectedActivity.title}</p>
-
-                <label className="text-blue-700 dark:text-blue-400 text-sm font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <i className="fas fa-align-left"></i> Description
-                </label>
-                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{selectedActivity.description}</p>
+                <h2 className="text-xl font-bold text-[#202124]">
+                  {selectedActivity.title}
+                </h2>
               </div>
 
-              {/* Info Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Location */}
-                <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-4 border border-amber-200 dark:border-amber-500/20">
-                  <label className="text-amber-700 dark:text-amber-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <i className="fas fa-map-marker-alt"></i> Location
-                  </label>
-                  <p className="text-slate-900 dark:text-white font-semibold">{getLocationString(selectedActivity.location)}</p>
-                  {hasValidCoordinates(selectedActivity.location) &&
-                    typeof selectedActivity.location === 'object' &&
-                    selectedActivity.location.coordinates && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        📍 {selectedActivity.location.coordinates.lat.toFixed(6)}, {selectedActivity.location.coordinates.lng.toFixed(6)}
-                      </p>
-                    )}
-                </div>
-
-                {/* Max Participants */}
-                <div className="bg-blue-50 dark:bg-blue-500/10 rounded-xl p-4 border border-blue-200 dark:border-blue-500/20">
-                  <label className="text-blue-700 dark:text-blue-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <i className="fas fa-users"></i> Max Participants
-                  </label>
-                  <p className="text-slate-900 dark:text-white font-semibold text-2xl">{selectedActivity.maxParticipants}</p>
-                </div>
-
-                {/* Current Participants */}
-                <div className="bg-cyan-50 dark:bg-cyan-500/10 rounded-xl p-4 border border-cyan-200 dark:border-cyan-500/20">
-                  <label className="text-cyan-700 dark:text-cyan-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <i className="fas fa-user-friends"></i> Current Participants
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <p className="text-slate-900 dark:text-white font-semibold text-2xl">{selectedActivity.participants.length}</p>
-                    <div className="flex-1 bg-slate-200 dark:bg-slate-600 rounded-full h-3 overflow-hidden">
-                      <div
-                        className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all"
-                        style={{ width: `${Math.min((selectedActivity.participants.length / selectedActivity.maxParticipants * 100), 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {Math.round((selectedActivity.participants.length / selectedActivity.maxParticipants * 100))}% Full
-                  </p>
-                </div>
-
-                {/* Created Date */}
-                <div className="bg-pink-50 dark:bg-pink-500/10 rounded-xl p-4 border border-pink-200 dark:border-pink-500/20">
-                  <label className="text-pink-700 dark:text-pink-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                    <i className="fas fa-calendar-alt"></i> Created Date
-                  </label>
-                  <p className="text-slate-900 dark:text-white font-semibold">{new Date(selectedActivity.createdAt).toLocaleDateString()}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {new Date(selectedActivity.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
+              {/* Description */}
+              <div>
+                <span className="label">Description</span>
+                <p className="p-4 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] text-xs text-[#202124] leading-relaxed">
+                  {selectedActivity.description}
+                </p>
               </div>
 
-              {/* Creator Info */}
-              <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-4 border border-purple-200 dark:border-purple-500/20">
-                <label className="text-purple-700 dark:text-purple-400 text-xs font-bold uppercase tracking-wider flex items-center gap-2 mb-2">
-                  <i className="fas fa-user-circle"></i> Created By
-                </label>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 dark:from-purple-500/30 dark:to-pink-500/20 flex items-center justify-center">
-                    <span className="text-purple-700 dark:text-purple-300 font-black text-lg">
-                      {getCreatorInitial(selectedActivity)}
+              {/* Info Matrix Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-[#147D70] flex-shrink-0" />
+                  <div className="min-w-0">
+                    <span className="text-[#858B89] block font-medium">Location</span>
+                    <span className="font-semibold text-[#202124] truncate block">
+                      {getLocationString(selectedActivity.location)}
                     </span>
                   </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] flex items-center gap-3">
+                  <Users className="w-5 h-5 text-[#147D70] flex-shrink-0" />
                   <div>
-                    <p className="text-slate-900 dark:text-white font-semibold">{getCreatorDisplay(selectedActivity)}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Activity Creator</p>
+                    <span className="text-[#858B89] block font-medium">Participants</span>
+                    <span className="font-semibold text-[#202124]">
+                      {selectedActivity.participants?.length || 0} / {selectedActivity.maxParticipants} max
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] flex items-center gap-3">
+                  <Calendar className="w-5 h-5 text-[#147D70] flex-shrink-0" />
+                  <div>
+                    <span className="text-[#858B89] block font-medium">Created On</span>
+                    <span className="font-semibold text-[#202124]">
+                      {new Date(selectedActivity.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] flex items-center gap-3">
+                  <div className="w-6 h-6 rounded-full bg-[#147D70] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                    {getCreatorDisplay(selectedActivity).charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[#858B89] block font-medium">Organizer</span>
+                    <span className="font-semibold text-[#202124] truncate block">
+                      {getCreatorDisplay(selectedActivity)}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              {/* Modal Actions */}
+              <div className="pt-4 border-t border-[#E8EBE9] flex items-center justify-between gap-3">
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white font-bold uppercase tracking-wider hover:bg-slate-200 dark:hover:bg-slate-600 transition-all border border-slate-200 dark:border-slate-600 hover:scale-105"
+                  className="btn-secondary text-xs flex-1"
                 >
-                  <i className="fas fa-times mr-2"></i>Close
+                  Close
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleDeleteActivity(selectedActivity._id)}
-                  className="px-6 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-medium transition-all flex items-center gap-2"
+                  className="py-2.5 px-4 rounded-xl text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"
                 >
-                  <Trash2 className="w-4 h-4" /> ลบกิจกรรม
+                  <Trash2 className="w-4 h-4" />
+                  Delete Activity
                 </button>
               </div>
             </div>

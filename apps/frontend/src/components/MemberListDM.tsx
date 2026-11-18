@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/apiClient';
 import { useAuth } from '../hooks/useAuth';
 import { useDM } from '../hooks/useDM';
 import UserInfoCard from './UserInfoCard';
-import { Users, MessageCircle, Star, Shield } from 'lucide-react';
+import { Users, MessageCircle, Shield } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -22,7 +21,6 @@ interface MemberListDMProps {
 }
 
 export default function MemberListDM({ members }: MemberListDMProps) {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [infoModalMember, setInfoModalMember] = useState<Member | null>(null);
 
@@ -55,12 +53,17 @@ export default function MemberListDM({ members }: MemberListDMProps) {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 px-3 py-2 bg-slate-100 rounded-xl border border-slate-200 dark:bg-slate-700/30 dark:border-slate-600/30">
-        <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-        <span className="text-sm font-semibold text-slate-900 dark:text-white">{members.length}</span>
-        <span className="text-xs text-slate-500 dark:text-slate-400">{members.length === 1 ? 'Member' : 'Members'}</span>
+      {/* Header Member Counter */}
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#F3F5F4] rounded-xl border border-[#E8EBE9]">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-[#147D70]" />
+          <span className="text-xs font-bold text-[#202124]">{members.length}</span>
+          <span className="text-xs text-[#858B89]">{members.length === 1 ? 'Participant' : 'Participants'}</span>
+        </div>
       </div>
-      <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
+
+      {/* Members Scroll List */}
+      <div className="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1">
         {members.map((member) => {
           const isMe = user && member.id === user._id;
           const isAdmin = member.role === 'admin';
@@ -70,8 +73,7 @@ export default function MemberListDM({ members }: MemberListDMProps) {
           return (
             <div
               key={member.id}
-              className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-slate-50 transition-colors group border border-slate-200 hover:border-teal-500/30 cursor-pointer dark:bg-slate-700/30 dark:hover:bg-slate-600/40 dark:border-slate-600/20"
-
+              className="flex items-center justify-between p-3 rounded-xl bg-white hover:bg-[#F3F5F4] transition-all group border border-[#E8EBE9] hover:border-[#147D70]/30 cursor-pointer shadow-xs"
               onClick={async () => {
                 try {
                   const res = await api.get(`/profiles/${member.id}`).catch(() => null);
@@ -92,43 +94,47 @@ export default function MemberListDM({ members }: MemberListDMProps) {
                     <img
                       src={member.avatar}
                       alt={displayName}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-teal-500/30"
+                      className="w-10 h-10 rounded-full object-cover border border-[#E8EBE9]"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-teal-500/20">
+                    <div className="w-10 h-10 rounded-full bg-[#147D70] flex items-center justify-center text-white font-bold text-sm shadow-xs">
                       {initial}
                     </div>
                   )}
                   {member.isOnline && (
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-white rounded-full animate-pulse dark:border-slate-800"></span>
+                    <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
                   )}
                 </div>
+
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-slate-900 dark:text-white truncate flex items-center gap-1.5 text-sm">
-                    <span>{displayName}</span>
+                  <div className="font-semibold text-[#202124] truncate flex items-center gap-1.5 text-sm">
+                    <span className="truncate">{displayName}</span>
                     {isMe && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded-md font-medium dark:bg-slate-600/50 dark:text-slate-300">You</span>
+                      <span className="text-[10px] px-1.5 py-0.2 bg-[#F3F5F4] text-[#858B89] rounded-md font-medium border border-[#E8EBE9]">
+                        You
+                      </span>
                     )}
                     {isAdmin && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 text-amber-400 rounded-md font-medium flex items-center gap-1 border border-amber-500/30">
+                      <span className="text-[10px] px-1.5 py-0.2 bg-[#EAF5D5] text-[#147D70] rounded-md font-semibold flex items-center gap-0.5 border border-[#D9F36A]">
                         <Shield className="w-2.5 h-2.5" />
                         Admin
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-slate-500 truncate mt-0.5">
+                  <div className="text-xs text-[#858B89] truncate">
                     {member.name}
                   </div>
                 </div>
               </div>
+
               {!isMe && (
                 <button
-                  className="p-2 rounded-lg bg-slate-100 hover:bg-teal-500/10 opacity-0 group-hover:opacity-100 transition-all text-slate-500 hover:text-teal-700 border border-transparent hover:border-teal-500/20 dark:bg-slate-600/30 dark:hover:bg-teal-500/20 dark:text-slate-400 dark:hover:text-teal-400 dark:hover:border-teal-500/30"
+                  className="p-2 rounded-lg bg-[#F3F5F4] hover:bg-[#EAF5D5] opacity-0 group-hover:opacity-100 transition-all text-[#858B89] hover:text-[#147D70] border border-transparent hover:border-[#D9F36A]"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDM(member);
                   }}
-                  title="Send direct message"
+                  title="Send Direct Message"
                 >
                   <MessageCircle className="w-4 h-4" />
                 </button>
@@ -138,9 +144,7 @@ export default function MemberListDM({ members }: MemberListDMProps) {
         })}
       </div>
 
-
-
-      {/* UserInfoCard - Modal Mode */}
+      {/* UserInfoCard Modal */}
       {infoModalMember && (
         <UserInfoCard
           user={{

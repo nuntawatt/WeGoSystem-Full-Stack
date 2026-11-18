@@ -1,8 +1,8 @@
 // src/components/UserInfoCard.tsx
-import React, { useEffect, useState, useMemo } from "react";
-import { createPortal } from "react-dom";
-import { socket } from "../lib/socket";
-import { X, User, Calendar, Mail, FileText } from "lucide-react";
+import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { socket } from '../lib/socket';
+import { X, Calendar, Mail, FileText, Shield } from 'lucide-react';
 
 interface UserInfoCardProps {
   user: {
@@ -16,20 +16,20 @@ interface UserInfoCardProps {
     createdAt: string;
     bio?: string;
   };
-  mode: "tooltip" | "modal";
-  position?: { x: number; y: number }; // ใช้กับ tooltip เท่านั้น
+  mode: 'tooltip' | 'modal';
+  position?: { x: number; y: number };
   onClose: () => void;
 }
 
 export default function UserInfoCard({
   user,
-  mode = "tooltip",
+  mode = 'tooltip',
   position,
   onClose,
 }: UserInfoCardProps) {
   const [isOnline, setIsOnline] = useState<boolean>(!!user.isOnline);
 
-  // ----- socket: real-time status -----
+  // Real-time socket status
   useEffect(() => {
     const handleStatusChange = ({
       userId,
@@ -41,53 +41,54 @@ export default function UserInfoCard({
       if (userId === user.id) setIsOnline(online);
     };
 
-    socket.on("userStatusChanged", handleStatusChange);
+    socket.on('userStatusChanged', handleStatusChange);
     return () => {
-      socket.off("userStatusChanged", handleStatusChange);
+      socket.off('userStatusChanged', handleStatusChange);
     };
   }, [user.id]);
 
-  // ----- lock scroll & ESC to close (modal only) -----
+  // Lock scroll & ESC key in modal mode
   useEffect(() => {
-    if (mode !== "modal") return;
+    if (mode !== 'modal') return;
 
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === 'Escape') onClose();
     };
 
     const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleEscape);
 
     return () => {
       document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", handleEscape);
+      window.removeEventListener('keydown', handleEscape);
     };
   }, [mode, onClose]);
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return 'N/A';
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
   const RoleBadge = useMemo(() => {
-    if (!user.role || user.role === "user") return null;
+    if (!user.role || user.role === 'user') return null;
 
     const colors: Record<string, string> = {
-      admin: "bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-700",
-      moderator: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700",
-      premium: "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-700",
+      admin: 'bg-[#EAF5D5] text-[#147D70] border-[#D9F36A]',
+      moderator: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+      premium: 'bg-amber-50 text-amber-700 border-amber-200',
     };
 
-    const cls = colors[user.role] || "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+    const cls = colors[user.role] || 'bg-[#F3F5F4] text-[#202124] border-[#E8EBE9]';
 
     return (
-      <span className={`px-2.5 py-1 text-xs font-medium uppercase tracking-wider rounded-sm border ${cls}`}>
+      <span className={`px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full border ${cls} flex items-center gap-1`}>
+        <Shield className="w-3 h-3" />
         {user.role}
       </span>
     );
@@ -95,10 +96,10 @@ export default function UserInfoCard({
 
   const cardContent = (
     <div className="relative">
-      {/* Avatar + name + role */}
-      <div className="flex flex-col items-center text-center mb-8">
-        <div className="relative mb-5">
-          <div className="w-32 h-32 rounded-full bg-teal-700 flex items-center justify-center text-5xl font-semibold text-white overflow-hidden border-4 border-slate-200 dark:border-slate-600">
+      {/* Header Profile Info */}
+      <div className="flex flex-col items-center text-center mb-6">
+        <div className="relative mb-4">
+          <div className="w-24 h-24 rounded-full bg-[#147D70] flex items-center justify-center text-3xl font-bold text-white overflow-hidden border-4 border-white shadow-md">
             {user.avatar ? (
               <img
                 src={user.avatar}
@@ -106,92 +107,91 @@ export default function UserInfoCard({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-white">
+              <span>
                 {(user.name || user.username || user.email)?.[0]?.toUpperCase()}
               </span>
             )}
           </div>
 
-          {/* Online Badge */}
+          {/* Online Indicator Badge */}
           {isOnline && (
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 text-white text-xs font-medium rounded-full">
-              <div className="w-2 h-2 bg-white rounded-full" />
+            <div className="absolute bottom-0 right-0 flex items-center gap-1 px-2.5 py-1 bg-emerald-500 text-white text-[11px] font-semibold rounded-full border-2 border-white shadow-sm">
+              <span className="w-1.5 h-1.5 bg-[#D9F36A] rounded-full" />
               Online
             </div>
           )}
         </div>
 
-        <h2 className="text-2xl font-semibold text-slate-800 dark:text-slate-100 mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-          {user.name || user.username || "Unknown User"}
+        <h2 className="text-xl font-bold text-[#202124] mb-1">
+          {user.name || user.username || 'Unknown User'}
         </h2>
 
-        {!!RoleBadge && <div className="mb-3">{RoleBadge}</div>}
+        {!!RoleBadge && <div className="mb-2">{RoleBadge}</div>}
 
-        <div className="flex flex-col gap-1 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex flex-col gap-1 text-xs text-[#858B89] mt-1">
           <p className="flex items-center justify-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5" />
-            Joined {formatDate(user.createdAt)}
+            <Mail className="w-3.5 h-3.5 text-[#147D70]" />
+            {user.email}
           </p>
           <p className="flex items-center justify-center gap-1.5">
-            <Mail className="w-3.5 h-3.5" />
-            {user.email}
+            <Calendar className="w-3.5 h-3.5 text-[#147D70]" />
+            Joined {formatDate(user.createdAt)}
           </p>
         </div>
       </div>
 
-      {/* Bio */}
-      <div className="bg-slate-50 dark:bg-slate-700/50 p-6 rounded-sm border border-slate-200 dark:border-slate-600">
-        <div className="flex items-center gap-2 mb-4">
-          <FileText className="w-5 h-5 text-teal-600 dark:text-teal-400" />
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Bio</h3>
+      {/* Bio Section */}
+      <div className="bg-[#F3F5F4] p-4 rounded-xl border border-[#E8EBE9]">
+        <div className="flex items-center gap-2 mb-2">
+          <FileText className="w-4 h-4 text-[#147D70]" />
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">About</h3>
         </div>
 
         {user.bio?.trim() ? (
-          <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-[#202124] leading-relaxed whitespace-pre-wrap">
             {user.bio}
           </p>
         ) : (
-          <p className="text-slate-400 dark:text-slate-500 italic text-center py-4">
-            No bio yet
+          <p className="text-xs text-[#858B89] italic text-center py-2">
+            No bio provided yet
           </p>
         )}
       </div>
     </div>
   );
 
-  // ================== TOOLTIP MODE ==================
-  if (mode === "tooltip" && position) {
+  // Tooltip Mode
+  if (mode === 'tooltip' && position) {
     return (
       <div
         className="fixed z-40"
         style={{
           left: position.x,
           top: position.y,
-          transform: "translate(-50%, 10px)",
+          transform: 'translate(-50%, 10px)',
         }}
       >
-        <div className="pointer-events-auto bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-lg p-4 min-w-[280px] max-w-[320px]">
+        <div className="pointer-events-auto bg-white border border-[#E8EBE9] rounded-2xl shadow-xl p-5 min-w-[280px] max-w-[320px]">
           {cardContent}
         </div>
       </div>
     );
   }
 
-  // ================== MODAL MODE (CENTER) ==================
+  // Modal Mode (Center Screen Portal)
   const modalNode = (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#202124]/50 backdrop-blur-sm animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xl p-8 w-full max-w-xl">
-        {/* Close */}
+      <div className="relative bg-white border border-[#E8EBE9] rounded-2xl shadow-2xl p-6 w-full max-w-md">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-sm bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-slate-500 dark:text-slate-400"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[#858B89] hover:text-[#202124] hover:bg-[#F3F5F4] transition-colors"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -202,6 +202,5 @@ export default function UserInfoCard({
     </div>
   );
 
-  // ใช้ Portal เพื่อไม่ให้ modal โดน parent (sidebar/chat) ที่มี overflow/stacking ตัดทอน
   return createPortal(modalNode, document.body);
 }

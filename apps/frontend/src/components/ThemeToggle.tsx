@@ -18,12 +18,12 @@ export default function ThemeToggle() {
 
   return (
     <button
-      className="p-2 rounded-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+      className="p-2 rounded-xl border border-[#E8EBE9] bg-white hover:bg-[#F3F5F4] text-[#858B89] hover:text-[#202124] transition-colors shadow-xs"
       onClick={() => setDark((d) => !d)}
       aria-label="Toggle theme"
       title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
-      {dark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+      {dark ? <Moon className="w-4 h-4 text-[#147D70]" /> : <Sun className="w-4 h-4 text-amber-500" />}
     </button>
   );
 }

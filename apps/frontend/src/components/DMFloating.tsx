@@ -8,8 +8,6 @@ export default function DMFloating() {
   const [text, setText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const msgs = isOpen && openPeer ? getMsgs(openPeer.uid) : [];
-  
-  console.log(`DMFloating render: isOpen=${isOpen}, openPeer=${openPeer?.uid}, msgs.length=${msgs.length}`);
 
   useEffect(() => {
     if (isOpen && openPeer) {
@@ -27,39 +25,39 @@ export default function DMFloating() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 z-50">
-      <div className="flex flex-col h-[500px] rounded-2xl shadow-2xl shadow-black/30 overflow-hidden border border-slate-700/50 bg-gradient-to-b from-slate-800 to-slate-900 backdrop-blur-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 bg-slate-800/80 border-b border-slate-700/50">
+    <div className="fixed bottom-6 right-6 w-88 sm:w-96 z-50 animate-slide-up">
+      <div className="flex flex-col h-[520px] rounded-2xl shadow-2xl overflow-hidden border border-[#E8EBE9] bg-white">
+        {/* Header with Dark Charcoal styling */}
+        <div className="flex items-center justify-between px-5 py-4 bg-[#202124] text-white">
           <div className="flex items-center gap-3">
             <div className="relative">
               {openPeer.avatar ? (
                 <img
                   src={openPeer.avatar}
                   alt={openPeer.name}
-                  className="w-10 h-10 rounded-full object-cover ring-2 ring-teal-500/30"
+                  className="w-10 h-10 rounded-full object-cover border-2 border-white/20"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-teal-500/20">
+                <div className="w-10 h-10 rounded-full bg-[#147D70] flex items-center justify-center text-white font-bold text-base border-2 border-white/20">
                   {openPeer.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              
-              {/* Status indicator - show only if online */}
+
+              {/* Online status indicator */}
               {openPeer.isOnline && (
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-800 animate-pulse"></span>
+                <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#D9F36A] rounded-full border-2 border-[#202124]"></span>
               )}
             </div>
             <div>
-              <div className="font-medium text-white text-base">{openPeer.name}</div>
+              <div className="font-bold text-white text-sm">{openPeer.name}</div>
               {openPeer.isOnline ? (
-                <div className="text-xs text-emerald-400 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></span>
-                  <span>Online</span>
+                <div className="text-[11px] text-[#D9F36A] flex items-center gap-1 font-medium">
+                  <span className="w-1.5 h-1.5 bg-[#D9F36A] rounded-full"></span>
+                  <span>Active Now</span>
                 </div>
               ) : (
-                <div className="text-xs text-slate-500 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 bg-slate-500 rounded-full"></span>
+                <div className="text-[11px] text-[#858B89] flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-[#858B89] rounded-full"></span>
                   <span>Offline</span>
                 </div>
               )}
@@ -67,7 +65,7 @@ export default function DMFloating() {
           </div>
           <button
             onClick={closeDM}
-            className="w-8 h-8 rounded-lg hover:bg-slate-700/50 text-slate-400 hover:text-white transition-all flex items-center justify-center"
+            className="w-8 h-8 rounded-xl hover:bg-white/10 text-white/70 hover:text-white transition-colors flex items-center justify-center"
             aria-label="Close"
             title="Close"
           >
@@ -75,16 +73,16 @@ export default function DMFloating() {
           </button>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-900/50 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-transparent">
+        {/* Messages Body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F3F5F4]">
           {msgs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-teal-500/20 to-emerald-600/20 border border-teal-500/30 flex items-center justify-center">
-                <MessageCircle className="w-8 h-8 text-teal-400" />
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-[#EAF5D5] text-[#147D70] flex items-center justify-center">
+                <MessageCircle className="w-7 h-7" />
               </div>
               <div>
-                <div className="text-slate-200 font-medium mb-1">Start a conversation</div>
-                <div className="text-slate-500 text-sm">Send a message to {openPeer.name}</div>
+                <h4 className="text-sm font-bold text-[#202124]">Direct Message</h4>
+                <p className="text-xs text-[#858B89] mt-1">Start chatting with {openPeer.name}</p>
               </div>
             </div>
           ) : (
@@ -94,16 +92,16 @@ export default function DMFloating() {
                 const fromUser = typeof m.from === 'object' ? m.from : null;
                 const displayAvatar = !mine && fromUser ? fromUser.avatar : openPeer.avatar;
                 const displayName = !mine && fromUser ? fromUser.username : openPeer.name;
-                
+
                 return (
                   <div key={m._id || i} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] ${mine ? '' : 'flex gap-2'}`}>
+                    <div className={`max-w-[80%] ${mine ? '' : 'flex gap-2'}`}>
                       {!mine && (
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 mt-0.5">
                           {displayAvatar ? (
-                            <img src={displayAvatar} alt="" className="w-7 h-7 rounded-full object-cover ring-1 ring-teal-500/30" />
+                            <img src={displayAvatar} alt="" className="w-7 h-7 rounded-full object-cover border border-[#E8EBE9]" />
                           ) : (
-                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-xs">
+                            <div className="w-7 h-7 rounded-full bg-[#147D70] flex items-center justify-center text-white font-bold text-xs">
                               {displayName.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -111,15 +109,15 @@ export default function DMFloating() {
                       )}
                       <div>
                         <div
-                          className={`px-4 py-2.5 rounded-2xl ${
+                          className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                             mine
-                              ? 'bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg shadow-teal-500/20'
-                              : 'bg-slate-700/80 text-white border border-slate-600/50'
+                              ? 'bg-[#147D70] text-white rounded-tr-xs shadow-xs'
+                              : 'bg-white text-[#202124] border border-[#E8EBE9] rounded-tl-xs shadow-xs'
                           }`}
                         >
-                          <div className="break-words text-sm leading-relaxed">{m.text}</div>
+                          <div className="break-words">{m.text}</div>
                         </div>
-                        <div className={`text-[10px] text-slate-500 mt-1 px-1 ${mine ? 'text-right' : 'text-left'}`}>
+                        <div className={`text-[10px] text-[#858B89] mt-1 px-1 ${mine ? 'text-right' : 'text-left'}`}>
                           {new Date(m.createdAt).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -135,40 +133,33 @@ export default function DMFloating() {
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="p-4 bg-slate-800/80 border-t border-slate-700/50">
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 relative">
-              <textarea
-                className="w-full px-4 py-3 text-sm bg-slate-700/50 border border-slate-600/50 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 rounded-xl text-white placeholder-slate-500 transition-all resize-none focus:outline-none"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Type a message..."
-                rows={1}
-                style={{
-                  minHeight: '44px',
-                  maxHeight: '120px'
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = 'auto';
-                  target.style.height = Math.min(target.scrollHeight, 120) + 'px';
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend();
-                  }
-                }}
-              />
-            </div>
-            <button 
-              className="px-4 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-teal-500 hover:from-teal-500 hover:to-teal-400 text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-lg shadow-teal-500/20 hover:shadow-teal-500/30 hover:scale-105"
+        {/* Input Footer */}
+        <div className="p-3 bg-white border-t border-[#E8EBE9]">
+          <div className="flex gap-2 items-center">
+            <textarea
+              className="flex-1 px-3.5 py-2.5 text-sm bg-[#F3F5F4] border border-[#E8EBE9] focus:border-[#147D70] focus:ring-2 focus:ring-[#147D70]/20 rounded-xl text-[#202124] placeholder-[#858B89] transition-all resize-none focus:outline-none"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Type your message..."
+              rows={1}
+              style={{
+                minHeight: '40px',
+                maxHeight: '100px'
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
+            />
+            <button
+              className="p-2.5 rounded-xl bg-[#147D70] hover:bg-[#11665C] text-white font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-xs flex-shrink-0"
               onClick={handleSend}
               disabled={!text.trim()}
-              title="Send message (Enter)"
+              title="Send message"
             >
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>

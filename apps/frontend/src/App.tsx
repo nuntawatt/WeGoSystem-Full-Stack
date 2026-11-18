@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Explore from './pages/Explore';
 import GroupDetail from './pages/groups/GroupDetail';
+import GroupList from './pages/groups/GroupList';
 import Create from './pages/Create';
 import Profile from './pages/Profile';
 import SignIn from './pages/auth/SignIn';
@@ -46,12 +47,13 @@ export default function App() {
         <Route
           path="/*"
           element={
-            <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+            <div className="min-h-screen bg-[#F3F5F4] text-[#202124] flex flex-col selection:bg-[#EAF5D5] selection:text-[#147D70]">
               <Navbar />
-              <main className="w-full">
+              <main className="w-full flex-1">
                 <Routes>
                   <Route path="/" element={<Home />} />
                   <Route path="/explore" element={<Explore />} />
+                  <Route path="/groups" element={<GroupList />} />
 
                   <Route
                     path="/groups/:id"

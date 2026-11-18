@@ -1,10 +1,28 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/apiClient';
 import { socket } from '../../lib/socket';
-import { Users, Shield, Wifi, Ban, Search, User, Mail, Calendar, Settings, Eye, Lock, Unlock, Trash2, X } from 'lucide-react';
+import { 
+  Users, 
+  Shield, 
+  Wifi, 
+  Ban, 
+  Search, 
+  User, 
+  Mail, 
+  Calendar, 
+  Settings, 
+  Eye, 
+  Lock, 
+  Unlock, 
+  X,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  UserCheck
+} from 'lucide-react';
 import { confirm, showSuccess, showError } from '../../lib/swal';
 
-interface User {
+interface UserItem {
   _id: string;
   email: string;
   username?: string;
@@ -27,39 +45,34 @@ interface UserProfile {
 }
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<'all' | 'user' | 'admin'>('all');
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserItem | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
   useEffect(() => {
     fetchUsers();
-    
-    // Connect socket and authenticate user
+
     const initSocket = async () => {
       if (!socket.connected) {
         socket.connect();
       }
 
-      // Get current user ID from localStorage or API
       const token = localStorage.getItem('token');
       if (token) {
         try {
           const response = await api.get('/auth/me');
           const currentUserId = response.data._id;
-          
-          // Join socket with user ID
           socket.emit('user:join', currentUserId);
-          console.log('Admin joined socket with ID:', currentUserId);
         } catch (error) {
           console.error('Error getting current user:', error);
         }
@@ -68,18 +81,13 @@ export default function UserManagement() {
 
     initSocket();
 
-    // Listen for user status updates
     socket.on('userStatusChanged', ({ userId, isOnline }: { userId: string; isOnline: boolean }) => {
-      console.log('User status changed:', userId, isOnline ? '🟢 ONLINE' : '⚫ OFFLINE');
-      
-      // Update users list
       setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user._id === userId ? { ...user, isOnline } : user
+        prevUsers.map((u) =>
+          u._id === userId ? { ...u, isOnline } : u
         )
       );
-      
-      // Update selected user in modal if it's open
+
       setSelectedUser((prevSelected) =>
         prevSelected && prevSelected._id === userId
           ? { ...prevSelected, isOnline }
@@ -87,30 +95,29 @@ export default function UserManagement() {
       );
     });
 
-    // Cleanup
     return () => {
       socket.off('userStatusChanged');
     };
   }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (isManual = false) => {
     try {
-      setLoading(true);
+      if (isManual) setRefreshing(true);
+      else setLoading(true);
       const response = await api.get('/admin/users');
       setUsers(response.data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   const handleBlockUser = async (userId: string, isBlocked: boolean) => {
-    // ตรวจสอบว่าไม่ใช่ตัวเอง
     try {
       const response = await api.get('/auth/me');
       const currentUserId = response.data._id;
-      
       if (userId === currentUserId) {
         showError('ไม่สามารถบล็อกตัวเองได้', 'คุณไม่สามารถบล็อกบัญชี Admin ของตัวเองได้');
         return;
@@ -119,55 +126,45 @@ export default function UserManagement() {
       console.error('Error checking current user:', error);
     }
 
-    // Confirmation message
-    const user = users.find(u => u._id === userId);
+    const targetUser = users.find((u) => u._id === userId);
     const confirmTitle = isBlocked 
-      ? `ปลดบล็อก ${user?.email || 'ผู้ใช้นี้'}?`
-      : `บล็อก ${user?.email || 'ผู้ใช้นี้'}?`;
+      ? `ปลดบล็อก ${targetUser?.email || 'ผู้ใช้นี้'}?`
+      : `บล็อก ${targetUser?.email || 'ผู้ใช้นี้'}?`;
     const confirmText = isBlocked
       ? 'ผู้ใช้จะสามารถเข้าสู่ระบบและใช้งานได้อีกครั้ง'
       : 'ผู้ใช้จะไม่สามารถเข้าสู่ระบบหรือใช้งานระบบได้';
     
     const result = await confirm(confirmTitle, confirmText, isBlocked ? 'ปลดบล็อก' : 'บล็อก', 'ยกเลิก');
-    if (!result.isConfirmed) {
-      return;
-    }
+    if (!result.isConfirmed) return;
 
     try {
       await api.put(`/admin/users/${userId}/block`, { isBlocked: !isBlocked });
+      await fetchUsers(true);
       
-      // Update users list
-      await fetchUsers();
-      
-      // Update selected user in modal if it's open
       if (selectedUser && selectedUser._id === userId) {
         setSelectedUser({ ...selectedUser, isBlocked: !isBlocked });
       }
 
-      // Success message
-      const successTitle = !isBlocked ? 'บล็อกผู้ใช้สำเร็จ!' : 'ปลดบล็อกผู้ใช้สำเร็จ!';
-      const successText = !isBlocked 
-        ? `${user?.email} ไม่สามารถเข้าสู่ระบบได้แล้ว`
-        : `${user?.email} สามารถเข้าสู่ระบบได้แล้ว`;
-      
-      showSuccess(successTitle, successText);
+      showSuccess(
+        !isBlocked ? 'บล็อกผู้ใช้สำเร็จ!' : 'ปลดบล็อกผู้ใช้สำเร็จ!',
+        !isBlocked ? `${targetUser?.email} ถูกระงับการใช้งานแล้ว` : `${targetUser?.email} สามารถเข้าใช้งานได้แล้ว`
+      );
     } catch (error: any) {
       console.error('Error blocking user:', error);
       showError(
         `ไม่สามารถ${isBlocked ? 'ปลดบล็อก' : 'บล็อก'}ผู้ใช้ได้`,
-        error.response?.data?.message || 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ'
+        error.response?.data?.message || 'เกิดข้อผิดพลาด'
       );
     }
   };
-  
-  const handleViewUser = async (user: User) => {
-    setSelectedUser(user);
+
+  const handleViewUser = async (userItem: UserItem) => {
+    setSelectedUser(userItem);
     setShowModal(true);
     setLoadingProfile(true);
-    
-    // Fetch user profile
+
     try {
-      const response = await api.get(`/profiles/${user._id}`);
+      const response = await api.get(`/profiles/${userItem._id}`);
       setUserProfile(response.data || null);
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -185,225 +182,264 @@ export default function UserManagement() {
     return matchesSearch && matchesRole;
   });
 
+  const totalUsersCount = users.length;
+  const adminUsersCount = users.filter((u) => u.role === 'admin').length;
+  const onlineUsersCount = users.filter((u) => u.isOnline && !u.isBlocked).length;
+  const blockedUsersCount = users.filter((u) => u.isBlocked).length;
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-400"></div>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <div className="w-10 h-10 rounded-full border-3 border-[#147D70] border-t-transparent animate-spin" />
+        <span className="text-sm font-medium text-[#858B89]">Loading user accounts...</span>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-full space-y-6">
-      {/* Header with Quick Stats */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Page Title & Refresh */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-[#E8EBE9] p-6 rounded-2xl shadow-xs">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-light text-slate-800 dark:text-white mb-1" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>User Management</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base">Manage all users in the system</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#202124] tracking-tight">
+            User Management Directory
+          </h1>
+          <p className="text-xs sm:text-sm text-[#858B89] mt-1">
+            Audit user roles, inspect account activity, monitor real-time presence, and manage access restrictions.
+          </p>
         </div>
-        <button onClick={fetchUsers} className="btn-ghost px-3 py-2 text-sm rounded-lg hover:bg-white/5">
-          <i className="fas fa-sync-alt mr-2"></i>Refresh
+        <button 
+          onClick={() => fetchUsers(true)}
+          disabled={refreshing}
+          className="btn-secondary text-xs px-3.5 py-2"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-[#147D70] ${refreshing ? 'animate-spin' : ''}`} />
+          <span>{refreshing ? 'Syncing...' : 'Refresh Users'}</span>
         </button>
       </div>
 
-      {/* Quick Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+      {/* Metrics Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Total Users</span>
+            <div className="w-9 h-9 rounded-xl bg-[#E0F3F1] flex items-center justify-center text-[#147D70]">
+              <Users className="w-4 h-4" />
             </div>
-            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Total Users</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.length}</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{totalUsersCount}</div>
+          <span className="text-[11px] text-[#858B89] mt-1 block">Registered in platform</span>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Administrators</span>
+            <div className="w-9 h-9 rounded-xl bg-[#202124] flex items-center justify-center text-white">
+              <Shield className="w-4 h-4 text-[#D9F36A]" />
             </div>
-            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Admins</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.role === 'admin').length}</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{adminUsersCount}</div>
+          <span className="text-[11px] text-[#858B89] mt-1 block">Privileged staff roles</span>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-              <Wifi className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Online Now</span>
+            <div className="w-9 h-9 rounded-xl bg-[#EAF5D5] flex items-center justify-center text-[#11665C]">
+              <Wifi className="w-4 h-4" />
             </div>
-            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Online</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isOnline && !u.isBlocked).length}</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{onlineUsersCount}</div>
+          <span className="text-[11px] text-[#147D70] font-semibold mt-1 flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#147D70] animate-pulse" /> Active live sockets
+          </span>
         </div>
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 sm:p-5 shadow-sm hover:shadow-md transition-all">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-11 h-11 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-              <Ban className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+
+        <div className="card p-5">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">Blocked</span>
+            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+              <Ban className="w-4 h-4" />
             </div>
-            <p className="text-slate-700 dark:text-slate-200 text-xs font-medium uppercase tracking-wider">Blocked</p>
           </div>
-          <p className="text-3xl sm:text-4xl font-semibold text-slate-800 dark:text-white">{filteredUsers.filter((u) => u.isBlocked).length}</p>
+          <div className="text-2xl sm:text-3xl font-extrabold text-[#202124]">{blockedUsersCount}</div>
+          <span className="text-[11px] text-red-600 font-medium mt-1 block">Restricted from login</span>
         </div>
       </div>
 
-      {/* Search & Filter */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-5 sm:p-6 shadow-sm">
-        <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search by email or username..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg pl-12 pr-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all placeholder:text-slate-400"
-            />
+      {/* Filter and Search Bar */}
+      <div className="card p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858B89]" />
+          <input
+            type="text"
+            placeholder="Search by email address or username..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="input pl-10 text-xs py-2.5"
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <span className="text-xs font-semibold text-[#858B89] hidden sm:inline">Role Filter:</span>
+          <div className="flex rounded-xl bg-[#F3F5F4] p-1 border border-[#E8EBE9] w-full sm:w-auto">
+            {(['all', 'user', 'admin'] as const).map((role) => (
+              <button
+                key={role}
+                onClick={() => setFilterRole(role)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  filterRole === role
+                    ? 'bg-white text-[#202124] shadow-xs'
+                    : 'text-[#858B89] hover:text-[#202124]'
+                }`}
+              >
+                {role === 'all' ? 'All Roles' : role}
+              </button>
+            ))}
           </div>
-          <select
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value as any)}
-            className="bg-slate-50 dark:bg-slate-700 text-slate-800 dark:text-white rounded-lg px-4 py-3 border border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none cursor-pointer transition-all"
-          >
-            <option value="all">All Roles</option>
-            <option value="user">User Only</option>
-            <option value="admin">Admin Only</option>
-          </select>
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden shadow-sm">
+      {/* Users Data Table */}
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 dark:bg-slate-700">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#F3F5F4] text-[#858B89] font-semibold uppercase tracking-wider border-b border-[#E8EBE9]">
               <tr>
-                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
-                  <div className="flex items-center gap-2"><User className="w-4 h-4" /> User</div>
-                </th>
-                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
-                  <div className="flex items-center gap-2"><Mail className="w-4 h-4" /> Email</div>
-                </th>
-                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
-                  <div className="flex items-center gap-2"><Shield className="w-4 h-4" /> Role</div>
-                </th>
-                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-left py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider hidden md:table-cell">
-                  <div className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Joined</div>
-                </th>
-                <th className="text-right py-4 px-6 text-slate-700 dark:text-slate-200 font-medium text-sm uppercase tracking-wider">
-                  <div className="flex items-center gap-2 justify-end"><Settings className="w-4 h-4" /> Actions</div>
-                </th>
+                <th className="py-3.5 px-6">Account Profile</th>
+                <th className="py-3.5 px-6">Email Address</th>
+                <th className="py-3.5 px-6">Role</th>
+                <th className="py-3.5 px-6">Status</th>
+                <th className="py-3.5 px-6 hidden md:table-cell">Registered Date</th>
+                <th className="py-3.5 px-6 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-[#E8EBE9]">
               {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr 
-                    key={user._id} 
-                    className="border-t border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
-                  >
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-3">
-                        {user.profile?.avatar ? (
-                          <img
-                            src={user.profile.avatar.startsWith('http') ? user.profile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${user.profile.avatar}`}
-                            alt={user.profile.name || user.email}
-                            className={`w-12 h-12 rounded-xl object-cover ring-2 transition-all ${
-                              user.isBlocked 
-                                ? 'ring-red-500/50 opacity-50 grayscale' 
-                                : 'ring-blue-500/30 group-hover:ring-blue-400/50'
-                            }`}
-                          />
-                        ) : (
-                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 ring-2 transition-all ${
-                            user.isBlocked
-                              ? 'from-red-500/30 to-gray-500/30 ring-red-500/30 opacity-50'
-                              : 'from-blue-500/30 to-purple-500/30 ring-blue-500/20 group-hover:ring-blue-400/40'
-                          }`}>
-                            <span className={`font-black text-lg ${user.isBlocked ? 'text-red-600' : 'text-blue-700 dark:text-blue-300'}`}>
-                              {user.email.charAt(0).toUpperCase()}
-                            </span>
+                filteredUsers.map((u) => {
+                  const avatarUrl = u.profile?.avatar && u.profile.avatar.startsWith('http')
+                    ? u.profile.avatar
+                    : u.profile?.avatar
+                      ? `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${u.profile.avatar}`
+                      : null;
+
+                  return (
+                    <tr 
+                      key={u._id} 
+                      className="hover:bg-[#F3F5F4]/70 transition-colors group"
+                    >
+                      {/* Profile Column */}
+                      <td className="py-3.5 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt={u.profile?.name || u.email}
+                                className={`w-9 h-9 rounded-xl object-cover ring-2 ${
+                                  u.isBlocked 
+                                    ? 'ring-red-300 opacity-60 grayscale' 
+                                    : 'ring-[#E8EBE9]'
+                                }`}
+                              />
+                            ) : (
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
+                                u.isBlocked 
+                                  ? 'bg-red-100 text-red-600' 
+                                  : 'bg-[#147D70] text-white'
+                              }`}>
+                                {u.email.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            {/* Online / Status Dot */}
+                            {!u.isBlocked && (
+                              <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+                                u.isOnline ? 'bg-[#147D70]' : 'bg-[#BAC2BF]'
+                              }`} />
+                            )}
                           </div>
-                        )}
-                        <div>
-                          <span className={`font-bold text-sm transition-colors ${
-                            user.isBlocked 
-                              ? 'text-red-600 line-through' 
-                              : 'text-slate-800 dark:text-white'
-                          }`}>
-                            {user.profile?.name || user.username || 'N/A'}
-                          </span>
-                          {user.isBlocked && (
-                            <p className="text-xs text-red-400 mt-0.5">🚫 Blocked - Cannot use system</p>
-                          )}
+                          <div>
+                            <span className={`font-semibold text-xs text-[#202124] ${u.isBlocked ? 'line-through text-red-500' : ''}`}>
+                              {u.profile?.name || u.username || 'N/A'}
+                            </span>
+                            {u.isBlocked && (
+                              <span className="block text-[10px] text-red-600 font-semibold">Access Suspended</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-emerald-700 dark:text-emerald-300 text-sm font-medium">{user.email}</td>
-                    <td className="py-4 px-6">
-                      <span className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider inline-block ${
-                        user.role === 'admin'
-                          ? 'bg-gradient-to-r from-red-500/30 to-pink-500/20 text-red-700 dark:text-red-300 border border-red-500/40'
-                          : 'bg-gradient-to-r from-blue-500/30 to-purple-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/40'
-                      }`}>
-                        {user.role === 'admin' ? '👑 Admin' : '👤 User'}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-                            user.isBlocked
-                              ? 'bg-gradient-to-r from-gray-500/30 to-gray-600/20 text-gray-700 dark:text-gray-300 border border-gray-500/40'
-                              : user.isOnline
-                              ? 'bg-gradient-to-r from-emerald-500/30 to-green-600/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/10'
-                              : 'bg-gradient-to-r from-amber-500/30 to-yellow-600/20 text-amber-700 dark:text-amber-300 border border-amber-500/40'
-                          }`}
-                        >
-                          {user.isBlocked ? '🚫 Blocked' : user.isOnline ? '🟢 Online' : '⚫ Offline'}
+                      </td>
+
+                      {/* Email Column */}
+                      <td className="py-3.5 px-6 font-medium text-[#5F6664]">
+                        {u.email}
+                      </td>
+
+                      {/* Role Column */}
+                      <td className="py-3.5 px-6">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          u.role === 'admin'
+                            ? 'bg-[#202124] text-white'
+                            : 'bg-[#F3F5F4] text-[#5F6664] border border-[#E8EBE9]'
+                        }`}>
+                          {u.role === 'admin' ? '👑 Admin' : 'User'}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-6 text-pink-700 dark:text-pink-300 text-sm font-medium hidden md:table-cell">
-                      <i className="fas fa-calendar-alt mr-2"></i>
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="py-4 px-6">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewUser(user);
-                          }}
-                          title="View user details"
-                          className="btn-secondary px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider"
-                        >
-                          <i className="fas fa-eye mr-2 group-hover/btn:scale-110 inline-block transition-transform"></i>
-                          View
-                        </button>
-                        <button
-                          onClick={() => handleBlockUser(user._id, user.isBlocked || false)}
-                          title={user.isBlocked ? 'Unblock user' : 'Block user'}
-                          className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all hover:scale-105 hover:shadow-lg group/btn ${
-                            user.isBlocked
-                                ? 'bg-gradient-to-r from-emerald-500/30 to-green-600/20 text-emerald-700 dark:text-emerald-300 hover:from-emerald-500/40 hover:to-green-600/30 border border-emerald-500/40 hover:shadow-emerald-500/20'
-                                : 'bg-gradient-to-r from-red-500/30 to-pink-600/20 text-red-700 dark:text-red-300 hover:from-red-500/40 hover:to-pink-600/30 border border-red-500/40 hover:shadow-red-500/20'
-                          }`}
-                        >
-                          <i className={`fas ${user.isBlocked ? 'fa-unlock' : 'fa-ban'} mr-2 group-hover/btn:scale-110 inline-block transition-transform`}></i>
-                          <span className="hidden sm:inline">{user.isBlocked ? 'Unblock' : 'Block'}</span>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      {/* Status Column */}
+                      <td className="py-3.5 px-6">
+                        {u.isBlocked ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-200">
+                            <Ban className="w-3 h-3" /> Blocked
+                          </span>
+                        ) : u.isOnline ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#EAF5D5] text-[#11665C] border border-[#D9F36A]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#147D70] animate-pulse" /> Online
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[#F3F5F4] text-[#858B89] border border-[#E8EBE9]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#BAC2BF]" /> Offline
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Registered Date Column */}
+                      <td className="py-3.5 px-6 text-[#858B89] hidden md:table-cell">
+                        {new Date(u.createdAt).toLocaleDateString()}
+                      </td>
+
+                      {/* Actions Column */}
+                      <td className="py-3.5 px-6 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleViewUser(u)}
+                            className="btn-secondary py-1 px-2.5 text-xs font-semibold"
+                            title="Inspect details"
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            Details
+                          </button>
+
+                          <button
+                            onClick={() => handleBlockUser(u._id, u.isBlocked || false)}
+                            className={`py-1 px-2.5 text-xs font-semibold rounded-xl transition-colors border ${
+                              u.isBlocked
+                                ? 'bg-[#E0F3F1] text-[#11665C] border-[#BFE7E2] hover:bg-[#147D70] hover:text-white'
+                                : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-600 hover:text-white'
+                            }`}
+                          >
+                            {u.isBlocked ? 'Unblock' : 'Block'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-600 dark:text-slate-400">
-                    <i className="fas fa-users text-4xl mb-3 opacity-50"></i>
-                    <p>No users found</p>
+                  <td colSpan={6} className="py-12 text-center text-[#858B89]">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p className="font-semibold text-sm">No matching users found</p>
+                    <p className="text-xs text-[#BAC2BF] mt-0.5">Try altering your search or role filters.</p>
                   </td>
                 </tr>
               )}
@@ -414,147 +450,135 @@ export default function UserManagement() {
 
       {/* User Details Modal */}
       {showModal && selectedUser && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-          <div className="card rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-white">User Details</h2>
-              <button onClick={() => setShowModal(false)} className="text-slate-500 hover:text-slate-800 dark:hover:text-white transition-colors">
-                <span className="sr-only">Close</span>
-                <span className="text-lg">✕</span>
+        <div 
+          className="fixed inset-0 bg-[#202124]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" 
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-lg w-full overflow-hidden border border-[#E8EBE9] shadow-2xl animate-fade-in" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#202124] text-white px-6 py-5 flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <User className="w-4 h-4 text-[#D9F36A]" />
+                  User Account Inspection
+                </h3>
+                <p className="text-xs text-[#858B89]">Unique identifier: {selectedUser._id}</p>
+              </div>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-6 space-y-6">
-              {/* Blocked Warning */}
+            {/* Modal Body */}
+            <div className="p-6 space-y-5">
+              {/* Blocked warning banner */}
               {selectedUser.isBlocked && (
-                <div className="bg-gradient-to-r from-red-50 to-red-50/50 border border-red-200 dark:border-red-700 rounded-xl p-4 flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0">
-                    <span className="text-red-600 dark:text-red-300 font-bold">!</span>
-                  </div>
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-xs text-red-700">
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
                   <div>
-                    <p className="text-red-700 dark:text-red-300 font-bold text-lg">User Blocked</p>
-                    <p className="text-red-700 dark:text-red-300 text-sm">This user cannot login or access any system features</p>
+                    <span className="font-bold block">Account Access Suspended</span>
+                    This user cannot sign in or interact with activities and chats.
                   </div>
                 </div>
               )}
 
-              {/* Avatar & Basic Info */}
-              <div className="flex items-center gap-4">
-                {loadingProfile ? (
-                  <div className="w-20 h-20 rounded-full bg-primary-700 animate-pulse"></div>
-                  ) : userProfile?.avatar ? (
-                  <img
-                    src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${userProfile.avatar}`}
-                    alt={userProfile.name || selectedUser.email}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-blue-400/30"
-                  />
-                ) : (
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-400/20 to-purple-500/20 flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-400 font-bold text-3xl">
+              {/* Profile Card Header */}
+              <div className="flex items-center gap-4 p-4 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9]">
+                <div className="relative">
+                  {userProfile?.avatar ? (
+                    <img
+                      src={userProfile.avatar.startsWith('http') ? userProfile.avatar : `${(import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '')}${userProfile.avatar}`}
+                      alt="avatar"
+                      className="w-16 h-16 rounded-xl object-cover ring-2 ring-[#E8EBE9]"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-[#147D70] text-white flex items-center justify-center text-2xl font-bold">
                       {selectedUser.email.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
+                    selectedUser.isOnline ? 'bg-[#147D70]' : 'bg-[#BAC2BF]'
+                  }`} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-bold text-[#202124] truncate">
+                    {userProfile?.name || selectedUser.username || 'No display name'}
+                  </h4>
+                  <p className="text-xs text-[#858B89] truncate">{selectedUser.email}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      selectedUser.role === 'admin'
+                        ? 'bg-[#202124] text-white'
+                        : 'bg-white text-[#5F6664] border border-[#E8EBE9]'
+                    }`}>
+                      {selectedUser.role}
+                    </span>
+                    <span className="text-[11px] text-[#858B89]">
+                      {selectedUser.isOnline ? '🟢 Live online' : '⚫ Offline'}
                     </span>
                   </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white">
-                    {loadingProfile ? (
-                      <div className="h-8 w-48 bg-primary-700 animate-pulse rounded"></div>
-                    ) : (
-                      userProfile?.name || selectedUser.username || 'N/A'
-                    )}
-                  </h3>
-                  <p className="text-slate-700 dark:text-slate-400">{selectedUser.email}</p>
                 </div>
               </div>
 
               {/* Bio Section */}
-              {!loadingProfile && userProfile?.bio && (
+              {userProfile?.bio && (
                 <div>
-                  <label className="text-slate-600 dark:text-slate-400 text-sm">Bio</label>
-                  <p className="text-slate-800 dark:text-slate-100 bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 mt-1">{userProfile.bio}</p>
+                  <span className="label">Bio</span>
+                  <p className="p-3 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] text-xs text-[#202124] leading-relaxed">
+                    {userProfile.bio}
+                  </p>
                 </div>
               )}
 
-              {/* Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-slate-600 dark:text-slate-400 text-sm font-semibold">User ID</label>
-                  <p className="text-slate-800 dark:text-slate-100 font-mono text-xs mt-1 break-all">{selectedUser._id}</p>
+              {/* Metadata Key/Value Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9]">
+                  <span className="text-[#858B89] block font-medium">Joined On</span>
+                  <span className="font-semibold text-[#202124] mt-1 block">
+                    {new Date(selectedUser.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
-                <div>
-                  <label className="text-slate-600 dark:text-slate-400 text-sm font-semibold">Role</label>
-                  <p className="text-slate-800 dark:text-slate-100 mt-1">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      selectedUser.role === 'admin'
-                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                        : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                    }`}>
-                      {selectedUser.role === 'admin' ? '👑 Admin' : '👤 User'}
-                    </span>
-                  </p>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-slate-600 dark:text-slate-400 text-sm font-semibold">Online Status</label>
-                  <p className="text-slate-800 dark:text-slate-100 mt-1">
-                    <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      selectedUser.isOnline
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}>
-                      {selectedUser.isOnline ? '🟢 Online' : '⚫ Offline'}
-                    </span>
-                  </p>
-                  {!selectedUser.isOnline && selectedUser.lastActive && (
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                      Last seen: {new Date(selectedUser.lastActive).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-                <div className="md:col-span-2">
-                  <label className="text-slate-600 dark:text-slate-400 text-sm font-semibold">Joined Date</label>
-                  <p className="text-slate-800 dark:text-slate-100 mt-1 flex items-center gap-2">
-                    <span className="text-pink-400">📅</span>
-                    {new Date(selectedUser.createdAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                    <span className="text-slate-600 dark:text-slate-400 text-sm">
-                      ({new Date(selectedUser.createdAt).toLocaleTimeString()})
-                    </span>
-                  </p>
+
+                <div className="p-3 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9]">
+                  <span className="text-[#858B89] block font-medium">Account Status</span>
+                  <span className="font-semibold text-[#202124] mt-1 block">
+                    {selectedUser.isBlocked ? 'Blocked' : 'Active'}
+                  </span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-3 pt-4 border-t border-primary-700">
+              {/* Actions Footer */}
+              <div className="pt-3 border-t border-[#E8EBE9] flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setShowModal(false)}
-                  className="btn-secondary flex-1 px-4 py-2.5 rounded-lg font-semibold text-center"
+                  className="btn-secondary flex-1 text-xs"
                 >
                   Close
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleBlockUser(selectedUser._id, selectedUser.isBlocked || false)}
-                  className={`flex-1 px-6 py-2.5 rounded-lg transition-all font-bold uppercase tracking-wider text-center ${
+                  className={`flex-1 text-xs font-semibold py-2.5 rounded-xl transition-colors ${
                     selectedUser.isBlocked
-                      ? 'bg-emerald-600 text-white border-2 border-emerald-700 hover:bg-emerald-700'
-                      : 'bg-red-600 text-white border-2 border-red-700 hover:bg-red-700'
+                      ? 'btn-primary'
+                      : 'bg-red-600 text-white hover:bg-red-700'
                   }`}
                 >
-                  {selectedUser.isBlocked ? 'Unblock User' : 'Block User'}
+                  {selectedUser.isBlocked ? 'Unblock User' : 'Suspend & Block User'}
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Tooltip hover preview removed - View button opens modal instead */}
-
-      {/* View uses the existing User Details modal (handleViewUser) */}
     </div>
   );
 }

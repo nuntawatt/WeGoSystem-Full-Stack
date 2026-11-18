@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { showSuccess, showError, showWarning, showInfo } from '../lib/swal';
+import { showSuccess, showError, showWarning } from '../lib/swal';
 import { useAuth } from '../hooks/useAuth';
+import { Flag, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 type ReportReason =
   | 'spam'
@@ -12,16 +13,15 @@ type ReportReason =
   | 'other';
 
 const REASON_LABELS: Record<ReportReason, string> = {
-  spam: 'Spam',
-  inappropriate_content: 'Inappropriate',
-  harassment: 'Harassment / Abuse',
-  false_information: 'False information',
-  scam: 'Scam',
-  other: 'Other'
+  spam: 'Spam or Advertising',
+  inappropriate_content: 'Inappropriate Content',
+  harassment: 'Harassment or Abuse',
+  false_information: 'False Information',
+  scam: 'Scam or Fraud',
+  other: 'Other Violation'
 };
 
 const MAX_CHARS = 240;
-const countWords = (text: string) => (text.trim().length === 0 ? 0 : text.trim().split(/\s+/).length);
 
 export default function ReportModal({
   isOpen,
@@ -55,18 +55,16 @@ export default function ReportModal({
         try {
           const res = await api.get(`/activities/${targetId}`);
           activity = res.data?.activity || res.data;
-          console.debug('[ReportModal] found activity by direct id', activity?._id);
         } catch (err: any) {
-          console.debug('[ReportModal] direct activity fetch failed:', (err?.message || err));
+          // ignore error
         }
 
         if (!activity) {
           try {
             const res2 = await api.get(`/activities/by-chat/${targetId}`);
             activity = res2.data?.activity || res2.data;
-            console.debug('[ReportModal] found activity by /by-chat', activity?._id);
           } catch (err: any) {
-            console.debug('[ReportModal] /by-chat fetch failed:', (err?.message || err));
+            // ignore error
           }
         }
 
@@ -79,10 +77,9 @@ export default function ReportModal({
               const relId = typeof related === 'string' ? related : (related._id || related.toString());
               const ares = await api.get(`/activities/${relId}`);
               activity = ares.data?.activity || ares.data;
-              console.debug('[ReportModal] found activity from chat.groupInfo.relatedActivity', activity?._id);
             }
           } catch (err: any) {
-            console.debug('[ReportModal] chat->relatedActivity fetch failed:', (err?.message || err));
+            // ignore error
           }
         }
 
@@ -93,10 +90,9 @@ export default function ReportModal({
             const matched = Array.isArray(activities) ? activities.find((a: any) => String(a?.chat?._id || a?.chat) === String(targetId)) : null;
             if (matched) {
               activity = matched;
-              console.debug('[ReportModal] found activity by scanning /activities', activity?._id);
             }
           } catch (err: any) {
-            console.debug('[ReportModal] activities scan failed:', (err?.message || err));
+            // ignore error
           }
         }
 
@@ -110,33 +106,29 @@ export default function ReportModal({
             return;
           }
         } catch (e) {
-          console.debug('[ReportModal] /has-reported check failed, falling back to embedded check', (e as any)?.message || e);
+          // fallback
         }
 
         const reports = activity.reports || [];
         const found = Array.isArray(reports) && !!reports.find((r: any) => String((r.user?._id || r.user)) === String(user._id));
         setAlreadyReported(Boolean(found));
       } catch (e) {
-        console.debug('[ReportModal] failed duplicate check', (e as any)?.message || e);
+        console.debug('[ReportModal] failed duplicate check', e);
       }
     })();
 
     return () => { active = false; };
   }, [isOpen, targetId, targetType, user]);
 
-  const words = countWords(details);
   const chars = details.trim().length;
 
   const submitReportTo = async (path: string, payload: any) => api.post(path, payload);
 
   const resolveAndPostActivity = async (id: string, payload: any) => {
     try {
-      console.debug('[Report] trying direct activity id:', id);
       const path = `/activities/${id}/report`;
-      console.debug(`Posting report to ${path}`);
       return await submitReportTo(path, payload);
     } catch (err: any) {
-      console.debug('[Report] direct activity POST failed:', id, err?.response?.status, err?.message || err);
       const is404 = err?.response?.status === 404 || String(err?.message || '').includes('ไม่พบข้อมูล') || String(err).includes('Not Found');
       if (is404) {
         try {
@@ -145,47 +137,34 @@ export default function ReportModal({
           const relatedActivity = chat?.groupInfo?.relatedActivity;
           if (relatedActivity) {
             const relId = typeof relatedActivity === 'string' ? relatedActivity : (relatedActivity._id || relatedActivity.toString());
-            console.debug('[Report] resolved relatedActivity from chat:', relId);
             if (relId) {
-              const path = `/activities/${relId}/report`;
-              console.debug(`Posting report to ${path}`);
-              return await submitReportTo(path, payload);
+              return await submitReportTo(`/activities/${relId}/report`, payload);
             }
           }
         } catch (e) {
-          const _e: any = e;
-          console.debug('[Report] chat resolution failed:', _e?.message || _e);
+          // ignore
         }
 
-        // try backend helper
         try {
-          console.debug('[Report] trying helper /activities/by-chat for chatId:', id);
           const res = await api.get(`/activities/by-chat/${id}`);
           const activity = res.data?.activity || res.data;
           const aid = activity?._id || activity?.id || activity;
-          console.debug('[Report] /by-chat returned activity id:', aid);
           if (aid) {
-            const path = `/activities/${aid}/report`;
-            console.debug(`Posting report to ${path}`);
-            return await submitReportTo(path, payload);
+            return await submitReportTo(`/activities/${aid}/report`, payload);
           }
         } catch (e) {
-          console.debug('[Report] /by-chat helper failed:', (e as any)?.message || e);
+          // ignore
         }
 
         try {
-          console.debug('[Report] falling back to scanning /activities for chat._id ==', id);
           const acts = await api.get('/activities');
           const activities = acts.data?.activities || acts.data || [];
           const matched = Array.isArray(activities) ? activities.find((a: any) => String(a?.chat?._id || a?.chat) === String(id)) : null;
-          console.debug('[Report] scan matched activity:', matched?._id);
           if (matched && matched._id) {
-            const path = `/activities/${matched._id}/report`;
-            console.debug(`Posting report to ${path}`);
-            return await submitReportTo(path, payload);
+            return await submitReportTo(`/activities/${matched._id}/report`, payload);
           }
         } catch (e) {
-          console.debug('[Report] activities scan failed:', (e as any)?.message || e);
+          // ignore
         }
       }
       throw err;
@@ -196,7 +175,7 @@ export default function ReportModal({
     e.preventDefault();
 
     if (chars < 10) {
-      showWarning('กรุณาใส่รายละเอียด', 'Please provide detailed description (at least 10 characters)');
+      showWarning('กรุณาใส่รายละเอียด', 'Please provide a detailed description (at least 10 characters)');
       return;
     }
     if (chars > MAX_CHARS) {
@@ -207,18 +186,13 @@ export default function ReportModal({
     setSubmitting(true);
     try {
       const payload = { reason, details: details.trim() };
-      console.debug('[Report] submitting payload', { payload, targetType, targetId });
 
       if (targetType === 'activity') {
         await resolveAndPostActivity(targetId, payload);
       } else if (targetType === 'group') {
-        const path = `/groups/${targetId}/report`;
-        console.debug(`Posting report to ${path}`);
-        await submitReportTo(path, payload);
+        await submitReportTo(`/groups/${targetId}/report`, payload);
       } else {
-        const path = `/users/${targetId}/report`;
-        console.debug(`Posting report to ${path}`);
-        await submitReportTo(path, payload);
+        await submitReportTo(`/users/${targetId}/report`, payload);
       }
 
       showSuccess('ส่งรายงานสำเร็จ!', 'Report submitted. Our moderation team will review it.');
@@ -231,9 +205,9 @@ export default function ReportModal({
       const serverError = error?.response?.data?.error || error?.message;
 
       if (status === 404) {
-        showError('ไม่พบกิจกรรม', 'Activity not found. It may have been deleted.');
+        showError('ไม่พบข้อมูล', 'Resource not found. It may have been removed.');
       } else if (status === 409) {
-        showWarning('รายงานแล้ว', 'You have already reported this activity.');
+        showWarning('รายงานแล้ว', 'You have already reported this item.');
       } else if (status === 400) {
         showError('รายงานไม่ถูกต้อง', serverError || 'Invalid report. Please check your input.');
       } else {
@@ -248,69 +222,100 @@ export default function ReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#202124]/50 backdrop-blur-sm animate-fade-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white dark:bg-slate-800 rounded-sm shadow-xl max-w-md sm:max-w-lg md:max-w-xl w-full border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[70vh] flex flex-col">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Report {targetType}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full border border-[#E8EBE9] overflow-hidden flex flex-col">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#E8EBE9]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-red-50 text-red-600 border border-red-100">
+              <ShieldAlert className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-[#202124]">Report {targetType}</h3>
+              <p className="text-xs text-[#858B89]">Help keep the WegoSystem community safe and respectful.</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-[#858B89] hover:text-[#202124] hover:bg-[#F3F5F4] transition-colors"
+          >
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 overflow-auto pb-24">
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Reason</label>
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {alreadyReported && !DEV_ALLOW_DUPLICATE && (
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <span>You have already submitted a report for this {targetType}.</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-[#858B89] mb-2">
+              Reason for report
+            </label>
             <select
-              className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-sm text-slate-800 dark:text-white focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
+              className="w-full px-4 py-3 bg-[#F3F5F4] border border-[#E8EBE9] rounded-xl text-[#202124] text-sm focus:ring-2 focus:ring-[#147D70] focus:border-transparent focus:outline-none transition-all"
               value={reason}
               onChange={(e) => setReason(e.target.value as ReportReason)}
             >
               {Object.entries(REASON_LABELS).map(([value, label]) => (
-                <option key={value} value={value} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                <option key={value} value={value}>
                   {label}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">Details <span className="text-red-500">*</span></label>
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-[#858B89]">
+                Details <span className="text-red-500">*</span>
+              </label>
+              <span className={`text-xs ${chars > MAX_CHARS ? 'text-red-500 font-semibold' : 'text-[#858B89]'}`}>
+                {chars}/{MAX_CHARS}
+              </span>
+            </div>
             <textarea
               value={details}
               onChange={(e) => { if (!isComposing) setDetails(e.target.value); else setDetails(e.target.value); }}
               onCompositionStart={() => setIsComposing(true)}
               onCompositionEnd={(e) => { setIsComposing(false); setDetails((e.target as HTMLTextAreaElement).value); }}
-              placeholder="Describe the issue..."
-              rows={5}
-              className="w-full min-h-[140px] px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-600 rounded-sm text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 resize-none focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none"
+              placeholder="Please provide details about this issue so our moderation team can review it accurately..."
+              rows={4}
+              className="w-full px-4 py-3 bg-[#F3F5F4] border border-[#E8EBE9] rounded-xl text-[#202124] placeholder-[#858B89]/60 text-sm resize-none focus:ring-2 focus:ring-[#147D70] focus:border-transparent focus:outline-none transition-all"
             />
-            <div className="flex justify-end text-xs text-slate-500 dark:text-slate-400 mt-1">
-              <span>{chars}/{MAX_CHARS} characters</span>
-            </div>
             {chars > 0 && chars < 10 && (
-              <div className="text-red-500 text-xs mt-1">Please type at least 10 characters.</div>
+              <p className="text-red-500 text-xs mt-1.5">Please type at least 10 characters.</p>
             )}
             {chars > MAX_CHARS && (
-              <div className="text-red-500 text-xs mt-1">Please limit your report to {MAX_CHARS} characters or fewer.</div>
+              <p className="text-red-500 text-xs mt-1.5">Please limit your report to {MAX_CHARS} characters.</p>
             )}
           </div>
 
-          <div className="sticky bottom-0 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm py-4">
-            <div className="flex justify-center px-4">
-              <button
-                type="submit"
-                disabled={submitting || details.trim().length < 10 || details.trim().length > MAX_CHARS || (alreadyReported && !DEV_ALLOW_DUPLICATE)}
-                className="w-full max-w-sm px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-medium rounded-sm transition-colors"
-              >
-                {submitting ? 'Submitting...' : (alreadyReported && !DEV_ALLOW_DUPLICATE) ? 'Already Reported' : 'Submit Report'}
-              </button>
-            </div>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#E8EBE9]">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl border border-[#E8EBE9] bg-white text-sm font-semibold text-[#858B89] hover:text-[#202124] hover:bg-[#F3F5F4] transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || details.trim().length < 10 || details.trim().length > MAX_CHARS || (alreadyReported && !DEV_ALLOW_DUPLICATE)}
+              className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold transition-colors shadow-sm flex items-center gap-2"
+            >
+              <Flag className="w-4 h-4" />
+              {submitting ? 'Submitting...' : (alreadyReported && !DEV_ALLOW_DUPLICATE) ? 'Already Reported' : 'Submit Report'}
+            </button>
           </div>
         </form>
       </div>

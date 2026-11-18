@@ -6,7 +6,7 @@ import { api } from '../../lib/apiClient';
 import MemberListDM from '../../components/MemberListDM';
 import GroupReviews from '../../components/GroupReviews';
 import ReportModal from '../../components/ReportModal';
-import { ArrowLeft, Users, Send, MessageSquare, Flag, Clock } from 'lucide-react';
+import { ArrowLeft, Users, Send, MessageSquare, Flag, Clock, Star } from 'lucide-react';
 
 type Message = {
   _id: string;
@@ -370,47 +370,13 @@ export default function DirectChat() {
 
   if (authLoading || isLoading) {
     return (
-      <section className="min-h-screen bg-slate-50 dark:bg-slate-900">
+      <section className="min-h-screen bg-[#F3F5F4]">
         <div className="container-app py-10 md:py-14">
           <div className="mx-auto w-full max-w-4xl">
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
-              <div className="px-5 py-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-600/10 border border-teal-600/20">
-                    <MessageSquare className="h-5 w-5 text-teal-600 dark:text-teal-400 animate-pulse" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-base font-semibold text-slate-900 dark:text-white">Loading conversation…</div>
-                    <div className="text-sm text-slate-500 dark:text-slate-400">Preparing chat room</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-5 md:p-6 animate-pulse">
-                <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr),20rem]">
-                  {/* Messages skeleton */}
-                  <div className="space-y-4">
-                    <div className="h-9 w-1/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
-                    <div className="space-y-3">
-                      <div className="h-12 w-2/3 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                      <div className="h-12 w-1/2 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                      <div className="h-12 w-3/5 rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                      <div className="h-12 w-1/2 ml-auto rounded-2xl bg-teal-600/10 dark:bg-teal-500/10" />
-                    </div>
-                    <div className="h-12 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                  </div>
-
-                  {/* Sidebar skeleton */}
-                  <div className="space-y-4">
-                    <div className="h-9 w-2/3 rounded-xl bg-slate-100 dark:bg-slate-700/40" />
-                    <div className="space-y-3">
-                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                      <div className="h-20 w-full rounded-2xl bg-slate-100 dark:bg-slate-700/40" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="card p-12 text-center space-y-3">
+              <div className="w-10 h-10 rounded-full border-3 border-[#147D70] border-t-transparent animate-spin mx-auto" />
+              <div className="text-sm font-bold text-[#202124]">Loading conversation…</div>
+              <div className="text-xs text-[#858B89]">Connecting to secure chat channel</div>
             </div>
           </div>
         </div>
@@ -420,40 +386,26 @@ export default function DirectChat() {
 
   if (loadError) {
     return (
-      <section className="min-h-[60vh]">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 dark:bg-slate-700/40 dark:border-slate-600/50">
-                <MessageSquare className="h-5 w-5 text-slate-500" />
-              </div>
-              <div className="flex-1">
-                <div className="text-base font-semibold text-slate-900 dark:text-white">Can’t load this conversation</div>
-                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">{loadError}</div>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <button
-                    onClick={() => setRefreshNonce((v) => v + 1)}
-                    className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-500 transition-colors"
-                  >
-                    Retry
-                  </button>
-                  {!user ? (
-                    <Link
-                      to="/auth/signin"
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600/50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/40"
-                    >
-                      Sign in
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/explore"
-                      className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-600/50 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700/40"
-                    >
-                      Back to Explore
-                    </Link>
-                  )}
-                </div>
-              </div>
+      <section className="min-h-[60vh] py-12 bg-[#F3F5F4]">
+        <div className="container-app max-w-md mx-auto">
+          <div className="card p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mx-auto">
+              <MessageSquare className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-base font-bold text-[#202124]">Cannot Load Conversation</div>
+              <div className="mt-1 text-xs text-[#858B89]">{loadError}</div>
+            </div>
+            <div className="flex justify-center gap-3 pt-2">
+              <button
+                onClick={() => setRefreshNonce((v) => v + 1)}
+                className="btn-primary text-xs"
+              >
+                Retry
+              </button>
+              <Link to="/explore" className="btn-secondary text-xs">
+                Back to Explore
+              </Link>
             </div>
           </div>
         </div>
@@ -463,25 +415,20 @@ export default function DirectChat() {
 
   if (!chatInfo) {
     return (
-      <section className="min-h-[60vh]">
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 border border-slate-200 dark:bg-slate-700/40 dark:border-slate-600/50">
-                <MessageSquare className="h-5 w-5 text-slate-500" />
-              </div>
-              <div className="flex-1">
-                <div className="text-base font-semibold text-slate-900 dark:text-white">Chat room not found</div>
-                <div className="mt-1 text-sm text-slate-600 dark:text-slate-300">This conversation might be deleted or you don’t have access.</div>
-                <div className="mt-4 flex flex-wrap gap-3">
-                  <Link
-                    to="/explore"
-                    className="inline-flex items-center justify-center rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-500 transition-colors"
-                  >
-                    Back to Explore
-                  </Link>
-                </div>
-              </div>
+      <section className="min-h-[60vh] py-12 bg-[#F3F5F4]">
+        <div className="container-app max-w-md mx-auto">
+          <div className="card p-6 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-[#E0F3F1] text-[#147D70] flex items-center justify-center mx-auto">
+              <MessageSquare className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-base font-bold text-[#202124]">Chat Room Not Found</div>
+              <div className="mt-1 text-xs text-[#858B89]">This conversation might be archived or you may lack access.</div>
+            </div>
+            <div className="pt-2">
+              <Link to="/explore" className="btn-primary text-xs">
+                Back to Explorer
+              </Link>
             </div>
           </div>
         </div>
@@ -490,30 +437,30 @@ export default function DirectChat() {
   }
 
   return (
-    <section className="min-h-screen bg-slate-50 dark:bg-slate-900">
-      <div className="container-app py-6 md:py-10">
-        <div className="mx-auto grid max-w-7xl grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 lg:grid-cols-[minmax(0,1fr),20rem]">
+    <section className="min-h-screen bg-[#F3F5F4]">
+      <div className="container-app py-6 md:py-8">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 overflow-hidden card lg:grid-cols-[minmax(0,1fr),20rem]">
           {/* Chat Section */}
-          <div className="flex min-h-[70vh] flex-col bg-white dark:bg-slate-800 lg:min-h-[calc(100vh-240px)]">
+          <div className="flex min-h-[70vh] flex-col bg-white lg:min-h-[calc(100vh-220px)]">
             {/* Chat Header */}
-            <header className="sticky top-0 z-10 px-4 py-4 md:px-6 flex items-center gap-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm dark:border-slate-700 dark:bg-slate-800/80">
+            <header className="sticky top-0 z-10 px-5 py-4 flex items-center gap-4 border-b border-[#E8EBE9] bg-white/95 backdrop-blur-sm">
               <button 
                 onClick={() => navigate(-1)} 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors duration-200 group dark:bg-slate-700/50 dark:hover:bg-slate-600/50 dark:border-slate-600/50"
+                className="btn-secondary text-xs px-3 py-2 flex items-center gap-1.5"
               >
-                <ArrowLeft className="w-5 h-5 text-slate-600 group-hover:text-teal-600 transition-colors dark:text-slate-300 dark:group-hover:text-teal-400" />
-                <span className="font-medium text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white">Back</span>
+                <ArrowLeft className="w-4 h-4 text-[#147D70]" />
+                <span>Back</span>
               </button>
               <div className="flex-1">
-                <h3 className="text-xl font-semibold text-slate-900 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+                <h3 className="text-base font-bold text-[#202124]">
                   {chatInfo.type === 'group' 
-                    ? (chatInfo.groupInfo?.relatedActivityDetails?.title || chatInfo.groupInfo?.name || 'Group Chat') 
-                    : 'Direct Message'}
+                    ? (chatInfo.groupInfo?.relatedActivityDetails?.title || chatInfo.groupInfo?.name || 'Group Workspace Chat') 
+                    : 'Direct Conversation'}
                 </h3>
                 {chatInfo.type === 'group' && (
-                  <div className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-2 mt-1">
-                    <Users className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    <span>{participantCount} members</span>
+                  <div className="text-xs text-[#858B89] flex items-center gap-1.5 mt-0.5">
+                    <Users className="w-3.5 h-3.5 text-[#147D70]" />
+                    <span>{participantCount} active members</span>
                   </div>
                 )}
               </div>
@@ -521,7 +468,7 @@ export default function DirectChat() {
 
             {/* Messages */}
             <div className="flex-1 p-4 md:p-6 flex flex-col">
-              <div className="flex-1 overflow-y-auto space-y-4 pr-2 md:pr-3 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
+              <div className="flex-1 overflow-y-auto space-y-4 pr-2 thin-scrollbar">
                 {messages.map((msg, idx) => {
                   const isMine = user && msg.sender._id === user._id;
                   const sender = msg.sender as any;
@@ -540,10 +487,10 @@ export default function DirectChat() {
                             <img 
                               src={avatarUrl} 
                               alt={displayName} 
-                              className="w-10 h-10 rounded-full object-cover ring-2 ring-teal-500/30" 
+                              className="w-8 h-8 rounded-xl object-cover ring-2 ring-[#E0F3F1]" 
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-teal-500/20">
+                            <div className="w-8 h-8 rounded-xl bg-[#147D70] flex items-center justify-center text-white font-bold text-xs">
                               {displayName.charAt(0).toUpperCase()}
                             </div>
                           )}
@@ -551,28 +498,28 @@ export default function DirectChat() {
                         
                         <div className="flex-1 space-y-1">
                           {showAvatar && (
-                            <div className={`text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-2 ${isMine ? 'justify-end mr-2' : 'ml-2'}`}>
-                              <span className="text-slate-700 dark:text-slate-300">{displayName}</span>
+                            <div className={`text-[11px] font-semibold text-[#858B89] mb-1 flex items-center gap-1.5 ${isMine ? 'justify-end mr-1' : 'ml-1'}`}>
+                              <span className="text-[#202124]">{displayName}</span>
                               {isOnline && (
-                                <span className="flex items-center gap-1 text-emerald-400">
-                                  <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+                                <span className="flex items-center gap-1 text-[#147D70]">
+                                  <span className="w-1.5 h-1.5 bg-[#147D70] rounded-full animate-pulse" />
                                   <span className="text-[10px]">Online</span>
                                 </span>
                               )}
                             </div>
                           )}
                           <div
-                            className={`px-4 py-3 rounded-2xl ${
+                            className={`px-4 py-2.5 rounded-2xl ${
                               isMine
-                                ? 'bg-teal-600 text-white'
-                                : 'bg-slate-100 text-slate-900 border border-slate-200 dark:bg-slate-700/70 dark:text-slate-100 dark:border-slate-600/50'
+                                ? 'bg-[#147D70] text-white rounded-br-xs shadow-xs'
+                                : 'bg-[#F3F5F4] text-[#202124] border border-[#E8EBE9] rounded-bl-xs'
                             }`}
                           >
-                            <div className="break-words text-sm leading-relaxed">{msg.content}</div>
-                            <div className={`text-[11px] mt-2 flex items-center gap-1.5 ${isMine ? 'text-teal-100 justify-end' : 'text-slate-500 dark:text-slate-400'}`}>
+                            <div className="break-words text-xs leading-relaxed">{msg.content}</div>
+                            <div className={`text-[10px] mt-1.5 flex items-center gap-1 ${isMine ? 'text-teal-100 justify-end' : 'text-[#858B89]'}`}>
                               <Clock className="w-3 h-3" />
-                              <span className="font-medium">
-                                {new Date(msg.createdAt).toLocaleTimeString('en-US', {
+                              <span>
+                                {new Date(msg.createdAt).toLocaleTimeString([], {
                                   hour: '2-digit',
                                   minute: '2-digit'
                                 })}
@@ -586,14 +533,14 @@ export default function DirectChat() {
                 })}
                 {!messages.length && (
                   <div className="flex h-full items-center justify-center">
-                    <div className="text-center space-y-4 p-8">
-                      <div className="w-20 h-20 mx-auto rounded-full bg-teal-500/10 border border-teal-500/20 flex items-center justify-center dark:bg-teal-500/20 dark:border-teal-500/30">
-                        <MessageSquare className="w-10 h-10 text-teal-600 dark:text-teal-400" />
+                    <div className="text-center space-y-3 p-8">
+                      <div className="w-14 h-14 mx-auto rounded-2xl bg-[#E0F3F1] text-[#147D70] flex items-center justify-center">
+                        <MessageSquare className="w-7 h-7" />
                       </div>
                       <div>
-                        <div className="text-xl font-medium text-slate-900 dark:text-slate-200 mb-2">No messages yet</div>
-                        <div className="text-sm text-slate-500 max-w-md leading-relaxed">
-                          Start the conversation! Send a message to begin chatting with {chatInfo.type === 'group' ? 'the group' : 'your contact'}.
+                        <div className="text-base font-bold text-[#202124] mb-1">No messages recorded</div>
+                        <div className="text-xs text-[#858B89] max-w-sm mx-auto leading-relaxed">
+                          Start the session conversation! Send a message to coordinate with {chatInfo.type === 'group' ? 'group members' : 'your partner'}.
                         </div>
                       </div>
                     </div>
@@ -603,14 +550,14 @@ export default function DirectChat() {
               </div>
 
               {/* Input Area */}
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <div className="flex gap-3 items-end">
+              <div className="mt-4 pt-3.5 border-t border-[#E8EBE9]">
+                <div className="flex gap-2 items-end">
                   <div className="flex-1">
                     <textarea
-                      className="w-full resize-none rounded-xl bg-white border border-slate-200 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all text-slate-900 placeholder-slate-400 min-h-[48px] max-h-36 py-3 px-4 text-sm leading-relaxed focus:outline-none dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder-slate-500"
+                      className="input min-h-[44px] max-h-32 text-xs py-2.5 resize-none"
                       value={text}
                       onChange={(e) => setText(e.target.value)}
-                      placeholder="Type a message..."
+                      placeholder="Type a message to the room..."
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault();
@@ -618,25 +565,14 @@ export default function DirectChat() {
                         }
                       }}
                       rows={1}
-                      style={{
-                        height: 'auto',
-                        minHeight: '48px'
-                      }}
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = 'auto';
-                        target.style.height = Math.min(target.scrollHeight, 144) + 'px';
-                      }}
                     />
                   </div>
                   <button 
-                    className="w-12 h-12 rounded-xl flex items-center justify-center bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     onClick={handleSend}
                     disabled={!text.trim()}
-                    aria-label="Send message"
-                    title="Send message"
+                    className="btn-primary w-11 h-11 p-0 flex items-center justify-center rounded-xl"
                   >
-                    <Send className="w-5 h-5 text-white" />
+                    <Send className="w-4 h-4 text-[#D9F36A]" />
                   </button>
                 </div>
               </div>
@@ -645,16 +581,16 @@ export default function DirectChat() {
 
           {/* Member List */}
           {chatInfo.type === 'group' && chatInfo.participants && (
-            <aside className="hidden lg:flex flex-col border-l border-slate-200 bg-slate-50/70 dark:border-slate-700 dark:bg-slate-900/20">
+            <aside className="hidden lg:flex flex-col border-l border-[#E8EBE9] bg-[#F3F5F4]/60 w-80">
               <div className="h-full flex flex-col">
                 <div className="flex-1 p-5 overflow-hidden flex flex-col">
-                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-3 text-slate-900 dark:text-white pb-3 border-b border-slate-200 dark:border-slate-700 flex-shrink-0" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                    <div className="p-2 bg-teal-500/10 rounded-xl border border-teal-500/20 dark:bg-teal-500/20 dark:border-teal-500/30">
-                      <Users className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+                  <h4 className="font-bold text-base mb-4 flex items-center gap-2 text-[#202124] pb-3 border-b border-[#E8EBE9] flex-shrink-0">
+                    <div className="p-2 bg-[#EAF5D5] rounded-xl text-[#147D70]">
+                      <Users className="w-4 h-4" />
                     </div>
                     <span>Group Members</span>
                   </h4>
-                  <div className="flex-1 overflow-y-auto pb-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600">
+                  <div className="flex-1 overflow-y-auto pb-4">
                     <MemberListDM 
                       members={membersWithProfiles || chatInfo.participants
                         .filter((p: Participant) => !!p?.user?._id)
@@ -678,14 +614,14 @@ export default function DirectChat() {
                     />
                   </div>
                   
-                  {/* Report Button - Sticky Footer inside sidebar */}
-                  <div className="flex-shrink-0 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  {/* Report Button */}
+                  <div className="flex-shrink-0 pt-4 border-t border-[#E8EBE9]">
                     <button
                       onClick={() => setShowReportModal(true)}
-                      className="w-full p-3 border border-red-500/30 bg-red-500/5 hover:bg-red-500/10 rounded-xl transition-colors flex items-center justify-center gap-2 text-red-600 hover:text-red-700 group dark:bg-red-500/10 dark:hover:bg-red-500/20 dark:text-red-400 dark:hover:text-red-300"
+                      className="w-full py-2.5 px-3 border border-red-200 bg-red-50 hover:bg-red-100 rounded-xl transition-colors flex items-center justify-center gap-2 text-red-600 font-semibold text-xs group"
                     >
-                      <Flag className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      <span className="text-sm font-medium">Report</span>
+                      <Flag className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+                      <span>Report Activity</span>
                     </button>
                   </div>
                 </div>
@@ -694,11 +630,11 @@ export default function DirectChat() {
           )}
         </div>
 
-        {/* Mobile Report Button - fixed for group chats */}
+        {/* Mobile Report Button */}
         {chatInfo.type === 'group' && (
           <button
             onClick={() => setShowReportModal(true)}
-            className="lg:hidden fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-lg transition-colors flex items-center justify-center text-white bg-red-600 hover:bg-red-500"
+            className="lg:hidden fixed bottom-6 right-6 z-40 p-3.5 rounded-full shadow-lg transition-colors flex items-center justify-center text-white bg-red-600 hover:bg-red-700"
             aria-label="Report"
             title="Report"
           >
@@ -706,29 +642,27 @@ export default function DirectChat() {
           </button>
         )}
 
-        {/* Group Reviews Section - Always show for all group chats */}
+        {/* Group Reviews Section */}
         {chatInfo?.type === 'group' && (
-          <div className="mt-6 max-w-4xl mx-auto px-0">
-            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm dark:bg-slate-800 dark:border-slate-700">
-              {/* Compact Header */}
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 bg-amber-500/10 rounded-lg border border-amber-500/20 dark:bg-amber-500/20 dark:border-amber-500/30">
-                    <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
+          <div className="mt-8 max-w-5xl mx-auto px-0">
+            <div className="bg-white border border-[#E8EBE9] rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-5 py-4 bg-[#F3F5F4] border-b border-[#E8EBE9] flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 bg-[#EAF5D5] rounded-lg text-[#147D70]">
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
                   </div>
-                  <h3 className="text-base font-medium text-slate-900 dark:text-white">
-                    {chatInfo?.groupInfo?.relatedActivity ? 'Activity Reviews' : 'Group Chat Reviews'}
+                  <h3 className="text-base font-bold text-[#202124]">
+                    {chatInfo?.groupInfo?.relatedActivity ? 'Activity Reviews' : 'Group Reviews'}
                   </h3>
-                  {chatInfo?.groupInfo?.relatedActivity && (
-                    <span className="text-xs text-slate-500 ml-auto">ID: {chatInfo.groupInfo.relatedActivity.slice(-8)}</span>
-                  )}
                 </div>
+                {chatInfo?.groupInfo?.relatedActivity && (
+                  <span className="text-xs text-[#858B89] font-mono">
+                    ID: {chatInfo.groupInfo.relatedActivity.slice(-8)}
+                  </span>
+                )}
               </div>
               
-              {/* Reviews Content */}
-              <div className="p-4">
+              <div className="p-6">
                 <GroupReviews 
                   groupId={chatInfo.groupInfo?.relatedActivity || uid} 
                   currentUserId={user?._id}

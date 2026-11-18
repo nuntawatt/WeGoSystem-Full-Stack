@@ -1,8 +1,7 @@
-// Socket.io chat (client-only demo)
 import { useEffect, useRef, useState } from 'react';
 import { socket } from '../lib/socket';
 import { showInfo } from '../lib/swal';
-import { MessageSquare, Send, Eye } from 'lucide-react';
+import { MessageSquare, Send, Eye, CheckCheck } from 'lucide-react';
 
 type ChatMsg = { id: string; text: string; user: string; at: number; readBy: string[] };
 
@@ -55,76 +54,89 @@ export default function ChatPanel({ groupId }: { groupId: string }) {
     socket.emit('chatMessage', { groupId, message: payload });
     setMsgs((s) => [...s, payload]);
     setInput('');
-    showInfo('ส่งข้อความสำเร็จ!', 'Message sent');
   };
 
   return (
-    <div className="p-5 h-[60vh] min-h-[420px] max-h-[680px] flex flex-col rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
-        <div className="w-9 h-9 rounded-xl bg-teal-700 flex items-center justify-center">
-          <MessageSquare className="w-4 h-4 text-white" />
+    <div className="card p-5 h-[62vh] min-h-[440px] max-h-[700px] flex flex-col justify-between">
+      {/* Chatroom Header */}
+      <div className="flex items-center justify-between pb-3.5 mb-3 border-b border-[#E8EBE9]">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-[#E0F3F1] text-[#147D70] flex items-center justify-center">
+            <MessageSquare className="w-4 h-4" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-[#202124]">Activity Room Chat</h3>
+            <p className="text-[11px] text-[#858B89]">Real-time encrypted session channel</p>
+          </div>
         </div>
-        <span className="font-semibold text-slate-800 dark:text-slate-100" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>Group Chat</span>
-        <div className="ml-auto flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <span className="w-2 h-2 rounded-full bg-teal-500"></span>
-          Live
+
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EAF5D5] text-[#11665C] border border-[#D9F36A] text-[11px] font-semibold">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#147D70] animate-pulse" />
+          <span>Live Sync</span>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-        {msgs.map((m) => (
-          <div key={m.id} className={`max-w-[80%] ${m.user === 'me' ? 'ml-auto' : ''}`}>
-            <div className={`rounded-sm px-4 py-3 ${
-              m.user === 'me' 
-                ? 'bg-teal-700 text-white text-right' 
-                : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100'
-            }`}>
-              <div>{m.text}</div>
-              <div className={`text-[10px] mt-1 flex items-center gap-2 justify-end ${
-                m.user === 'me' ? 'text-teal-200' : 'text-slate-500 dark:text-slate-400'
-              }`}>
-                {new Date(m.at).toLocaleTimeString()} 
-                <span className="flex items-center gap-1">
-                  <Eye className="w-3 h-3" /> {m.readBy.length}
-                </span>
-              </div>
-            </div>
+      {/* Message Feed */}
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2 thin-scrollbar">
+        {msgs.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center text-[#858B89] space-y-1">
+            <MessageSquare className="w-8 h-8 opacity-40 text-[#147D70]" />
+            <p className="text-xs font-semibold text-[#202124]">No messages yet</p>
+            <p className="text-[11px]">Send a greeting to start the conversation!</p>
           </div>
-        ))}
+        ) : (
+          msgs.map((m) => {
+            const isMe = m.user === 'me';
+            return (
+              <div key={m.id} className={`flex flex-col max-w-[80%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
+                <div className={`rounded-2xl px-4 py-2.5 text-xs ${
+                  isMe
+                    ? 'bg-[#147D70] text-white rounded-br-xs shadow-xs'
+                    : 'bg-[#F3F5F4] text-[#202124] border border-[#E8EBE9] rounded-bl-xs'
+                }`}>
+                  <p className="leading-relaxed whitespace-pre-wrap">{m.text}</p>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-[#858B89] mt-1 px-1">
+                  <span>{new Date(m.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  {isMe && <CheckCheck className="w-3 h-3 text-[#147D70]" />}
+                </div>
+              </div>
+            );
+          })
+        )}
         <div ref={endRef} />
       </div>
 
-      {/* Typing indicator */}
+      {/* Typing Indicator */}
       {typing && (
-        <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-2">
-          <span className="flex gap-1">
-            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+        <div className="text-[11px] text-[#858B89] py-1 flex items-center gap-1.5">
+          <span className="flex gap-0.5">
+            <span className="w-1 h-1 bg-[#147D70] rounded-full animate-bounce" />
+            <span className="w-1 h-1 bg-[#147D70] rounded-full animate-bounce delay-100" />
+            <span className="w-1 h-1 bg-[#147D70] rounded-full animate-bounce delay-200" />
           </span>
-          {typing} is typing…
+          <span>{typing} is typing...</span>
         </div>
       )}
 
-      {/* Input */}
-      <div className="mt-3 flex gap-3">
+      {/* Input Form */}
+      <div className="mt-3 pt-3 border-t border-[#E8EBE9] flex gap-2">
         <input
-          className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none transition-all"
+          className="input flex-1 text-xs py-2.5"
           value={input}
           onChange={(e) => {
             setInput(e.target.value);
             socket.emit('typing', groupId);
           }}
-          placeholder="Type a message..."
+          placeholder="Write a message to the group..."
           onKeyDown={(e) => e.key === 'Enter' && send()}
         />
-        <button 
-          onClick={send} 
-          className="px-5 py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-medium transition-colors flex items-center justify-center"
+        <button
+          onClick={send}
+          disabled={!input.trim()}
+          className="btn-primary px-4 py-2.5 text-xs flex items-center justify-center"
         >
-          <Send className="w-4 h-4" />
+          <Send className="w-4 h-4 text-[#D9F36A]" />
         </button>
       </div>
     </div>

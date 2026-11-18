@@ -6,6 +6,19 @@ import { useEvents } from '../hooks/useEvents';
 import { useProfile } from '../hooks/useProfile';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Users, 
+  Image as ImageIcon, 
+  Sparkles, 
+  PlusCircle, 
+  X,
+  UploadCloud,
+  CheckCircle2,
+  ArrowLeft
+} from 'lucide-react';
 
 interface FormData {
   title: string;
@@ -33,20 +46,17 @@ export default function Create() {
     date: '',
     time: '',
     tags: [],
-    maxParticipants: 2,
-
+    maxParticipants: 4,
   });
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [previewImage, setPreviewImage] = useState<string>('');
   const navigate = useNavigate();
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Cleanup preview image when component unmounts
   useEffect(() => {
     return () => {
       if (previewImage) {
@@ -67,7 +77,7 @@ export default function Create() {
     () =>
       (data?.name?.trim() ||
         user?.email?.split('@')[0] ||
-        '') as string,
+        'You') as string,
     [data?.name, user?.email]
   );
 
@@ -78,23 +88,20 @@ export default function Create() {
       return;
     }
 
-    const maxSize = 5; // 5MB
+    const maxSize = 5;
     const sizeMb = file.size / (1024 * 1024);
     if (sizeMb > maxSize) {
       showError('ไฟล์ใหญ่เกินไป', `File too large (max ${maxSize} MB)`);
       return;
     }
 
-    // Cleanup previous preview URL if exists
     if (previewImage) {
       URL.revokeObjectURL(previewImage);
     }
 
-    // Create new preview image
     const localUrl = URL.createObjectURL(file);
     setPreviewImage(localUrl);
 
-    // Save file to form data
     setFormData((prev: FormData) => ({
       ...prev,
       coverImage: file
@@ -115,7 +122,6 @@ export default function Create() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form data (category is optional)
     if (!formData.title || !formData.description || !formData.location ||
       !formData.date || !formData.time) {
       showError('กรุณากรอกข้อมูล', 'Please fill in all required fields');
@@ -128,7 +134,6 @@ export default function Create() {
     }
 
     try {
-      // If there's a cover image, upload it first
       let coverUrl = undefined;
       if (formData.coverImage) {
         setUploading(true);
@@ -185,8 +190,8 @@ export default function Create() {
       };
 
       await createEvent(eventData);
-      showSuccess('สร้างกิจกรรมสำเร็จ', 'Your activity has been created');
-      navigate('/events');
+      showSuccess('สร้างกิจกรรมสำเร็จ!', 'ห้องกิจกรรมของคุณถูกเผยแพร่แล้ว');
+      navigate('/explore');
     } catch (error) {
       console.error('Create event error:', error);
       showError('ไม่สามารถสร้างกิจกรรมได้', 'กรุณาลองใหม่อีกครั้ง');
@@ -194,76 +199,97 @@ export default function Create() {
   };
 
   return (
-    <section className="min-h-screen py-8 bg-slate-50 dark:bg-slate-900">
-      <div className="container-app px-4">
-        {/* Professional Header */}
-        <header className="mb-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            Create <span className="italic">Activity</span>
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400">Share your interests and meet like-minded people</p>
-        </header>
-
-        <div className="w-full max-w-3xl mx-auto">
-          {/* Professional Form Card */}
-          <form
-            onSubmit={onSubmit}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm p-8 space-y-6 shadow-sm"
+    <section className="min-h-screen py-10 bg-[#F3F5F4]">
+      <div className="container-app max-w-4xl space-y-6">
+        {/* Navigation Breadcrumb / Back */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#858B89] hover:text-[#202124] transition-colors"
           >
-            {/* Form Header */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-                Activity Details
-              </h3>
-              <span className="text-sm text-slate-500 dark:text-slate-400 px-3 py-1.5 bg-slate-100 dark:bg-slate-700 rounded-sm">
-                Creator: <span className="font-medium text-teal-700 dark:text-teal-400">{userName}</span>
-              </span>
-            </div>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back</span>
+          </button>
 
-            {/* Cover Image Section */}
+          <span className="text-xs text-[#858B89]">
+            Publishing as <strong className="text-[#147D70]">{userName}</strong>
+          </span>
+        </div>
+
+        {/* Form Container Card */}
+        <div className="card overflow-hidden shadow-xs">
+          {/* Header Banner */}
+          <div className="p-6 sm:p-8 border-b border-[#E8EBE9] bg-white">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#E0F3F1] text-[#147D70] flex items-center justify-center flex-shrink-0">
+                <PlusCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-[#202124] tracking-tight">
+                  Create an Activity Room
+                </h1>
+                <p className="text-xs sm:text-sm text-[#858B89] mt-0.5">
+                  Host study sessions, creative workshops, or group collaborations.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Fields */}
+          <form onSubmit={onSubmit} className="p-6 sm:p-8 space-y-6 bg-white">
+            {/* Cover Image Upload Dropzone */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3" htmlFor="coverImage">
-                Cover Image
-              </label>
-              <div className="flex gap-4 items-start">
-                <div className="relative w-44 h-44 rounded-sm overflow-hidden bg-slate-100 dark:bg-slate-700 border-2 border-dashed border-slate-300 dark:border-slate-600">
+              <label className="label">Cover Media (Optional)</label>
+              <div className="flex flex-col sm:flex-row items-start gap-4">
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full sm:w-60 h-40 rounded-xl border-2 border-dashed border-[#E8EBE9] hover:border-[#147D70] bg-[#F3F5F4] flex flex-col items-center justify-center cursor-pointer transition-colors overflow-hidden relative group"
+                >
                   {previewImage ? (
-                    <img
-                      src={previewImage}
-                      alt="Activity cover"
-                      className="w-full h-full object-cover"
-                    />
+                    <>
+                      <img
+                        src={previewImage}
+                        alt="Activity cover"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-[#202124]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold">
+                        Change Image
+                      </div>
+                    </>
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 dark:text-slate-500">
-                      <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-xs">No image</span>
+                    <div className="text-center p-4 space-y-1 text-[#858B89]">
+                      <UploadCloud className="w-8 h-8 mx-auto text-[#147D70]" />
+                      <span className="text-xs font-semibold text-[#202124] block">Click to upload cover</span>
+                      <span className="text-[10px] block">PNG, JPG, WebP up to 5MB</span>
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col gap-3">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200"
-                    disabled={isLoading}
-                  >
-                    Choose Image
-                  </button>
-                  {previewImage && (
+
+                <div className="space-y-2 flex-1">
+                  <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={removeImage}
-                      className="px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 rounded-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn-secondary text-xs"
+                      disabled={isLoading || uploading}
                     >
-                      Remove
+                      {previewImage ? 'Replace Image' : 'Choose Photo'}
                     </button>
-                  )}
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    Recommended: 1200×800px<br />Max 5MB
+                    {previewImage && (
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="px-3 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#858B89] leading-relaxed">
+                    Recommended resolution: 1200×630px. High-quality imagery helps attract engaged participants to your session.
                   </p>
                 </div>
+
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -274,16 +300,14 @@ export default function Create() {
               </div>
             </div>
 
-            {/* Activity Name */}
+            {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="title">
-                Activity Name
-              </label>
+              <label htmlFor="title" className="label">Activity Title *</label>
               <input
                 id="title"
                 name="title"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                placeholder="Enter a catchy activity name..."
+                className="input"
+                placeholder="e.g., Late Night Machine Learning Study Circle"
                 value={formData.title}
                 onChange={handleChange}
                 required
@@ -293,14 +317,12 @@ export default function Create() {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="description">
-                Description
-              </label>
+              <label htmlFor="description" className="label">Room Agenda & Description *</label>
               <textarea
                 id="description"
                 name="description"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-28"
-                placeholder="Briefly describe your activity..."
+                className="input min-h-[7rem] resize-none"
+                placeholder="What will you work on? Any prerequisites or expectations for attendees?"
                 value={formData.description}
                 onChange={handleChange}
                 required
@@ -310,119 +332,84 @@ export default function Create() {
 
             {/* Location */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="location">
-                Location
-              </label>
-              <input
-                id="location"
-                name="location"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                placeholder="Where will this happen?"
-                value={formData.location}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-              />
+              <label htmlFor="location" className="label">Meeting Location or Online Link *</label>
+              <div className="relative">
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858B89]" />
+                <input
+                  id="location"
+                  name="location"
+                  className="input pl-10"
+                  placeholder="e.g., Central Library 4th Floor Study Room 402 or Google Meet link"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
             </div>
 
             {/* Date & Time Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="date">
-                  Date
-                </label>
+                <label htmlFor="date" className="label">Scheduled Date *</label>
                 <div className="relative">
                   <input
                     ref={dateInputRef}
                     type="date"
                     id="date"
                     name="date"
-                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none input-with-icon calendar"
-                    style={{ colorScheme: 'light dark' }}
+                    className="input input-with-icon calendar"
                     value={formData.date}
                     onChange={handleChange}
                     required
                     disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    aria-label="Open date picker"
-                    onClick={() => {
-                      const el = dateInputRef.current as HTMLInputElement | null;
-                      if (!el) return;
-                      try {
-                        if (typeof el.showPicker === 'function') {
-                          el.showPicker();
-                          return;
-                        }
-                      } catch (e) {
-                        // ignore
-                      }
-                      el.focus();
-                      try { el.click(); } catch (e) { /* ignore */ }
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="4" width="18" height="18" rx="2" />
-                      <line x1="16" y1="2" x2="16" y2="6" />
-                      <line x1="8" y1="2" x2="8" y2="6" />
-                    </svg>
-                  </button>
                 </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="time">
-                  Time
-                </label>
+                <label htmlFor="time" className="label">Start Time *</label>
                 <div className="relative">
                   <input
                     ref={timeInputRef}
                     type="time"
                     id="time"
                     name="time"
-                    className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none input-with-icon clock"
-                    style={{ colorScheme: 'light dark' }}
+                    className="input input-with-icon clock"
                     value={formData.time}
                     onChange={handleChange}
                     required
                     disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    aria-label="Open time picker"
-                    onClick={() => {
-                      const el = timeInputRef.current as HTMLInputElement | null;
-                      if (!el) return;
-                      try {
-                        // @ts-ignore
-                        if (typeof el.showPicker === 'function') {
-                          // @ts-ignore
-                          el.showPicker();
-                          return;
-                        }
-                      } catch (e) {
-                        // ignore
-                      }
-                      el.focus();
-                      try { el.click(); } catch (e) { /* ignore */ }
-                    }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <polyline points="12 6 12 12 16 14" />
-                    </svg>
-                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Tags */}
+            {/* Max Participants */}
             <div>
-              <div className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Tags
+              <label htmlFor="maxParticipants" className="label">Maximum Participants (Capacity) *</label>
+              <div className="flex items-center gap-4">
+                <input
+                  type="number"
+                  id="maxParticipants"
+                  name="maxParticipants"
+                  className="input max-w-[12rem]"
+                  min={2}
+                  max={100}
+                  value={formData.maxParticipants}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                />
+                <span className="text-xs text-[#858B89]">
+                  Minimum 2 members required. Organizer is included automatically.
+                </span>
               </div>
+            </div>
+
+            {/* Tags Section */}
+            <div>
+              <label className="label">Tags & Classifications</label>
               <TagSelector
                 value={formData.tags}
                 onChange={(newTags) => setFormData((prev: FormData) => ({ ...prev, tags: newTags }))}
@@ -430,38 +417,36 @@ export default function Create() {
               />
             </div>
 
-            {/* Max Participants */}
-            <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2" htmlFor="maxParticipants">
-                Max Participants
-              </label>
-              <input type="number" id="maxParticipants" name="maxParticipants"
-                className="w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                placeholder="ระบุจำนวนคนที่รับได้ (ขั้นต่ำ 2 คน)" min={2} max={100} value={formData.maxParticipants}
-                onChange={handleChange} required disabled={isLoading}
-              />
-              <p className="text-xs text-slate-400 dark:text-slate-500 mt-2">
-                ระบุจำนวนคนที่ต้องการรับเข้ากิจกรรม (ไม่นับรวมผู้สร้าง)
-              </p>
+            {/* Submit Action */}
+            <div className="pt-4 border-t border-[#E8EBE9] flex items-center justify-between gap-4">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="btn-secondary text-xs"
+                disabled={isLoading || uploading}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isLoading || uploading}
+                className="btn-primary text-xs px-6 py-3 flex items-center gap-2"
+              >
+                {isLoading || uploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Publishing Activity Room...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-[#D9F36A]" />
+                    <span>Publish Activity Room</span>
+                  </>
+                )}
+              </button>
             </div>
-
-            {/* Submit Button */}
-            <button
-              className="w-full py-3.5 text-base font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                  Creating activity...
-                </>
-              ) : (
-                <>Create Activity</>
-              )}
-            </button>
           </form>
-
         </div>
       </div>
     </section>

@@ -1,9 +1,8 @@
-// Forgot Password page
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { showSuccess, showError, showInfo } from '../../lib/swal';
 import { api } from '../../lib/apiClient';
-import { Lock, Mail, ArrowLeft, Check, KeyRound, Send } from 'lucide-react';
+import { Lock, Mail, ArrowLeft, Check, KeyRound, Send, ArrowRight } from 'lucide-react';
 import FloatingInput from '../../components/FloatingInput';
 import FloatingPasswordInput from '../../components/FloatingPasswordInput';
 
@@ -14,9 +13,8 @@ export default function ForgotPassword() {
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [devOTP, setDevOTP] = useState<string | null>(null); // Store OTP for display
+  const [devOTP, setDevOTP] = useState<string | null>(null);
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -32,7 +30,6 @@ export default function ForgotPassword() {
       setLoading(true);
       const response = await api.post('/auth/forgot-password', { email });
       
-      // Check if OTP is returned (development mode)
       if (response.data?.devOTP) {
         setDevOTP(response.data.devOTP);
         showSuccess('รหัส OTP ถูกสร้างแล้ว!', 'กรุณากรอกรหัส OTP ด้านล่าง');
@@ -78,7 +75,6 @@ export default function ForgotPassword() {
     }
   };
 
-  // Copy OTP to input when clicked
   const handleCopyOTP = () => {
     if (devOTP) {
       setOtp(devOTP);
@@ -87,168 +83,147 @@ export default function ForgotPassword() {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-6 px-4 bg-slate-50 dark:bg-slate-900">
-      <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
-          {/* Header */}
-          <header className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-xl mb-4">
-              <Lock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
-            </div>
-            <h2 className="text-2xl font-serif font-medium text-slate-800 dark:text-white mb-2">
-              {step === 'email' ? 'Forgot Password' : 'Reset Password'}
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400">
-              {step === 'email' 
-                ? 'Enter your email to receive OTP' 
-                : 'Enter OTP and new password'}
-            </p>
-          </header>
+    <section className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-[#F3F5F4]">
+      <div className="w-full max-w-md space-y-4">
+        {/* Brand Mark */}
+        <div className="text-center space-y-1">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#147D70] shadow-sm mb-2">
+            <Lock className="w-5 h-5 text-[#D9F36A]" />
+          </div>
+          <h2 className="text-2xl font-extrabold text-[#202124] tracking-tight">
+            {step === 'email' ? 'Forgot Password' : 'Enter Verification Code'}
+          </h2>
+          <p className="text-xs text-[#858B89]">
+            {step === 'email' 
+              ? 'Enter your registered email to receive an authorization code.' 
+              : 'Verify OTP code and create a new secure password.'}
+          </p>
+        </div>
 
-          {/* Step 1: Email Input */}
-          {step === 'email' && (
-            <form onSubmit={handleSendOTP} className="space-y-6">
+        {/* Card */}
+        <div className="card p-7 sm:p-8 bg-white shadow-sm space-y-5">
+          {step === 'email' ? (
+            <form onSubmit={handleSendOTP} className="space-y-4">
               <FloatingInput
                 id="email"
-                label="Email"
+                label="Registered Email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
-                autoFocus
+                disabled={loading}
+                required
               />
 
               <button 
                 type="submit" 
-                className="w-full mt-2 px-8 py-3.5 font-medium text-white rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
+                className="btn-primary w-full py-3 text-xs font-semibold flex items-center justify-center gap-2" 
                 disabled={loading}
               >
                 {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    Sending OTP...
-                  </>
+                  <span>Sending Code...</span>
                 ) : (
                   <>
-                    Send OTP
-                    <Send className="w-4 h-4" />
+                    <span>Send Reset Code</span>
+                    <Send className="w-3.5 h-3.5 text-[#D9F36A]" />
                   </>
                 )}
               </button>
 
-              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-slate-600 dark:text-slate-300">
-                  Remember your password?{' '}
-                  <Link to="/auth/signin" className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors">
-                    Sign in
-                  </Link>
-                </p>
+              <div className="pt-4 border-t border-[#E8EBE9] text-center">
+                <Link
+                  to="/auth/signin"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#858B89] hover:text-[#147D70] transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Return to Sign In</span>
+                </Link>
               </div>
             </form>
-          )}
-
-          {/* Step 2: OTP & New Password */}
-          {step === 'otp' && (
-            <form onSubmit={handleResetPassword} className="space-y-6">
-              {/* Email Display */}
-              <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Sent to:</p>
-                <p className="text-slate-800 dark:text-white font-medium flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  {email}
-                </p>
+          ) : (
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="p-3 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-[#5F6664]">
+                  <Mail className="w-4 h-4 text-[#147D70]" />
+                  <span className="font-semibold text-[#202124]">{email}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStep('email')}
+                  className="text-[#147D70] font-semibold hover:underline"
+                >
+                  Change
+                </button>
               </div>
 
-              {/* OTP Input */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2" htmlFor="otp">
-                  <KeyRound className="w-4 h-4" /> OTP Code
-                </label>
+              {/* OTP Field */}
+              <div>
+                <label htmlFor="otp" className="label">6-Digit Verification Code</label>
                 <input
                   id="otp"
                   type="text"
-                  className="w-full px-4 py-4 rounded-lg text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 focus:border-teal-500 dark:focus:border-teal-400 focus:outline-none transition-all text-center text-2xl tracking-[0.5em] font-semibold"
+                  className="input text-center text-xl font-mono tracking-[0.4em] font-bold"
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   maxLength={6}
                   autoFocus
                 />
-                
-                {/* Show OTP if in development mode */}
-                {devOTP ? (
+
+                {devOTP && (
                   <div 
-                    className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all"
                     onClick={handleCopyOTP}
+                    className="mt-2 p-3 rounded-xl bg-[#EAF5D5] border border-[#D9F36A] cursor-pointer text-center hover:bg-[#D9F36A]/30 transition-colors"
                   >
-                    <p className="text-xs text-emerald-700 dark:text-emerald-400 text-center font-medium mb-2 flex items-center justify-center gap-2">
-                      <Check className="w-4 h-4" />
-                      Development Mode - Click to Copy OTP
-                    </p>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-[0.3em] font-mono select-all">
-                        {devOTP}
-                      </div>
-                      <p className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-2">
-                        Click to auto-fill
-                      </p>
-                    </div>
+                    <span className="text-[11px] font-bold text-[#11665C] block">
+                      Development Mode Auto-Fill:
+                    </span>
+                    <span className="text-xl font-mono font-bold text-[#202124] tracking-widest mt-0.5 block">
+                      {devOTP}
+                    </span>
+                    <span className="text-[10px] text-[#4D5810] block mt-0.5">Click to auto-populate</span>
                   </div>
-                ) : (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                    Check your email for the 6-digit code
-                  </p>
                 )}
               </div>
 
-              {/* New Password Input */}
+              {/* New Password */}
               <FloatingPasswordInput
                 id="newPassword"
                 label="New Password (min 6 characters)"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
+                disabled={loading}
+                required
               />
 
               <button 
                 type="submit" 
-                className="w-full mt-2 px-8 py-3.5 font-medium text-white rounded-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60" 
+                className="btn-primary w-full py-3 text-xs font-semibold flex items-center justify-center gap-2" 
                 disabled={loading}
               >
                 {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                    Resetting...
-                  </>
+                  <span>Updating Password...</span>
                 ) : (
                   <>
-                    Reset Password
-                    <Check className="w-4 h-4" />
+                    <span>Confirm & Reset Password</span>
+                    <Check className="w-4 h-4 text-[#D9F36A]" />
                   </>
                 )}
               </button>
 
-              <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
+              <div className="pt-4 border-t border-[#E8EBE9] text-center text-xs text-[#858B89]">
+                Didn't get the code?{' '}
                 <button
                   type="button"
-                  onClick={() => setStep('email')}
-                  className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors flex items-center gap-1 mx-auto"
+                  onClick={() => {
+                    setStep('email');
+                    setOtp('');
+                  }}
+                  className="font-bold text-[#147D70] hover:underline"
                 >
-                  <ArrowLeft className="w-4 h-4" /> Back to email
+                  Resend Code
                 </button>
-                <p className="text-slate-600 dark:text-slate-300">
-                  Didn't receive OTP?{' '}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('email');
-                      setOtp('');
-                    }}
-                    className="text-teal-700 dark:text-teal-400 font-medium hover:text-teal-600 dark:hover:text-teal-300 transition-colors"
-                  >
-                    Resend
-                  </button>
-                </p>
               </div>
             </form>
           )}

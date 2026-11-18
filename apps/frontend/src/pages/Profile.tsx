@@ -2,7 +2,18 @@ import { useEffect, useRef, useState } from 'react';
 import { useProfile } from '../hooks/useProfile';
 import { useAuth } from '../hooks/useAuth';
 import { showSuccess, showError } from '../lib/swal';
-import { Edit3 } from 'lucide-react';
+import { 
+  User, 
+  Mail, 
+  Edit3, 
+  Camera, 
+  Trash2, 
+  CheckCircle2, 
+  ShieldCheck, 
+  Sparkles,
+  Save,
+  Clock
+} from 'lucide-react';
 
 const BIO_MAX = 240;
 const AVATAR_MAX_MB = 5;
@@ -37,12 +48,10 @@ export default function Profile() {
   const usernameRef = useRef<HTMLInputElement | null>(null);
   const bioRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  // Load initial data
   useEffect(() => {
     if (data || user) {
       const emailPrefix = user?.email?.split('@')[0] || '';
@@ -52,7 +61,6 @@ export default function Profile() {
     }
   }, [data, user]);
 
-  // Cleanup blob URLs when component unmounts or avatar changes
   useEffect(() => {
     return () => {
       if (avatar && avatar.startsWith('blob:')) {
@@ -62,7 +70,6 @@ export default function Profile() {
   }, [avatar]);
 
   const openFilePicker = () => fileInputRef.current?.click();
-
   const _apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/i, '');
 
   const onSelectFile = async (file?: File | null) => {
@@ -86,7 +93,6 @@ export default function Profile() {
 
     let localUrl: string | null = null;
     try {
-      // Cleanup previous URL if exists
       if (avatar && avatar.startsWith('blob:')) {
         URL.revokeObjectURL(avatar);
       }
@@ -96,15 +102,12 @@ export default function Profile() {
       setUploading(true);
       setProgress(0);
 
-      // Create form data to send to server
       const formData = new FormData();
       formData.append('avatar', blob, 'avatar.jpg');
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      if (!token) throw new Error('Authentication required');
 
-  const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
+      const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
@@ -114,20 +117,15 @@ export default function Profile() {
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to upload avatar');
-      }
+      if (!response.ok) throw new Error('Failed to upload avatar');
 
-      const data = await response.json();
-      
-      // Set avatar to server URL first, then revoke local blob after DOM updates
-      await updateProfile({ name, bio, avatar: data.avatarUrl });
-      setAvatar(data.avatarUrl);
+      const resData = await response.json();
+      await updateProfile({ name, bio, avatar: resData.avatarUrl });
+      setAvatar(resData.avatarUrl);
       setUploading(false);
       setProgress(100);
       showSuccess('รูปโปรไฟล์อัปเดตสำเร็จ!', 'รูปภาพของคุณถูกเปลี่ยนแล้ว');
 
-      // Revoke local preview blob after a short delay so the DOM updates to the server URL
       if (localUrl) {
         const urlToRevoke: string = localUrl;
         setTimeout(() => {
@@ -139,10 +137,7 @@ export default function Profile() {
         }, 300);
       }
     } catch (error: any) {
-      // Cleanup blob URL on error
-      if (localUrl) {
-        URL.revokeObjectURL(localUrl);
-      }
+      if (localUrl) URL.revokeObjectURL(localUrl);
       setAvatar('');
       setUploading(false);
       setProgress(0);
@@ -153,17 +148,14 @@ export default function Profile() {
 
   const removeAvatar = async () => {
     try {
-      // Cleanup blob URL if exists
       if (avatar && avatar.startsWith('blob:')) {
         URL.revokeObjectURL(avatar);
       }
 
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('Authentication required');
-      }
+      if (!token) throw new Error('Authentication required');
 
-  const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
+      const response = await fetch(`${_apiBase}/api/profiles/avatar`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -172,9 +164,7 @@ export default function Profile() {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete avatar');
-      }
+      if (!response.ok) throw new Error('Failed to delete avatar');
 
       setAvatar('');
       await updateProfile({ name, bio, avatar: '' });
@@ -203,9 +193,11 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <section className="container-app py-8 bg-slate-50 dark:bg-slate-900">
-        <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm text-center">
-          <p className="text-slate-500 dark:text-slate-400">Please sign in to view profile.</p>
+      <section className="container-app py-16 text-center">
+        <div className="card p-12 max-w-md mx-auto space-y-3">
+          <User className="w-10 h-10 text-[#858B89] mx-auto" />
+          <h2 className="text-base font-bold text-[#202124]">Please Sign In</h2>
+          <p className="text-xs text-[#858B89]">You must be signed in to access account profile settings.</p>
         </div>
       </section>
     );
@@ -213,10 +205,9 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <section className="container-app py-8 bg-slate-50 dark:bg-slate-900">
-        <div className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm text-center">
-          <p className="text-slate-500 dark:text-slate-400">Loading…</p>
-        </div>
+      <section className="container-app py-16 flex flex-col items-center justify-center gap-3">
+        <div className="w-10 h-10 rounded-full border-3 border-[#147D70] border-t-transparent animate-spin" />
+        <span className="text-xs text-[#858B89]">Loading account settings...</span>
       </section>
     );
   }
@@ -224,62 +215,83 @@ export default function Profile() {
   const firstChar = (name || user.email || '?').charAt(0).toUpperCase();
 
   return (
-    <section className="min-h-screen py-8 bg-slate-50 dark:bg-slate-900">
-      <div className="container-app">
-        {/* Professional Header */}
-        <header className="mb-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-light text-slate-800 dark:text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-            Profile <span className="italic">Settings</span>
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400">Manage your account information and preferences</p>
-        </header>
+    <section className="min-h-screen py-10 bg-[#F3F5F4]">
+      <div className="container-app max-w-5xl space-y-6">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-[#E8EBE9] p-6 rounded-2xl shadow-xs">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#202124] tracking-tight">
+                Account & Profile Settings
+              </h1>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#EAF5D5] text-[#11665C] border border-[#D9F36A]">
+                {user.role === 'admin' ? 'Administrator' : 'Standard Member'}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#858B89] mt-1">
+              Customize how other members see your profile in activity rooms and chats.
+            </p>
+          </div>
 
-        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-[320px,minmax(0,640px)] items-start justify-center">
-        {/* Profile Picture Card */}
-        <aside className="p-6 space-y-5 self-start bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
-            <h3 className="text-lg font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Profile Picture
+          <button
+            onClick={save}
+            disabled={uploading}
+            className="btn-primary text-xs flex items-center gap-2"
+          >
+            <Save className="w-4 h-4 text-[#D9F36A]" />
+            <span>Save Profile</span>
+          </button>
+        </div>
+
+        {/* 2-Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Avatar & Account Details */}
+          <div className="md:col-span-5 card p-6 space-y-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#858B89]">
+              Profile Photo
             </h3>
-            
-            <div className="flex items-center gap-4">
-              <div className="relative h-24 w-24 shrink-0">
-                {avatar ? (
-                  <>
+
+            <div className="flex flex-col items-center text-center space-y-4">
+              <div className="relative">
+                <div className="w-28 h-28 rounded-2xl overflow-hidden ring-4 ring-[#E0F3F1] bg-[#F3F5F4] flex items-center justify-center">
+                  {avatar ? (
                     <img
                       src={avatar}
                       alt="Avatar"
-                      className="h-24 w-24 rounded-full object-cover ring-2 ring-slate-200 dark:ring-slate-700"
+                      className="w-full h-full object-cover"
                     />
-                  </>
-                ) : (
-                  <div className="grid h-24 w-24 place-items-center rounded-full text-2xl font-medium text-teal-700 dark:text-teal-400 bg-teal-100 dark:bg-teal-900/30 ring-2 ring-slate-200 dark:ring-slate-700">
-                    {firstChar}
-                  </div>
-                )}
+                  ) : (
+                    <span className="text-4xl font-extrabold text-[#147D70]">
+                      {firstChar}
+                    </span>
+                  )}
+                </div>
+
                 {uploading && (
-                  <div className="absolute -bottom-2 left-1/2 w-24 -translate-x-1/2 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700">
-                    <div
-                      className="h-1.5 rounded-full transition-all duration-300 bg-teal-600"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <div className="absolute inset-0 bg-[#202124]/60 backdrop-blur-xs rounded-2xl flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-[#D9F36A] border-t-transparent rounded-full animate-spin" />
                   </div>
                 )}
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
                 <button
+                  type="button"
                   onClick={openFilePicker}
-                  className="rounded-sm px-5 py-2.5 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 disabled:opacity-60"
                   disabled={uploading}
+                  className="btn-secondary text-xs px-3.5 py-2 flex items-center gap-1.5"
                 >
-                  {uploading ? 'กำลังอัปโหลด…' : 'Upload'}
+                  <Camera className="w-3.5 h-3.5 text-[#147D70]" />
+                  <span>Upload Photo</span>
                 </button>
                 {avatar && (
                   <button
+                    type="button"
                     onClick={removeAvatar}
-                    className="rounded-sm px-5 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors duration-200"
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-xl border border-red-200 transition-colors"
+                    title="Remove avatar"
                   >
-                    Remove
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 )}
                 <input
@@ -289,111 +301,124 @@ export default function Profile() {
                   hidden
                   onChange={(e) => onSelectFile(e.target.files?.[0] || null)}
                 />
-                <p className="text-xs text-slate-400 dark:text-slate-500">แนะนำไม่เกิน {AVATAR_MAX_MB}MB</p>
               </div>
+
+              <p className="text-[11px] text-[#858B89]">
+                Supports PNG, JPG or WebP up to {AVATAR_MAX_MB}MB.
+              </p>
             </div>
 
-            <div className="border-t border-slate-200 dark:border-slate-700 pt-4 space-y-3">
-              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Your account
+            {/* Quick Metadata Box */}
+            <div className="pt-4 border-t border-[#E8EBE9] space-y-3 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-[#858B89]">Account Role</span>
+                <span className="font-semibold text-[#202124] capitalize">{user.role}</span>
               </div>
-              <div className="space-y-2">
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  {name}
-                </div>
-                <div className="text-sm text-slate-500 dark:text-slate-500">
-                  {user.email}
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#858B89]">User ID</span>
+                <span className="font-mono text-[11px] text-[#5F6664]">{user._id.slice(0, 12)}...</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-[#858B89]">Profile Status</span>
+                <span className="inline-flex items-center gap-1 text-[#147D70] font-semibold">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Active
+                </span>
               </div>
             </div>
-        </aside>
+          </div>
 
-        {/* Main Details Card */}
-        <main className="p-8 space-y-6 self-start w-full max-w-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm shadow-sm">
-            <h3 className="text-xl font-medium text-slate-800 dark:text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Your Information
+          {/* Right Column: Identity & Bio Form */}
+          <div className="md:col-span-7 card p-6 sm:p-8 space-y-6">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-[#858B89]">
+              Personal Information
             </h3>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="name">
-                ชื่อผู้ใช้
-              </label>
-              <div className="relative">
-                <input
-                  id="name"
-                  ref={usernameRef}
-                  className={`w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none pr-14 ${isEditingName ? 'border-teal-500 dark:border-teal-400' : ''}`}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  readOnly={!isEditingName}
-                />
+            {/* Name Field */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label htmlFor="name" className="label mb-0">Display Name</label>
                 <button
                   type="button"
-                  aria-label="Edit name"
-                  aria-pressed={isEditingName}
                   onClick={() => {
-                    setIsEditingName((v: boolean) => !v);
+                    setIsEditingName((v) => !v);
                     setTimeout(() => usernameRef.current?.focus(), 0);
                   }}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 rounded p-2 transition-colors duration-200 ${isEditingName ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
+                  className="text-xs font-semibold text-[#147D70] hover:underline flex items-center gap-1"
                 >
-                  <Edit3 className="h-4 w-4" />
+                  <Edit3 className="w-3 h-3" />
+                  <span>{isEditingName ? 'Done' : 'Edit'}</span>
                 </button>
               </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="email">
-                อีเมล
-              </label>
-              <input 
-                id="email" 
-                className="w-full px-4 py-3 rounded-sm text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 cursor-not-allowed"
-                value={user?.email || ''} 
-                readOnly 
+              <input
+                id="name"
+                ref={usernameRef}
+                className={`input ${isEditingName ? 'border-[#147D70] ring-2 ring-[#147D70]/15' : 'bg-[#F3F5F4]'}`}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                readOnly={!isEditingName}
               />
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="bio">
-                เกี่ยวกับคุณ
-              </label>
+            {/* Email Field (Read-only) */}
+            <div>
+              <label htmlFor="email" className="label">Registered Email</label>
               <div className="relative">
-                <textarea
-                  id="bio"
-                  ref={bioRef}
-                  className={`w-full px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200 focus:border-teal-500 dark:focus:border-teal-400 focus:ring-2 focus:ring-teal-500/20 focus:outline-none resize-none h-32 pr-14 ${isEditingBio ? 'border-teal-500 dark:border-teal-400' : ''}`}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
-                  readOnly={!isEditingBio}
-                  placeholder="บอกอะไรเกี่ยวกับตัวคุณสักหน่อย..."
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#858B89]" />
+                <input
+                  id="email"
+                  className="input pl-10 bg-[#F3F5F4] text-[#858B89] cursor-not-allowed"
+                  value={user?.email || ''}
+                  readOnly
                 />
-                <button
-                  type="button"
-                  aria-label="Edit bio"
-                  aria-pressed={isEditingBio}
-                  onClick={() => {
-                    setIsEditingBio((v: boolean) => !v);
-                    setTimeout(() => bioRef.current?.focus(), 0);
-                  }}
-                  className={`absolute right-3 top-3 rounded p-2 transition-colors duration-200 ${isEditingBio ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'}`}
-                >
-                  <Edit3 className="h-4 w-4" />
-                </button>
               </div>
-              <div className="text-right text-xs text-slate-400 dark:text-slate-500">{bio.length}/{BIO_MAX} ตัวอักษร</div>
+              <span className="text-[11px] text-[#858B89] mt-1 block">
+                Email address is tied to authentication and cannot be changed directly.
+              </span>
             </div>
 
-            <div className="pt-6 border-t border-slate-200 dark:border-slate-700">
-              <button 
-                className="px-8 py-3 text-sm font-medium text-white bg-slate-800 dark:bg-white dark:text-slate-900 rounded-sm hover:bg-slate-700 dark:hover:bg-slate-100 transition-colors duration-200 disabled:opacity-60" 
-                onClick={save} 
+            {/* Bio Field */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label htmlFor="bio" className="label mb-0">Bio & Interests</label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingBio((v) => !v);
+                    setTimeout(() => bioRef.current?.focus(), 0);
+                  }}
+                  className="text-xs font-semibold text-[#147D70] hover:underline flex items-center gap-1"
+                >
+                  <Edit3 className="w-3 h-3" />
+                  <span>{isEditingBio ? 'Done' : 'Edit'}</span>
+                </button>
+              </div>
+              <textarea
+                id="bio"
+                ref={bioRef}
+                className={`input min-h-[7rem] resize-none ${isEditingBio ? 'border-[#147D70] ring-2 ring-[#147D70]/15' : 'bg-[#F3F5F4]'}`}
+                value={bio}
+                onChange={(e) => setBio(e.target.value.slice(0, BIO_MAX))}
+                readOnly={!isEditingBio}
+                placeholder="Share a short bio, your academic focus, or favorite hobbies..."
+              />
+              <div className="text-right text-[11px] text-[#858B89] mt-1">
+                {bio.length}/{BIO_MAX} characters
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="pt-4 border-t border-[#E8EBE9] flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={save}
                 disabled={uploading}
+                className="btn-primary text-xs px-6 py-2.5 flex items-center gap-2"
               >
-                Confirm changes
+                <Save className="w-4 h-4 text-[#D9F36A]" />
+                <span>Save All Changes</span>
               </button>
             </div>
-        </main>
+          </div>
         </div>
       </div>
     </section>

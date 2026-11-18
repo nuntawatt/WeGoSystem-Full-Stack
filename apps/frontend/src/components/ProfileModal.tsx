@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { X, User, Mail, Calendar, Tag } from 'lucide-react';
+import { X, User, Mail, Calendar, Tag, Shield } from 'lucide-react';
 
 type Profile = {
   userId: string;
@@ -12,7 +12,7 @@ type Profile = {
   createdAt: string;
 };
 
-type User = {
+type UserData = {
   _id: string;
   email: string;
   username?: string;
@@ -30,7 +30,7 @@ export default function ProfileModal({
   userId: string | null;
 }) {
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,38 +62,39 @@ export default function ProfileModal({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#202124]/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div 
-        className="relative bg-white dark:bg-slate-800 rounded-sm shadow-xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
+        className="relative bg-white rounded-2xl shadow-2xl border border-[#E8EBE9] max-w-md w-full p-6 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          className="absolute top-4 right-4 p-2 rounded-xl text-[#858B89] hover:text-[#202124] hover:bg-[#F3F5F4] transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
         {loading && (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-2 border-teal-600 border-t-transparent"></div>
+          <div className="flex flex-col items-center justify-center py-12 gap-3">
+            <div className="w-10 h-10 border-3 border-[#147D70] border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs text-[#858B89]">Loading profile...</p>
           </div>
         )}
 
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-sm text-red-700 dark:text-red-400">
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
             {error}
           </div>
         )}
 
         {!loading && !error && profile && user && (
-          <div>
-            {/* Avatar */}
-            <div className="flex flex-col items-center mb-6">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-teal-600 to-teal-700 flex items-center justify-center mb-4 overflow-hidden shadow-md">
+          <div className="space-y-6">
+            {/* Header Avatar & Info */}
+            <div className="flex flex-col items-center text-center">
+              <div className="w-24 h-24 rounded-full bg-[#147D70] flex items-center justify-center mb-3 overflow-hidden border-4 border-white shadow-md">
                 {profile.avatar ? (
                   <img 
                     src={profile.avatar} 
@@ -101,24 +102,22 @@ export default function ProfileModal({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl font-semibold text-white">
+                  <span className="text-3xl font-bold text-white">
                     {profile.name.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
               
-              {/* Name */}
-              <h3 className="text-2xl font-serif font-medium text-slate-800 dark:text-slate-100 mb-1">{profile.name}</h3>
+              <h3 className="text-xl font-bold text-[#202124]">{profile.name}</h3>
               
-              {/* Email */}
-              <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-1.5 mb-2">
-                <Mail className="w-3.5 h-3.5" />
+              <p className="text-xs text-[#858B89] flex items-center gap-1.5 mt-1">
+                <Mail className="w-3.5 h-3.5 text-[#147D70]" />
                 {user.email}
               </p>
               
-              {/* Role Badge */}
               {user.role === 'admin' && (
-                <span className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 rounded-sm text-xs font-medium text-amber-700 dark:text-amber-400">
+                <span className="mt-2.5 px-3 py-0.5 bg-[#EAF5D5] border border-[#D9F36A] rounded-full text-xs font-semibold text-[#147D70] flex items-center gap-1">
+                  <Shield className="w-3 h-3" />
                   Admin
                 </span>
               )}
@@ -126,27 +125,27 @@ export default function ProfileModal({
 
             {/* Bio */}
             {profile.bio && (
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
+              <div className="p-4 bg-[#F3F5F4] rounded-xl border border-[#E8EBE9]">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#858B89] mb-1.5 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-[#147D70]" />
                   Bio
                 </h4>
-                <p className="text-slate-700 dark:text-slate-300">{profile.bio}</p>
+                <p className="text-sm text-[#202124] leading-relaxed">{profile.bio}</p>
               </div>
             )}
 
-            {/* Tags */}
+            {/* Interests / Tags */}
             {profile.tags && profile.tags.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5" />
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-[#858B89] mb-2 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-[#147D70]" />
                   Interests
                 </h4>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {profile.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 rounded-sm text-xs font-medium text-teal-700 dark:text-teal-400"
+                      className="px-3 py-1 bg-[#EAF5D5] border border-[#D9F36A]/50 rounded-full text-xs font-medium text-[#147D70]"
                     >
                       {tag}
                     </span>
@@ -156,18 +155,18 @@ export default function ProfileModal({
             )}
 
             {/* Member Since */}
-            <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
-              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5" />
+            <div className="pt-4 border-t border-[#E8EBE9] flex items-center justify-between text-xs text-[#858B89]">
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#147D70]" />
                 Member since {new Date(profile.createdAt).toLocaleDateString()}
-              </p>
+              </span>
             </div>
 
             {/* Actions */}
-            <div className="mt-6">
+            <div>
               <button
                 onClick={onClose}
-                className="w-full btn-secondary"
+                className="w-full py-2.5 px-4 font-semibold text-sm rounded-xl border border-[#E8EBE9] bg-[#F3F5F4] hover:bg-[#E8EBE9] text-[#202124] transition-colors"
               >
                 Close
               </button>

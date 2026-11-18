@@ -1,4 +1,3 @@
-// Sign in page
 import { useState, useEffect } from 'react';
 import GoogleSignIn from '../../components/GoogleSignIn';
 import FloatingInput from '../../components/FloatingInput';
@@ -7,11 +6,11 @@ import { SignInSchema } from '../../lib/validators';
 import { showSuccess, showError } from '../../lib/swal';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { ArrowRight } from 'lucide-react';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
-  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const nav = useNavigate();
@@ -20,7 +19,6 @@ export default function SignIn() {
 
   const { signIn } = useAuth();
 
-  // Reset scroll on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -37,7 +35,6 @@ export default function SignIn() {
       const result = await signIn(email.trim(), pass);
       showSuccess('เข้าสู่ระบบสำเร็จ!', 'ยินดีต้อนรับกลับมา 🎉');
       
-      // Redirect admins to dashboard, others to intended location or explore
       if (result && result.role === 'admin') {
         nav('/admin/dashboard', { replace: true });
       } else {
@@ -51,27 +48,35 @@ export default function SignIn() {
   };
 
   return (
-    <section className="min-h-[calc(100vh-4rem)] flex items-start justify-center pt-12 px-4 bg-slate-50 dark:bg-slate-900">
-      <div className="w-full max-w-md">
-        {/* Professional Card */}
-        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm">
-          {/* Header */}
-          <header className="text-center mb-8">
-            <h2 className="text-2xl font-light text-slate-800 dark:text-white mb-2" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Welcome <span className="italic">Back</span>
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">Sign in to your WeGo account</p>
-          </header>
+    <section className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-[#F3F5F4]">
+      <div className="w-full max-w-md space-y-4">
+        {/* Brand Mark */}
+        <div className="text-center space-y-1">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#147D70] shadow-sm mb-2">
+            <div className="relative w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-[#D9F36A]" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-extrabold text-[#202124] tracking-tight">
+            Sign in to WegoSystem
+          </h2>
+          <p className="text-xs text-[#858B89]">
+            Access your activities, chat channels, and matched schedules.
+          </p>
+        </div>
 
-          <form onSubmit={submit} className="space-y-6">
+        {/* Card Form */}
+        <div className="card p-7 sm:p-8 bg-white shadow-sm space-y-5">
+          <form onSubmit={submit} className="space-y-4">
             <FloatingInput
               id="email"
-              label="Email"
+              label="Email Address"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="username"
               disabled={loading}
+              required
             />
 
             <FloatingPasswordInput
@@ -81,46 +86,54 @@ export default function SignIn() {
               onChange={(e) => setPass(e.target.value)}
               autoComplete="current-password"
               disabled={loading}
+              required
             />
 
-          {/* Submit Button */}
-          <button 
-            className="w-full mt-2 py-3.5 text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 rounded-lg shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed" 
-            type="submit" 
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Signing in...
-              </span>
-            ) : (
-              <>Sign In</>
-            )}
-          </button>
+            <div className="flex justify-end text-xs">
+              <Link 
+                to="/auth/forgot-password" 
+                className="font-medium text-[#147D70] hover:text-[#11665C] transition-colors"
+              >
+                Forgot your password?
+              </Link>
+            </div>
 
-          {/* Google Sign-In */}
+            <button 
+              className="btn-primary w-full py-3 text-xs font-semibold flex items-center justify-center gap-2 mt-2" 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? (
+                <span>Signing in...</span>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4 text-[#D9F36A]" />
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-[#E8EBE9]" />
+            </div>
+            <div className="relative flex justify-center text-[11px] font-semibold uppercase tracking-wider text-[#858B89]">
+              <span className="bg-white px-2">or continue with</span>
+            </div>
+          </div>
+
           <GoogleSignIn />
 
-          <div className="text-sm text-center space-y-3 pt-6 border-t border-slate-200 dark:border-slate-700">
-            <p className="text-slate-500 dark:text-slate-400">
-              Don't have an account?{' '}
-              <Link to="/auth/signup" className="font-medium text-teal-700 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300 transition-colors duration-200">
-                Sign up
-              </Link>
-            </p>
-            <p>
-              <Link to="/auth/forgot-password" className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 transition-colors duration-200">
-                Forgot password?
-              </Link>
-            </p>
+          {/* Sign up prompt */}
+          <div className="pt-4 border-t border-[#E8EBE9] text-center text-xs text-[#5F6664]">
+            Don't have an account yet?{' '}
+            <Link to="/auth/signup" className="font-bold text-[#147D70] hover:underline">
+              Create an account
+            </Link>
           </div>
-            </form>
         </div>
-      
       </div>
     </section>
   );

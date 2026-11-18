@@ -25,26 +25,31 @@ export default function TagSelector({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mb-3">
-        {value.map((t) => (
-          <span key={t} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-800">
-            {t}
-            <button 
-              type="button" 
-              className="text-teal-500 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-200 transition-colors" 
-              onClick={() => !disabled && remove(t)}
-              disabled={disabled}
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {value.map((t) => (
+            <span 
+              key={t} 
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-[#E0F3F1] text-[#11665C] border border-[#BFE7E2]"
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </span>
-        ))}
-      </div>
+              <span>{t}</span>
+              <button 
+                type="button" 
+                className="text-[#147D70] hover:text-[#082E29] transition-colors p-0.5" 
+                onClick={() => !disabled && remove(t)}
+                disabled={disabled}
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="flex gap-2">
         <input
-          className="flex-1 px-4 py-3 rounded-sm text-slate-800 dark:text-white bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 placeholder-slate-400 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
-          placeholder="พิมพ์แท็กแล้วกด Enter"
+          className="input flex-1 text-xs py-2.5"
+          placeholder="Type a tag name and press Enter..."
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={disabled}
@@ -57,25 +62,27 @@ export default function TagSelector({
         />
         <button 
           type="button" 
-          className="px-5 py-2.5 rounded-sm font-medium text-white bg-teal-700 hover:bg-teal-600 transition-colors disabled:opacity-60" 
+          className="btn-primary text-xs px-4 py-2.5" 
           onClick={() => add(input)}
-          disabled={disabled}
+          disabled={disabled || !input.trim()}
         >
-          เพิ่ม
+          Add Tag
         </button>
       </div>
 
       {!!suggestions.length && (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+          <span className="text-[11px] font-medium text-[#858B89] mr-1">Suggestions:</span>
           {suggestions.map((s) => (
             <button
               type="button"
               key={s}
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm text-sm font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-60"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-[#5F6664] bg-[#F3F5F4] border border-[#E8EBE9] hover:border-[#147D70] hover:text-[#147D70] transition-colors disabled:opacity-50"
               onClick={() => add(s)}
-              disabled={disabled}
+              disabled={disabled || value.includes(s.toLowerCase())}
             >
-              <Plus className="w-3.5 h-3.5" /> {s}
+              <Plus className="w-3 h-3 text-[#147D70]" />
+              <span>{s}</span>
             </button>
           ))}
         </div>

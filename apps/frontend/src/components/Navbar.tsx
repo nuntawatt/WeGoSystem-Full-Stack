@@ -1,11 +1,9 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
-import { Plus, LogOut, LayoutDashboard, Search } from 'lucide-react';
-import clsx from 'clsx';
-import logo from '../../image/logo-wego.png';
+import { Plus, LogOut, LayoutDashboard, Compass, User, Sparkles } from 'lucide-react';
 
-const APP_NAME = import.meta.env.VITE_APP_NAME || 'WeGo';
+const APP_NAME = import.meta.env.VITE_APP_NAME || 'WegoSystem';
 
 function nameFromEmail(email?: string | null) {
   return email ? (email.split('@')[0] || '') : '';
@@ -15,15 +13,13 @@ export default function Navbar() {
   const { user, logOut } = useAuth();
   const { data: profile } = useProfile(user?._id);
   const location = useLocation();
-  const isHome = location.pathname === '/';
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    clsx(
-      'px-4 py-2 text-sm font-medium transition-all duration-200',
+    `flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
       isActive
-        ? 'text-slate-900 dark:text-white border-b-2 border-teal-600 dark:border-teal-400'
-        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-    );
+        ? 'bg-[#E0F3F1] text-[#11665C]'
+        : 'text-[#5F6664] hover:text-[#202124] hover:bg-[#F3F5F4]'
+    }`;
 
   const displayName = (profile?.name && profile.name.trim()) || (user as any)?.username || nameFromEmail(user?.email) || '';
   const profileAvatar = profile?.avatar || '';
@@ -32,47 +28,64 @@ export default function Navbar() {
   const first = (displayName || '?').charAt(0).toUpperCase();
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-[#E8EBE9] shadow-xs">
       <div className="container-app flex items-center justify-between py-3">
-
+        {/* Brand Logo & Name */}
         <Link to="/" className="flex items-center gap-3 group" aria-label={APP_NAME}>
-          <div className="flex items-center transition-transform duration-200 group-hover:scale-105">
-            <img src={logo} alt="WeGo" className="h-9 sm:h-10 w-auto object-contain block" />
+          <div className="relative w-9 h-9 rounded-xl bg-[#147D70] flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105">
+            <div className="absolute -top-1.5 -left-1.5 w-4 h-4 rounded-full bg-[#D9F36A]" />
+            <div className="relative z-10 w-3.5 h-3.5 rounded-full border-2 border-white flex items-center justify-center">
+              <div className="w-1 h-1 rounded-full bg-[#D9F36A]" />
+            </div>
           </div>
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col">
+            <span className="font-bold text-lg tracking-tight text-[#202124] leading-tight">
+              Wego<span className="text-[#147D70]">System</span>
+            </span>
+            <span className="text-[10px] font-medium text-[#858B89] -mt-0.5 tracking-wider uppercase">
+              Activity & Community
+            </span>
           </div>
         </Link>
 
-        {/* Nav - Clean minimal links */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Desktop Navigation Links */}
+        <nav className="flex items-center gap-2 sm:gap-4">
           <NavLink to="/explore" className={linkClass}>
-            <span className="flex items-center gap-2">
-              <Search className="w-4 h-4" /> Explore
-            </span>
-          </NavLink>
-          <NavLink to="/create" className={linkClass}>
-            <span className="flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Create
-            </span>
+            <Compass className="w-4 h-4" />
+            <span>Explore</span>
           </NavLink>
 
-          {/* Admin Dashboard Link */}
+          <NavLink to="/create" className={linkClass}>
+            <Plus className="w-4 h-4" />
+            <span>Create Activity</span>
+          </NavLink>
+
+          {/* Admin Dashboard Quick Link */}
           {user?.role === 'admin' && (
-            <NavLink to="/admin/dashboard" className={linkClass}>
-              <span className="flex items-center gap-2">
-                <LayoutDashboard className="w-4 h-4" /> Dashboard
-              </span>
+            <NavLink 
+              to="/admin/dashboard" 
+              className={({ isActive }) => 
+                `flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-[#202124] text-white shadow-xs' 
+                    : 'bg-[#F3F5F4] text-[#202124] hover:bg-[#202124] hover:text-white'
+                }`
+              }
+            >
+              <LayoutDashboard className="w-4 h-4 text-[#D9F36A]" />
+              <span>Admin Console</span>
             </NavLink>
           )}
 
+          {/* User Auth Actions */}
           {user ? (
-            <div className="flex items-center gap-4 ml-6 pl-6 border-l border-slate-200 dark:border-slate-700">
-              {/* Profile button - Clean style */}
+            <div className="flex items-center gap-2 pl-2 sm:pl-4 border-l border-[#E8EBE9]">
+              {/* Profile Chip */}
               <Link
                 to="/profile"
-                className="flex items-center gap-2.5 px-3 py-1.5 rounded-md transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="flex items-center gap-2.5 p-1.5 pr-3 rounded-xl bg-[#F3F5F4] hover:bg-[#E8EBE9] border border-[#E8EBE9] transition-all duration-200 group"
               >
-                <div className="h-8 w-8 rounded-full overflow-hidden grid place-items-center bg-teal-100 dark:bg-teal-900 flex-shrink-0">
+                <div className="h-7 w-7 rounded-lg overflow-hidden grid place-items-center bg-[#147D70] text-white flex-shrink-0">
                   {avatar ? (
                     <img
                       src={avatar}
@@ -81,36 +94,37 @@ export default function Navbar() {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <span className="text-sm font-medium text-teal-700 dark:text-teal-300">{first}</span>
+                    <span className="text-xs font-bold">{first}</span>
                   )}
                 </div>
-                <span className="text-slate-700 dark:text-slate-300 text-sm font-medium max-w-[100px] truncate hover:text-slate-900 dark:hover:text-white">
+                <span className="text-[#202124] text-xs font-semibold max-w-[110px] truncate group-hover:text-[#147D70]">
                   {displayName}
                 </span>
               </Link>
 
-              {/* Log out - Subtle style */}
+              {/* Log out Button */}
               <button
                 onClick={() => logOut()}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600/90 dark:hover:bg-red-900/40 transition-all duration-200"
+                title="Sign out of account"
+                className="p-2 rounded-xl text-[#858B89] hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition-colors"
+                aria-label="Log out"
               >
                 <LogOut className="w-4 h-4" />
-                Log out
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 pl-2 sm:pl-4 border-l border-[#E8EBE9]">
               <NavLink
                 to="/auth/signin"
-                className="px-5 py-2 rounded-full text-sm font-medium text-white bg-gradient-to-r from-teal-500 to-cyan-500 hover:text-white dark:hover:text-white hover:from-teal-600 hover:to-cyan-600 shadow-md shadow-teal-500/20 hover:shadow-lg hover:shadow-teal-500/30 transition-all duration-300"
+                className="px-4 py-2 text-sm font-semibold text-[#202124] hover:text-[#147D70] hover:bg-[#F3F5F4] rounded-xl transition-colors"
               >
-                Sign in
+                Sign In
               </NavLink>
               <NavLink
                 to="/auth/signup"
-                className="px-5 py-2 rounded-full text-sm font-medium text-teal-600 dark:text-teal-400 border-2 border-teal-500 dark:border-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/30 hover:text-slate-900 dark:hover:text-white transition-all duration-300"
+                className="btn-primary py-2 px-4 text-xs font-semibold"
               >
-                Sign up
+                Get Started
               </NavLink>
             </div>
           )}

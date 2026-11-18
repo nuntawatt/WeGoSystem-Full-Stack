@@ -348,21 +348,21 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-3 p-6 rounded-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-1/3"></div>
-        <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded-sm"></div>
-        <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded-sm"></div>
+      <div className="animate-pulse space-y-3 p-5 rounded-2xl bg-white border border-[#E8EBE9]">
+        <div className="h-4 bg-[#F3F5F4] rounded w-1/3"></div>
+        <div className="h-14 bg-[#F3F5F4] rounded-xl"></div>
+        <div className="h-14 bg-[#F3F5F4] rounded-xl"></div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 p-6 rounded-sm bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex items-center justify-between pb-3.5 border-b border-[#E8EBE9]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-sm bg-amber-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+          <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center">
+            <svg className="w-4 h-4 fill-amber-500" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
             </svg>
           </div>
@@ -371,59 +371,52 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
               <div className="flex items-center gap-1">
                 {renderStars(Math.round(parseFloat(reviewsData.averageRating)))}
               </div>
-              <span className="text-lg font-semibold text-amber-600 dark:text-amber-400">
+              <span className="text-base font-bold text-[#202124]">
                 {reviewsData.averageRating}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 px-2.5 py-1 rounded-sm bg-slate-100 dark:bg-slate-700">
+              <span className="text-xs text-[#858B89] px-2 py-0.5 rounded-full bg-[#F3F5F4] border border-[#E8EBE9]">
                 {reviewsData.totalReviews} {reviewsData.totalReviews === 1 ? 'review' : 'reviews'}
               </span>
             </>
           ) : (
-            <span className="text-sm text-slate-500 dark:text-slate-400">No reviews yet</span>
+            <span className="text-xs text-[#858B89]">No peer reviews yet</span>
           )}
         </div>
         
         {currentUserId && !showReviewForm && (
           <button
             onClick={() => setShowReviewForm(true)}
-            className="px-4 py-2 text-sm font-medium rounded-sm transition-colors bg-teal-700 hover:bg-teal-600 text-white"
+            className="btn-primary text-xs py-1.5 px-3.5"
           >
-            {userHasReviewed ? 'Edit Review' : 'Write Review'}
+            {userHasReviewed ? 'Edit Your Review' : 'Write a Review'}
           </button>
         )}
       </div>
 
-      {/* Review Form - Professional Style */}
+      {/* Review Form */}
       {showReviewForm && (
-        <form onSubmit={handleSubmitReview} className="p-5 rounded-sm space-y-4 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600">
+        <form onSubmit={handleSubmitReview} className="p-4 rounded-xl space-y-3.5 bg-[#F3F5F4] border border-[#E8EBE9]">
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Your Rating</label>
+            <label className="label">Rating</label>
             <div className="flex gap-2">
               {renderStars(rating, true, setRating)}
             </div>
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-200">Comment (Optional)</label>
+            <label className="label">Comment (Optional)</label>
             <textarea
-              className="w-full px-4 py-3 rounded-sm border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-teal-500 focus:border-transparent focus:outline-none resize-none"
+              className="input text-xs min-h-[5rem] resize-none"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your thoughts..."
+              placeholder="Share how the collaboration went..."
               rows={3}
               maxLength={500}
             />
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{comment.length}/500</div>
+            <div className="text-[11px] text-[#858B89] text-right mt-1">{comment.length}/500</div>
           </div>
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="flex-1 py-3 text-sm font-medium rounded-sm transition-colors bg-teal-700 hover:bg-teal-600 text-white disabled:opacity-50"
-            >
-              {submitting ? 'Submitting...' : 'Submit Review'}
-            </button>
+          <div className="flex gap-2 justify-end">
             <button
               type="button"
               onClick={() => {
@@ -431,48 +424,47 @@ export default function GroupReviews({ groupId, currentUserId, type = 'group' }:
                 setRating(5);
                 setComment('');
               }}
-              className="px-6 py-3 text-sm font-medium rounded-sm transition-colors bg-slate-200 dark:bg-slate-600 hover:bg-slate-300 dark:hover:bg-slate-500 text-slate-700 dark:text-slate-200"
+              className="btn-secondary text-xs"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary text-xs"
+            >
+              {submitting ? 'Submitting...' : 'Post Review'}
             </button>
           </div>
         </form>
       )}
 
-      {/* Reviews List - Professional Style */}
-      <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+      {/* Reviews List */}
+      <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 thin-scrollbar">
         {reviewsData && reviewsData.reviews.length > 0 ? (
           reviewsData.reviews.map((review) => (
-            <div key={review._id} className="p-4 rounded-sm transition-colors bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">
-                    {review.userId.username || review.userId.email?.split('@')[0] || review.userId.email || 'User'}
-                  </div>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex gap-0.5">
-                      {renderStars(review.rating)}
-                    </div>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                  </div>
+            <div key={review._id} className="p-3.5 rounded-xl bg-[#F3F5F4] border border-[#E8EBE9] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-[#202124]">
+                  {review.userId.username || review.userId.email?.split('@')[0] || review.userId.email || 'Participant'}
+                </span>
+                <span className="text-[10px] text-[#858B89]">
+                  {new Date(review.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  {renderStars(review.rating)}
                 </div>
               </div>
               {review.comment && (
-                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">{review.comment}</p>
+                <p className="text-xs text-[#5F6664] leading-relaxed line-clamp-3">{review.comment}</p>
               )}
             </div>
           ))
         ) : (
-          <div className="text-center py-10">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-              <svg className="w-8 h-8 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-              </svg>
-            </div>
-            <p className="text-slate-600 dark:text-slate-300 font-medium">No reviews yet</p>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Be the first to share your experience!</p>
+          <div className="text-center py-6 text-xs text-[#858B89]">
+            Be the first peer to leave a review for this room.
           </div>
         )}
       </div>
